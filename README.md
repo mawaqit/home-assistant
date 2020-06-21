@@ -8,11 +8,11 @@ English and Arabic versions below:
 
 @######################## French Version ################@
 
-Ce composent permet d'intégrer les données d'une mosquée mawaqit dans son installation homeassistant. Pour ce faire, Un compte mawaqit est nécessaire. Visitez https://mawaqit.net/ pour créer un compte.
+Ce composent permet d'intégrer les données de votre mosquée mawaqit dans votre installation homeassistant. Pour ce faire, Un compte mawaqit https://mawaqit.net/ est nécessaire.
 
 Le composent est rajouté à homeassistant sous forme d'integrations. Pour l'installation, il faur copier le dossier mawaqit dans le répertoire custom_components de votre installation homeassistant (créez le s'il n'existe pas).
 
-Après le redémarrage de homeassistant, allez dans configuration>intégrations et cherchez "mawaqit". Entre le login et mot de posse et cliquez sur soumettre. En se basant sur vos coordonnées latitude/longitude enregistrés dans homeassistant, le composent cherche les mosquée mawaqit dans un rayon de 20km proche de vous et vous demande de sélectionner votre mosquée préférée.
+Après le redémarrage de homeassistant, allez dans configuration>intégrations et cherchez "mawaqit". Entrez le login et mot de posse et cliquez sur soumettre. En se basant sur vos coordonnées latitude/longitude enregistrées dans homeassistant, le composent cherche les mosquées mawaqit dans un rayon de 20km proche de vous et vous demande de sélectionner votre mosquée préférée.
 
 L'integration permet de rajouter 6 composants de type sensor: les 5 horaires des prières et un sensor sensor.my_mosque qui résume toutes les données de votre mosquée (adresse, site web, jumaa, iqama,...)
 
