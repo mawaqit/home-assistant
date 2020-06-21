@@ -18,8 +18,8 @@ L'integration permet de rajouter 6 composants de type sensor: les 5 horaires des
 
 Dans le fichier configuration.yaml, vous avez un exemple de code pour créer des automatismes dans homeassistant avec les sensors mawaqit notamment pour lancer l'athan à l'heure de la prière ou encore pour lancer des actions spécifiques (lire le coran par exemple)  15 minutes avant l'appel à la prière. Les actions sont à adapter en fonction de vote installation homeassistant.
 
-![Alt text](/immage1.jpg?raw=true "Optional Title")
-![Alt text](/image2.jpg?raw=true "Optional Title")
+![Alt text](/image1.png?raw=true "Optional Title")
+![Alt text](/image2.png?raw=true "Optional Title")
 @######################## English Version ################@
 
 The component permits to link homeassistant with the nearest mawaqit mosque in your neighborhood. Data of the mosque and prayer times are added as sensors to home assistant.
