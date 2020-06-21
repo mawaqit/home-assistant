@@ -16,23 +16,14 @@
         "description": "Multiple mosques available, select one:",
         "data": {
           "username": "[%key:common::config_flow::data::email%]",
-          "password": "[%key:common::config_flow::data::password%]", 	
+          "password": "[%key:common::config_flow::data::password%]",
           "server": "Server"
         }
-      }            
+      }
     },
     "abort": {
       "one_instance_allowed": "Only a single instance is necessary.",
       "no_mosque": "Sorry, no Mawaqit Mosque in your neighberhood"
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "calculation_method": "Prayer calculation method"
-        }
-      }
-    }
-  }
 }
