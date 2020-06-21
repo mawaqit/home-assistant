@@ -1,0 +1,140 @@
+homeassistant:
+
+
+sensor:
+  - platform: time_date
+    display_options:
+      - 'time'
+      - 'date_time'
+
+
+automation:
+  - alias: Prayer Time Magreb
+    initial_state: true
+    trigger:
+      platform: template
+      value_template: >
+        {% set a1 = states("sensor.date_time").split(" ")[1].split(":")[0]  %}
+        {% set b1 = states("sensor.date_time").split(":")[1] %}
+        {% set a = states("sensor.maghrib_mawaqit").split(" ")[1].split(":")[0] %}
+        {% set b = states("sensor.maghrib_mawaqit").split(":")[1] %}
+        {{ b | int == b1 | int and a | int == a1 | int  }}
+    action:
+      - service: mqtt.publish
+        data_template:
+          topic: 'commande/play/mini'
+          payload: "http://192.168.10.101/Quran/nofajr.mp3"
+
+
+
+  - alias: Prayer Time Asr
+    initial_state: true
+    trigger:
+      platform: template
+      value_template: >
+        {% set a1 = states("sensor.date_time").split(" ")[1].split(":")[0]  %}
+        {% set b1 = states("sensor.date_time").split(":")[1] %}
+        {% set a = states("sensor.asr_mawaqit").split(" ")[1].split(":")[0] %}
+        {% set b = states("sensor.asr_mawaqit").split(":")[1] %}
+        {{ b | int == b1 | int and a | int == a1 | int  }}
+    action:
+      - service: mqtt.publish
+        data_template:
+          topic: 'commande/play/mini'
+          payload: "http://192.168.10.101/Quran/nofajr.mp3"
+
+
+
+  - alias: Prayer Time Dhuhr
+    initial_state: true
+    trigger:
+      platform: template
+      value_template: >
+        {% set a1 = states("sensor.date_time").split(" ")[1].split(":")[0]  %}
+        {% set b1 = states("sensor.date_time").split(":")[1] %}
+        {% set a = states("sensor.dhuhr_mawaqit").split(" ")[1].split(":")[0] %}
+        {% set b = states("sensor.dhuhr_mawaqit").split(":")[1] %}
+        {{ b | int == b1 | int and a | int == a1 | int  }}
+    action:
+      - service: mqtt.publish
+        data_template:
+          topic: 'commande/play/mini'
+          payload: "http://192.168.10.101/Quran/nofajr.mp3"
+
+
+
+  - alias: Prayer Time Isha
+    initial_state: true
+    trigger:
+      platform: template
+      value_template: >
+        {% set a1 = states("sensor.date_time").split(" ")[1].split(":")[0]  %}
+        {% set b1 = states("sensor.date_time").split(":")[1] %}
+        {% set a = states("sensor.isha_mawaqit").split(" ")[1].split(":")[0] %}
+        {% set b = states("sensor.isha_mawaqit").split(":")[1] %}
+        {{ b | int == b1 | int and a | int == a1 | int  }}
+    action:
+      - service: mqtt.publish
+        data_template:
+          topic: 'commande/play/mini'
+          payload: "http://192.168.10.101/Quran/nofajr.mp3"
+
+
+
+  - alias: Prayer Time Fajr
+    initial_state: true
+    trigger:
+      platform: template
+      value_template: >
+        {% set a1 = states("sensor.date_time").split(" ")[1].split(":")[0]  %}
+        {% set b1 = states("sensor.date_time").split(":")[1] %}
+        {% set a = states("sensor.fajr_mawaqit").split(" ")[1].split(":")[0] %}
+        {% set b = states("sensor.fajr_mawaqit").split(":")[1] %}
+        {{ b | int == b1 | int and a | int == a1 | int  }}
+    action:
+      - service: mqtt.publish
+        data_template:
+          topic: 'commande/play/mini'
+          payload: "http://192.168.10.101/Quran/fajr.mp3"
+
+
+
+
+  - alias: Quran before Prayer Time
+    initial_state: true
+    trigger:
+      platform: template
+      value_template: >
+        {% set before1 = (as_timestamp(states('sensor.maghrib_mawaqit')) - 10 * 60) | timestamp_custom("%H:%M")   %}
+        {% set before2 = (as_timestamp(states('sensor.isha_mawaqit')) - 10 * 60) | timestamp_custom("%H:%M")   %}
+        {% set before3 = (as_timestamp(states('sensor.dhuhr_mawaqit')) - 10 * 60) | timestamp_custom("%H:%M")   %}
+        {% set before4 = (as_timestamp(states('sensor.fajr_mawaqit')) - 60 * 60) | timestamp_custom("%H:%M")   %}
+        {% set before5 = (as_timestamp(states('sensor.fajr_mawaqit')) - 10 * 60) | timestamp_custom("%H:%M")   %}
+        {% set b1 = states("sensor.date_time").split(" ")[1] | timestamp_custom("%H:%M") %}
+        {{ b1  == before1 or b1  == before2 or b1  == before3 or b1  == before4 or b1  == before5   }}
+    action:
+      - service: mqtt.publish
+        data_template:
+          topic: 'commande/play/mini'
+          payload: "http://192.168.10.101/Quran/Nasser/088.mp3"
+
+
+
+
+  - alias: Annonce before Prayer Time
+    initial_state: true
+    trigger:
+      platform: template
+      value_template: >
+        {% set before1 = (as_timestamp(states('sensor.maghrib_mawaqit')) - 1 * 60) | timestamp_custom("%H:%M")   %}
+        {% set before2 = (as_timestamp(states('sensor.isha_mawaqit')) - 1 * 60) | timestamp_custom("%H:%M")   %}
+        {% set before3 = (as_timestamp(states('sensor.dhuhr_mawaqit')) - 1 * 60) | timestamp_custom("%H:%M")   %}
+        {% set before4 = (as_timestamp(states('sensor.fajr_mawaqit')) - 1 * 60) | timestamp_custom("%H:%M")   %}
+        {% set before5 = (as_timestamp(states('sensor.fajr_mawaqit')) - 1 * 60) | timestamp_custom("%H:%M")   %}
+        {% set b1 = states("sensor.date_time").split(" ")[1] | timestamp_custom("%H:%M") %}
+        {{ b1  == before1 or b1  == before2 or b1  == before3 or b1  == before4 or b1  == before5   }}
+    action:
+      service: mqtt.publish
+      data_template:
+        topic: 'commande/say/mini'
+        payload: "la prochaine salat aura lieu dans une minute. soyez prets"
