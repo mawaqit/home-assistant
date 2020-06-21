@@ -1,0 +1,7 @@
+{
+  "domain": "mawaqit",
+  "name": "Mawaqit",
+  "documentation": "https://github.com/yac69/homeassistant-mawaqit",
+  "codeowners": ["@yac69"],
+  "config_flow": true
+}
