@@ -28,7 +28,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         entities.append(MawaqitPrayerTimeSensor(sensor_type, client))
 
     async_add_entities(entities, True)
-    
+
     name = 'My Mosque'
     sensor1 = [MyMosqueSensor(name, hass)]
     async_add_entities(sensor1, True)
@@ -108,16 +108,17 @@ class MyMosqueSensor(Entity):
         data = json.load(f)
         f.close()
         for (k, v) in data.items():
-        	self._attributes[k] = str(v)
-        	print("Key: " + k)
-        	print("Value: " + str(v))
+            if str(k) != "uuid" and str(k) != "id" and str(k) != "slug":
+                self._attributes[k] = str(v)
+                print("Key: " + k)
+                print("Value: " + str(v))
 
- 
-                
-                
-        
-  
-      
+
+
+
+
+
+
 
     @property
     def name(self):
@@ -127,7 +128,7 @@ class MyMosqueSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._attributes['name'] 
+        return self._attributes['name']
 
     @property
     def icon(self):
@@ -140,6 +141,3 @@ class MyMosqueSensor(Entity):
     def device_state_attributes(self):
         """Return attributes for the sensor."""
         return self._attributes
-
-
-
