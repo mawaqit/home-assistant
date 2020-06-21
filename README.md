@@ -4,6 +4,8 @@
 as-salāmu ʿalaykum ,
 
 English and Arabic versions below:
+
+
 @######################## French Version ################@
 
 Ce composent permet d'intégrer les données d'une mosquée mawaqit dans son installation homeassistant. Pour ce faire, Un compte mawaqit est nécessaire. Visitez https://mawaqit.net/ pour créer un compte.
