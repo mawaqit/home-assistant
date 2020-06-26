@@ -3,7 +3,7 @@
 ٱلسَّلَامُ عَلَيْكُمْ وَرَحْمَةُ ٱللَّٰهِ وَبَرَكَاتُهُ,
 as-salāmu ʿalaykum ,
 
-English and Arabic versions below:
+English and French versions below:
 
 
 @######################## French Version ################@
@@ -12,14 +12,15 @@ Ce composant permet d'intégrer les données de votre mosquée mawaqit dans votr
 
 Le composant est rajouté à homeassistant sous forme d'une integration. Pour l'installation, il faut copier le dossier mawaqit dans le répertoire custom_components de votre installation homeassistant (créez le s'il n'existe pas).
 
-Après le redémarrage de homeassistant, allez dans configuration>intégrations et cherchez "mawaqit". Entrez le login et mot de posse et cliquez sur soumettre. En se basant sur vos coordonnées latitude/longitude enregistrées dans homeassistant, le composant cherche les mosquées mawaqit dans un rayon de 20km proche de vous et vous demande de sélectionner votre mosquée préférée.
+Après le redémarrage de homeassistant, allez dans configuration > intégrations et cherchez "mawaqit". Entrez le login et mot de posse et cliquez sur soumettre. En se basant sur vos coordonnées GPS (latitude/longitude) enregistrées dans homeassistant, le composant cherche les mosquées mawaqit dans un rayon de 20km proche de vous et vous demande de sélectionner votre mosquée préférée.
 
 L'integration permet de rajouter 6 composants de type sensor: les 5 horaires des prières et un sensor sensor.my_mosque qui résume toutes les données de votre mosquée (adresse, site web, jumaa, iqama,...)
 
-Dans le fichier configuration.yaml, vous avez un exemple de code pour créer des automatismes dans homeassistant avec les sensors mawaqit notamment pour lancer l'athan à l'heure de la prière ou encore pour lancer des actions spécifiques (lire le coran par exemple)  15 minutes avant l'appel à la prière. Les actions sont à adapter en fonction de vote installation homeassistant.
+Dans le fichier configuration.yaml, vous avez un exemple de code pour créer des automatismes dans homeassistant avec les sensors mawaqit notamment pour lancer l'athan à l'heure de la prière ou encore pour lancer des actions spécifiques (lire le coran, augmenter le chauffage 10 min avant Al-fajr, ouvrer les volets lors du shuruq ...etc)  15 minutes avant l'appel à la prière. Les actions sont à adapter en fonction de vote installation homeassistant.
 
 ![Alt text](/image1.png?raw=true "Optional Title")
 ![Alt text](/image2.png?raw=true "Optional Title")
+
 @######################## English Version ################@
 
 The component permits to link homeassistant to the nearest mawaqit mosque in your neighborhood. Data of the mosque and prayer times are added as sensors to home assistant.
