@@ -6,7 +6,7 @@
         },
         "step": {
             "user": {
-                "description": "Get an account on https://mawaqit.net/ and enter your login/password below. Then, submit to choose your favourite mosque",
+                "description": "Register on https://mawaqit.net/ and connect below. Then, submit to choose your favourite mosque",
                 "title": "Set up Mawaqit Prayer Times"
             }
         }
