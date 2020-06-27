@@ -8,7 +8,7 @@ English and French versions below:
 
 @######################## French Version ################@
 
-Ce composant permet d'intégrer les données de votre mosquée mawaqit dans votre installation homeassistant. Pour ce faire, Un compte mawaqit https://mawaqit.net/ est nécessaire.
+Ce composant permet d'intégrer les données de votre mosquée mawaqit dans votre installation homeassistant. Pour ce faire, Un compte mawaqit https://mawaqit.net/ est nécessaire. Il est inspiré par le composant Islamic Prayer Time.
 
 Le composant est rajouté à homeassistant sous forme d'une integration. Pour l'installation, il faut copier le dossier mawaqit dans le répertoire custom_components de votre installation homeassistant (créez le s'il n'existe pas).
 
