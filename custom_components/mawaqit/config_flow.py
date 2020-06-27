@@ -12,7 +12,7 @@ from homeassistant.core import callback
 from .const import DOMAIN, NAME, CONF_SERVER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_API_KEY, CONF_TOKEN
 
-name_servers = ["connect to choose a mosque"]
+name_servers = ["Connect to choose a mosque"]
 
 
 class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -26,13 +26,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize."""
         self._errors = {}
-        
-        
-
-
-    
-    
-
+     
     def _show_setup_form(self, user_input=None, errors=None):
         """Show the setup form to the user."""
 
@@ -50,15 +44,13 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
                     ): str,
                     vol.Optional(
-                        CONF_SERVER, default="connect to choose mosque"): vol.In(name_servers),
+                        CONF_SERVER, default="Connect to choose mosque"): vol.In(name_servers),
                 }
             ),
             errors=errors or {},
         )
 
-
-
-
+    
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         global name_servers
@@ -157,14 +149,10 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         	if not os.path.exists('{}/www/mawaqit'.format(hassioDirectory)):
         		os.makedirs('{}/www/mawaqit'.format(hassioDirectory))
         	open('{}/www/mawaqit/image.jpg'.format(hassioDirectory), 'wb').write(r.content)
-        
-        
-
-
+      
         if not mosque_id:
             return self.async_abort(reason="no_mosque")
               
-        
         
         if self._async_current_entries():
             return self.async_abort(reason="one_instance_allowed")
