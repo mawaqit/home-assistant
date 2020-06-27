@@ -23,7 +23,9 @@ Dans le fichier configuration.yaml, vous avez un exemple de code pour créer des
 
 @######################## English Version ################@
 
-The component permits to link homeassistant to the nearest mawaqit mosque in your neighborhood. Data of the mosque and prayer times are added as sensors to home assistant.
+The component permits to link homeassistant to the nearest mawaqit mosque in your neighborhood. It is inspired from the Islamic Prayer Time homeassistant component.
+
+Data of the mosque and prayer times are added as sensors to home assistant.
 For the integration, an account at mawaqit is needed. More information on mawaqit is available at https://mawaqit.net/.
 
 The component is added as an integration to homeassistant. for its installation, you need to copy the mawaqit folder into  the custom_components directory of your homeassistant installation (create it if it does not exist).
