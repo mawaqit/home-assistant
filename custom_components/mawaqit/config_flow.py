@@ -112,7 +112,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         	with open('{}/data/all_mosquee.txt'.format(current_dir), "r") as f:
         		distros_dict = json.load(f)
         	for distro in distros_dict:
-        		name_servers.extend([distro['name']])
+        		name_servers.extend([distro['label']])
         		uuid_servers.extend([distro['uuid']])
         	return self._show_setup_form(user_input, None)
         	username = user_input[CONF_USERNAME]
@@ -128,10 +128,10 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         with open('{}/data/all_mosquee.txt'.format(current_dir), "r") as f:
         	distros_dict = json.load(f)
         for entry in distros_dict:
-        	if mosque_name == entry ['name']:
+        	if mosque_name == entry ['label']:
         		mosque_id = entry ['uuid']
         		mosque_image = entry ['image']
-        my_gen = (item for item in distros_dict if item['name'] == mosque_name)
+        my_gen = (item for item in distros_dict if item['label'] == mosque_name)
         for item in my_gen:
         	print(item)
         	with open('{}/data/my_mosquee.txt'.format(current_dir), "w") as outfile:
