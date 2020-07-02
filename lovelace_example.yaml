@@ -1,0 +1,25 @@
+# this is the lovelace card code used to show the times and the my_mosque sensor
+entities:
+  - entity: sensor.my_mosque
+    name: Ma Mosquée
+  - entity: sensor.fajr_mawaqit
+    format: time
+    name: Fajr
+  - entity: sensor.dhuhr_mawaqit
+    format: time
+    name: Dhuhr
+  - entity: sensor.asr_mawaqit
+    format: time
+    name: Asr
+  - entity: sensor.maghrib_mawaqit
+    format: time
+    name: Maghrib
+  - entity: sensor.isha_mawaqit
+    format: time
+    name: Isha
+header:
+  image: /local/mawaqit/image.jpg?v1
+  type: picture
+show_header_toggle: false
+title: Mes mawaqits
+type: entities
