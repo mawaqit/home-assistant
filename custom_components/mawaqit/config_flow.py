@@ -8,9 +8,14 @@ import json
 from homeassistant import config_entries
 from homeassistant.core import callback
 
+
+
+import homeassistant.helpers.config_validation as cv
+
+
 # pylint: disable=unused-import
 from .const import DOMAIN, NAME, CONF_SERVER
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_API_KEY, CONF_TOKEN
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_PASSWORD, CONF_USERNAME, CONF_API_KEY, CONF_TOKEN
 
 name_servers = ["Connect to choose a mosque"]
 
@@ -23,9 +28,11 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
 
+
     def __init__(self):
         """Initialize."""
         self._errors = {}
+
 
     def _show_setup_form(self, user_input=None, errors=None):
         """Show the setup form to the user."""
@@ -43,6 +50,12 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(
                         CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
                     ): str,
+                    vol.Optional(
+                        CONF_LATITUDE, default=self.hass.config.latitude
+                    ): cv.latitude,
+                    vol.Optional(
+                        CONF_LONGITUDE, default=self.hass.config.longitude
+                    ): cv.longitude,
                     vol.Optional(
                         CONF_SERVER, default="Connect to choose mosque"): vol.In(name_servers),
                 }
@@ -64,7 +77,11 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
+        lat = user_input[CONF_LATITUDE]
+        longi = user_input[CONF_LONGITUDE]
         server = user_input[CONF_SERVER]
+
+
 
         url = 'https://mawaqit.net/api/2.0/me'
         response = get(url, auth=(username, password))
@@ -83,16 +100,24 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         headers = {'Content-Type': 'application/json',
              'Api-Access-Token': format(api)}
 
-        lat = self.hass.config.latitude
-        longi = self.hass.config.longitude
+
+
+
+
+
+        #lat =  self.hass.config.latitude #
+        #longi =  self.hass.config.longitude #
+
+
 
 
         params = {
             "lat": lat,
-            "lon": longi,
+            "lon": longi
         }
-        api_url0 = '{0}/mosque/search'.format(api_url_base)
+        api_url0 = 'https://mawaqit.net/api/2.0/mosque/search'
         response0 = requests.get(api_url0, params=params, headers=headers)
+        all_mosques = response0.text
         if not bool(response0.json()):
         	return self.async_abort(reason="no_mosque")
 
