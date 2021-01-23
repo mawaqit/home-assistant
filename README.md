@@ -1,4 +1,5 @@
-# homeassistant-mawaqit
+# A Mawaqit component for Home Assistant
+## Smart home, Smart mosque  
 
 ٱلسَّلَامُ عَلَيْكُمْ وَرَحْمَةُ ٱللَّٰهِ وَبَرَكَاتُهُ,
 as-salāmu ʿalaykum ,
