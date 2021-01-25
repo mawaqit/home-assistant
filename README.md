@@ -85,7 +85,3 @@ Après le redémarrage de homeassistant, allez dans configuration > intégration
 L'integration permet de rajouter 6 composants de type sensor: les 5 horaires des prières et un sensor sensor.my_mosque qui résume toutes les données de votre mosquée (adresse, site web, jumua, iqama,...etc)
 
 Dans le fichier configuration.yaml, vous avez un exemple de code pour créer des automatismes dans homeassistant avec les sensors mawaqit notamment pour lancer l'athan à l'heure de la prière ou encore pour lancer des actions spécifiques (lire le coran, augmenter le chauffage 10 min avant Al-fajr, ouvrir les volets lors du shuruq ...etc). Les actions sont à adapter en fonction de vote installation homeassistant.
-
-
-![Alt text](/image1.png?raw=true "Optional Title")
-![Alt text](/image2.png?raw=true "Optional Title")
