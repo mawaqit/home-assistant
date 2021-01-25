@@ -1,13 +1,11 @@
 # A Mawaqit component for Home Assistant
-## Smart home, Smart mosque  
+## Smart home, Smart mosque : automate things based on prayer times
 
-ٱلسَّلَامُ عَلَيْكُمْ وَرَحْمَةُ ٱللَّٰهِ وَبَرَكَاتُهُ,
-as-salāmu ʿalaykum ,
+ٱلسَّلَامُ عَلَيْكُمْ وَرَحْمَةُ ٱللَّٰهِ وَبَرَكَاتُهُ
 
-English and French versions below:
+Essalāmu ʿalaykum
 
-
-@######################## French Version ################@
+### Français
 
 Ce composant permet d'intégrer les données de votre mosquée mawaqit dans votre installation homeassistant. Pour ce faire, Un compte mawaqit https://mawaqit.net/ est nécessaire.
 
@@ -19,10 +17,7 @@ L'integration permet de rajouter 6 composants de type sensor: les 5 horaires des
 
 Dans le fichier configuration.yaml, vous avez un exemple de code pour créer des automatismes dans homeassistant avec les sensors mawaqit notamment pour lancer l'athan à l'heure de la prière ou encore pour lancer des actions spécifiques (lire le coran, augmenter le chauffage 10 min avant Al-fajr, ouvrer les volets lors du shuruq ...etc)  15 minutes avant l'appel à la prière. Les actions sont à adapter en fonction de vote installation homeassistant.
 
-![Alt text](/image1.png?raw=true "Optional Title")
-![Alt text](/image2.png?raw=true "Optional Title")
-
-@######################## English Version ################@
+### English
 
 The component permits to link homeassistant to the nearest mawaqit mosque in your neighborhood.
 
@@ -37,4 +32,62 @@ After restarting homeassistant, you search for "mawaqit" within the homeassistan
 
 In the configuration.yaml file, you have an example of needed code and automations to interact with the mawaqit sensors. For instance, you have the athan automation at prayer time or specefic actions to trigger few minutes before the athan call. The actions specified in the automations are to adjust based on your homeassistant installation
 
-@######################## Arabic Version ################@
+
+### Automation examples
+
+/config/configuration.yaml
+
+```yaml
+homeassistant:
+sensor:
+  platform: time_date
+  display_options:
+    - 'time'
+    - 'date_time'
+```    
+
+/config/automations.yaml
+
+```yalm
+- id: 'fajr_wakeup'
+  alias: Turn on bedroom light and alexa routine, 20 min before fajr adhan
+  trigger:
+  - platform: template
+    value_template: >
+      {% set before = (as_timestamp(states("sensor.fajr_mawaqit")) - 20 * 60) | timestamp_custom("%H:%M") %} 
+      {% set time = states("sensor.date_time").split(" ")[1] | timestamp_custom("%H:%M") %}
+      {{ time == before }}
+  action:
+  # turn on the light of the bedroom
+  - service: switch.turn_on
+    entity_id: switch.sonoff_1000814ec9 # the entity id of the sonoff switch, can be an other entity
+  # play a routine on alexa
+  - service: media_player.play_media
+    entity_id: media_player.zehhaf_s_echo_dot # the entity id of your alexa device
+    data:
+      media_content_id: bonjour # the routine name configured on alexa mobile app, it can be a sequence of actions, like flash info, weather ...etc
+      media_content_type: routine
+  initial_state: true
+  mode: single      
+
+# Play adhan on a connected speaker
+- id: 'isha_adhan'
+  alias: Isha adhan
+  trigger:
+    platform: template
+    value_template: >
+      {% set isha_time = as_timestamp(states("sensor.isha_mawaqit")) | timestamp_custom("%H:%M") %} 
+      {% set time = states("sensor.date_time").split(" ")[1] | timestamp_custom("%H:%M") %}
+      {{ time == isha_time }}
+  action:
+    - service: mqtt.publish
+      data_template:
+        topic: 'commande/play/mini'
+        payload: 'http://192.168.10.101/mp3/adhan.mp3' # an http url to mp3 file
+  initial_state: true
+  mode: single
+```
+
+
+![Alt text](/image1.png?raw=true "Optional Title")
+![Alt text](/image2.png?raw=true "Optional Title")
