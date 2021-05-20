@@ -1,22 +1,17 @@
 """Platform to retrieve Mawaqit prayer times information for Home Assistant."""
-import logging
 
-from datetime import datetime, timedelta
-import json
-import os
-import requests
-from homeassistant.util import Throttle
-TIME_BETWEEN_UPDATES = timedelta(minutes=60)
-
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
 from .const import DATA_UPDATED, DOMAIN, PRAYER_TIMES_ICON, SENSOR_TYPES
 
-_LOGGER = logging.getLogger(__name__)
-
+import json
+import os
+#from datetime import datetime, timedelta
+#from homeassistant.util import Throttle
+#TIME_BETWEEN_UPDATES = timedelta(minutes=60)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Mawaqit prayer times sensor platform."""
@@ -25,16 +20,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     entities = []
     for sensor_type in SENSOR_TYPES:
-        entities.append(MawaqitPrayerTimeSensor(sensor_type, client))
+        if sensor_type != "Mosque":
+            entities.append(MawaqitPrayerTimeSensor(sensor_type, client))
 
     async_add_entities(entities, True)
-
     name = 'My Mosque'
     sensor1 = [MyMosqueSensor(name, hass)]
     async_add_entities(sensor1, True)
 
-
-class MawaqitPrayerTimeSensor(Entity):
+class MawaqitPrayerTimeSensor(SensorEntity):
     """Representation of an Mawaqit prayer time sensor."""
 
     def __init__(self, sensor_type, client):
@@ -57,13 +51,21 @@ class MawaqitPrayerTimeSensor(Entity):
         """Icon to display in the front end."""
         return PRAYER_TIMES_ICON
 
+   # @property
+   # def state(self):
+   #     """Return the state of the sensor."""
+   #     return (
+   #         self.client.prayer_times_info.get(self.sensor_type)
+   #         .astimezone(dt_util.UTC)
+   #         .isoformat()
+   #     )
+
     @property
     def state(self):
         """Return the state of the sensor.  .astimezone(dt_util.UTC)"""
         return (
             self.client.prayer_times_info.get(self.sensor_type)
         )
-
     @property
     def should_poll(self):
         """Disable polling."""
@@ -81,13 +83,11 @@ class MawaqitPrayerTimeSensor(Entity):
         )
 
 
-
-
-class MyMosqueSensor(Entity):
-    """Representation of a Tautulli sensor."""
+class MyMosqueSensor(SensorEntity):
+    """Representation of a mosque sensor."""
 
     def __init__(self, name, hass):
-        """Initialize the Tautulli sensor."""
+        """Initialize the mosque sensor."""
         self.hass = hass
         self._attributes = {}
         self._name = name
@@ -100,7 +100,7 @@ class MyMosqueSensor(Entity):
 
 
 
-    @Throttle(TIME_BETWEEN_UPDATES)
+    #@Throttle(TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Get the latest data from the Mawaqit API."""
         current_dir = os.path.dirname(os.path.realpath(__file__))
@@ -112,11 +112,6 @@ class MyMosqueSensor(Entity):
                 self._attributes[k] = str(v)
                 print("Key: " + k)
                 print("Value: " + str(v))
-
-
-
-
-
 
 
 

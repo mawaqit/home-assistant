@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "Mawaqit",
-        "description": "Get a Mawaqit account at https://mawaqit.net/ and enter your credentials. Then, Submit to validate and choose your favourite mosque.",
+        "description": "Register on https://mawaqit.net/ and connect below. The nearest mosque to your house will be chosen but you can change it later on in the addon parameters",
         "data": {
           "username": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]",
@@ -26,4 +26,14 @@
       "no_mosque": "Sorry, no Mawaqit Mosque in your neighberhood"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "calculation_method": "Change your favourite mosque"
+        }
+      }
+    }
+  }
 }
+
