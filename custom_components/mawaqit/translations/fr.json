@@ -6,7 +6,7 @@
         },
         "step": {
             "user": {
-                "description": "Inscvrivez-vous sur https://mawaqit.net/ puis connectez-vous ci-dessous. Soumettez afin de pouvoir choisir votre mosqu\u00e9e:",
+                "description": "Inscvrivez-vous sur https://mawaqit.net/ puis connectez-vous ci-dessous. La mosqu\u00e9e la plus proche sera chosie mais vous pouvez la changer ult\u00e9rieurement dans les Param\u00e9tres du plugin Mawaqit:",
                 "title": "Installation de Mawaqit"
             }
         }
@@ -15,7 +15,7 @@
         "step": {
             "init": {
                 "data": {
-                    "calculation_method": "Prayer calculation method"
+                    "calculation_method": "Changer votre mosqu\u00e9e "
                 }
             }
         }

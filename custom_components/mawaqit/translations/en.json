@@ -1,24 +1,24 @@
 {
-    "config": {
-        "abort": {
-            "one_instance_allowed": "Only a single instance is necessary.",
-            "no_mosque": "Sorry, no Mawaqit mosque in the neighborhood."
-        },
-        "step": {
-            "user": {
-                "description": "Register on https://mawaqit.net/ and connect below. Then, submit to choose your favourite mosque",
-                "title": "Set up Mawaqit Prayer Times"
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "calculation_method": "Prayer calculation method"
-                }
-            }
-        }
-    },
-    "title": "Mawaqit"
+  "config": {
+      "abort": {
+          "one_instance_allowed": "Only a single instance is necessary.",
+          "no_mosque": "Sorry, no Mawaqit mosque in the neighborhood."
+      },
+      "step": {
+          "user": {
+              "description": "Register on https://mawaqit.net/ and connect below. The nearest mosque to your house will be chosen but you can change it later on in the addon parameters",
+              "title": "Set up Mawaqit Prayer Times"
+          }
+      }
+  },
+  "options": {
+      "step": {
+          "init": {
+              "data": {
+                  "calculation_method": "Change your favourite mosque"
+              }
+          }
+      }
+  },
+  "title": "Mawaqit"
 }
