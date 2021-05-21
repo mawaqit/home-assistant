@@ -9,9 +9,9 @@ from .const import DATA_UPDATED, DOMAIN, PRAYER_TIMES_ICON, SENSOR_TYPES
 
 import json
 import os
-#from datetime import datetime, timedelta
-#from homeassistant.util import Throttle
-#TIME_BETWEEN_UPDATES = timedelta(minutes=60)
+from datetime import datetime, timedelta
+from homeassistant.util import Throttle
+TIME_BETWEEN_UPDATES = timedelta(minutes=60)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Mawaqit prayer times sensor platform."""
@@ -100,7 +100,7 @@ class MyMosqueSensor(SensorEntity):
 
 
 
-    #@Throttle(TIME_BETWEEN_UPDATES)
+    @Throttle(TIME_BETWEEN_UPDATES)   # update the mosque data every 60 minutes to check news
     async def async_update(self):
         """Get the latest data from the Mawaqit API."""
         current_dir = os.path.dirname(os.path.realpath(__file__))
