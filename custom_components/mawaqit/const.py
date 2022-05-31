@@ -1,4 +1,4 @@
-"""Constants for the Mawaqit Prayer component."""
+"""Constants for the Islamic Prayer component."""
 DOMAIN = "mawaqit_prayer_times"
 NAME = "Mawaqit Prayer Times"
 PRAYER_TIMES_ICON = "mdi:calendar-clock"

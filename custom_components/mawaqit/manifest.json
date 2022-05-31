@@ -1,8 +1,8 @@
 {
-  "domain": "mawaqit",
+  "domain": "mawaqit_prayer_times",
   "name": "Mawaqit Prayer Times",
   "documentation": "https://github.com/mawaqit/home-assistant",
-  "requirements": ["mawaqit_times_calculator>=0.0.4"],
+  "requirements": ["mawaqit_times_calculator>=0.0.4","pymysql"],
   "codeowners": ["@mawaqit"],
   "config_flow": true,
   "iot_class": "cloud_polling",

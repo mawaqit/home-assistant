@@ -1,1 +1,1 @@
-CALC_METHODS = ['مسجد التوبة - Lyon', 'مسجد الروضة - Lyon', 'El AMINE - Lyon', 'Mosquée Al Houda مسجد الهدى - Lyon', 'مسجد قباء Mosquée Koba - Lyon', 'Mosquee Al Sakina - Caluire', 'مسجد أبو بكر الصديق - Lyon', 'مسجد براش - Lyon', 'مسجد مصعب بن عمير - Mosaab ibn Omayer - Lyon', 'مسجد الوسيلة - El - Wassila - Lyon']
+CALC_METHODS = ['مسجد  الهدى - Villefranche-sur-saone', 'AFTV  DIYANET VILLEFRANCHE CAMISI', 'مسجد التقوى mosquée Attakwa - Villefranche-sur-Saône', 'مسجد النور - Belleville', 'مسجد بلال - Neuville-Sur-Saone']
