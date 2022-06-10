@@ -39,8 +39,8 @@ sensor:
   trigger:
   - platform: template
     value_template: >
-      {% set before = (as_timestamp(states("sensor.fajr_mawaqit")) - 20 * 60) | timestamp_custom("%H:%M") %} 
-      {% set time = states("sensor.date_time").split(" ")[1] | timestamp_custom("%H:%M") %}
+      {% set before = (as_timestamp(states("sensor.fajr_mawaqit")) - 20 * 60) | timestamp_custom("%H:%M", True) %} 
+      {% set time = states("sensor.date_time").split(" ")[1] %}
       {{ time == before }}
   action:
   # turn on the light of the bedroom
@@ -61,8 +61,8 @@ sensor:
   trigger:
     platform: template
     value_template: >
-      {% set isha_time = as_timestamp(states("sensor.isha_mawaqit")) | timestamp_custom("%H:%M") %} 
-      {% set time = states("sensor.date_time").split(" ")[1] | timestamp_custom("%H:%M") %}
+      {% set isha_time = as_timestamp(states("sensor.isha_mawaqit")) | timestamp_custom("%H:%M", True) %} 
+      {% set time = states("sensor.date_time").split(" ")[1]  %}
       {{ time == isha_time }}
   action:
     - service: mqtt.publish
