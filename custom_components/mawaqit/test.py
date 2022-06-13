@@ -1,25 +1,32 @@
-import os
-os.system('pip3 install mawaqit_times_calculator')
-from mawaqit_times_calculator import MawaqitTimesCalculator
+import asyncio
+from datetime import datetime, timedelta
+
+from mawaqit import MawaqitClient
+
+
+USERNAME = ""
+PASSWORD = ""
+latitude = "45.764043"
+longitude = "4.835659"
+token= ''
+mosque_id=''
+
+async def main() -> None:
+    async with MawaqitClient(latitude, longitude, mosque_id, USERNAME, PASSWORD, token ) as client:
+        api = await client.apimawaqit()
+        print(api)
+        da = await client.all_mosques_neighberhood()
+        for i in range(len(da)):
+            print(da[i]["uuid"])
+        db = await client.fetch_prayer_times()
+        print (db)
+
+
+asyncio.run(main())     
 
 
 
-mawaqit_login = "login here"
-mawaqit_password = "password here"
-mawaqit_latitude = "45.764043"
-mawaqit_longitude = "4.835659"
 
 
 
- 
-calc = MawaqitTimesCalculator(
-    mawaqit_latitude,
-    mawaqit_longitude,
-    '',
-    mawaqit_login,
-    mawaqit_password,
-    ''
-        )
 
-print(calc.apimawaqit())
-print(calc.fetch_prayer_times())
