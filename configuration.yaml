@@ -7,6 +7,15 @@ sensor:
       - 'time'
       - 'date_time'
 
+input_datetime:
+  next_salat_time:
+    name: next salat time
+    has_date: true
+    has_time: true
+  next_prep_salat_time: # 10 minutes before prayer call, cf. the blueprints to change it
+    name: next prep salat time
+    has_date: true
+    has_time: true
 
 automation:
   - alias: Prayer Time Magreb
