@@ -5,6 +5,7 @@ PRAYER_TIMES_ICON = "mdi:calendar-clock"
 
 SENSOR_TYPES = {
     "Fajr": "mawaqit",
+    "Shurouq": "mawaqit",
     "Sunrise": "time",
     "Dhuhr": "mawaqit",
     "Asr": "mawaqit",
@@ -12,6 +13,14 @@ SENSOR_TYPES = {
     "Isha": "mawaqit",
     "Midnight": "time",
     "Mosque": "mawaqit",
+    "Mosque_address": "mawaqit",
+    "Mosquee_site": "mawaqit", 
+    "Mosquee_image": "mawaqit",   
+    "Fajr_Iqama": "mawaqit",  
+    "Dhuhr_Iqama": "mawaqit",   
+    "Asr_Iqama": "mawaqit",    
+    "Maghrib_Iqama": "mawaqit",  
+    "Isha_Iqama": "mawaqit",                  
 }
 
 CONF_CALC_METHOD = "calculation_method"
@@ -27,3 +36,5 @@ CONF_SERVER = "server"
 USERNAME = "user"
 
 PASSWORD = "password"
+
+API = "api"

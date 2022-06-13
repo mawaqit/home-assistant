@@ -4,7 +4,10 @@ import logging
 import os
 import json
 import sys
-from mawaqit_times_calculator import MawaqitTimesCalculator
+from datetime import datetime
+#from mawaqit_times_calculator import MawaqitClient, exceptions
+from .mawaqit import MawaqitClient, BadCredentialsException
+
 from requests.exceptions import ConnectionError as ConnError
 import voluptuous as vol
 
@@ -14,8 +17,11 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later, async_track_point_in_time
 import homeassistant.util.dt as dt_util
+from homeassistant.helpers import aiohttp_client
+
 
 from .const import (
+    API,
     CONF_CALC_METHOD,
     DATA_UPDATED,
     DEFAULT_CALC_METHOD,
@@ -73,7 +79,10 @@ async def async_setup_entry(hass, config_entry):
         return False
 
     hass.data.setdefault(DOMAIN, client)
+
     return True
+
+
 
 
 async def async_unload_entry(hass, config_entry):
@@ -111,93 +120,81 @@ class MawaqitPrayerClient:
 
         mosquee = self.config_entry.options.get("calculation_method")
 
- 
-        calc = MawaqitTimesCalculator(
-            mawaqit_latitude,
-            mawaqit_longitude,
-            '',
-            mawaqit_login,
-            mawaqit_password,
-            ''
-        )
 
-        
+
 
 
         current_dir = os.path.dirname(os.path.realpath(__file__))
-        if not os.path.exists('{}/data'.format(current_dir)):
-          os.makedirs('{}/data'.format(current_dir))
-
-
-
-
-        text_file = open('{}/data/all_mosquee.txt'.format(current_dir), "w")
-        json.dump(calc.all_mosques_neighberhood(), text_file)
-        text_file.close()
 
        
 
         name_servers=[]
         uuid_servers=[]
         CALC_METHODS=[]
-        with open('{}/data/all_mosquee.txt'.format(current_dir), "r") as f:
+        with open('{}/data/all_mosquee_NN.txt'.format(current_dir), "r") as f:
           distros_dict = json.load(f)
         for distro in distros_dict:
           name_servers.extend([distro["label"]])
           uuid_servers.extend([distro["uuid"]])
           CALC_METHODS.extend([distro["label"]])
 
-        no_mawaqit_mosque = False
-        if len(uuid_servers)==0:
-            #text_file = open('{}/data/test5.py'.format(current_dir), "w")
-            #n = text_file.write("pas de mosque")
-            #text_file.close()
-            uuid_servers=["no mosque in neighborhood"]
-            CALC_METHODS=["no mosque in neighborhood"]
-            name_servers=["no mosque in neighborhood"]
-            no_mawaqit_mosque = True
-            
 
 
-        text_file = open('{}/mosq_list.py'.format(current_dir), "w")
-        n = text_file.write("CALC_METHODS = " + str(CALC_METHODS))
-        text_file.close() 
  
-        #text_file = open('{}/mosq_list_uuid.py'.format(current_dir), "w")
-        #n = text_file.write("uuid = " + str(uuid_servers))
-        #text_file.close() 
         if mosquee=="nearest" or mosquee=="no mosque in neighborhood" :
             indice = 0
         else:
             indice = name_servers.index(mosquee)
         mosque_id = uuid_servers[indice]
-        #text_file = open('{}/data/indice.txt'.format(current_dir), "w")
-        #n = text_file.write(str(mosque_id))
-        #text_file.close()
 
-        if no_mawaqit_mosque == False:
-            text_file = open('{}/data/my_mosquee.txt'.format(current_dir), "w")
-            json.dump(calc.all_mosques_neighberhood()[indice], text_file)
-            text_file.close()
-            calc = MawaqitTimesCalculator(
-            self.hass.config.latitude,
-            self.hass.config.longitude,
-            mosque_id,
-            mawaqit_login,
-            mawaqit_password, '',
-            )
-            text_file = open('{}/data/pray_time.txt'.format(current_dir), "w")
-            n = text_file.write(str(calc.fetch_prayer_times()))
-            text_file.close() 
-            return calc.fetch_prayer_times()            
-        else:
-            data = {"uuid": "neighborhood", "label": "no mawaqit mosque in neighborhood", "name": "no mawaqit mosque in neighborhood", "id": 000, "slug": "no-mosque" }
-            text_file = open('{}/data/my_mosquee.txt'.format(current_dir), "w")
-            json.dump(data, text_file)
-            text_file.close()
-            data1 = {'Fajr': '00:00', 'Sunrise': '00:00', 'Dhuhr': '00:00', 'Asr': '00:00', 'Sunset': '00:00', 'Maghrib': '00:00', 'Isha': '00:00', 'Imsak': '00:00', 'Midnight': '00:00', 'Jumua': '00:00', 'Shuruq': '00:00'}
-            return data1
 
+        #update my_mosque file whenever the user changes it in the option
+        f = open('{dir}/data/all_mosquee_NN.txt'.format(dir=current_dir ))
+        data = json.load(f)
+        text_file = open('{}/data/my_mosquee_NN.txt'.format(current_dir), "w")
+        json.dump(data[indice], text_file)
+        text_file.close()
+        
+        #readiding prayer times 
+        f = open('{dir}/data/pray_time_{name}.txt'.format(dir=current_dir, name=mosque_id ))
+        data = json.load(f)
+        calendar = data["calendar"]
+        today = datetime.today()
+        index_month = month = today.month -1
+        month_times = calendar[index_month]
+        index_day = today.day
+        day_times = month_times[str(index_day)]
+        salat_name = ["Fajr", "Shurouq", "Dhuhr", "Asr", "Maghrib", "Isha" ]
+        res = {salat_name[i]: day_times[i] for i in range(len(salat_name))}
+        res['Midnight']=(datetime.strptime(day_times[5], '%H:%M') + timedelta(minutes=1)).strftime("%H:%M") #1 minutes after isha to update 
+        # if call of the integration is done after isha time, provide d+1 data
+        maintenant  = today.time().strftime("%H:%M")
+        if datetime.strptime(day_times[5], '%H:%M') < datetime.strptime(maintenant, '%H:%M'):
+            index_day = today.day + 1
+            day_times = month_times[str(index_day)]
+            res = {salat_name[i]: day_times[i] for i in range(len(salat_name))}
+            res['Midnight']=(datetime.strptime(day_times[5], '%H:%M') + timedelta(minutes=1)).strftime("%H:%M") #1 minutes after isha to update 
+        # complete the dic with mosque detail
+        res['Mosque_name']=data["label"]
+        res['Mosque_address']=data["localisation"]
+        res['Mosque_site']=data["url"]    
+        res['Mosque_image']=data["image"]
+
+        #Iqama timing
+        iqamaCalendar = data["iqamaCalendar"]
+        iqama= iqamaCalendar[index_month][str(index_day)]
+        iqama=[int(s.replace("+", "")) for s in iqama]
+        salat=[datetime.strptime(s, '%H:%M') for s in day_times]
+        del salat[1] #no iqama for shurouq
+        iqama_list = []
+        for (item1, item2) in zip(salat, iqama):
+            iqama_list.append((item1+ timedelta(minutes=item2)).strftime("%H:%M"))             
+        iqama_name = ["Fajr_Iqama", "Dhuhr_Iqama", "Asr_Iqama", "Maghrib_Iqama", "Isha_Iqama" ]
+        res1 = {iqama_name[i]: iqama_list[i] for i in range(len(iqama_name))}
+        res2 = {**res, **res1}
+        return res2
+
+        
 
     
 
@@ -212,7 +209,7 @@ class MawaqitPrayerClient:
         expired.
 
         Calculated Midnight: The Mawaqit midnight.
-        Traditional Midnight: 12:00AM
+        Traditional Midnight: Isha time + 1 minute
 
         Update logic for prayer times:
 
@@ -239,7 +236,7 @@ class MawaqitPrayerClient:
         midnight_dt = self.prayer_times_info["Midnight"]
 
         if now > dt_util.as_utc(midnight_dt):
-            next_update_at = midnight_dt + timedelta(days=1, minutes=1)
+            next_update_at = midnight_dt + timedelta(days=0, minutes=1)
             _LOGGER.debug(
                 "Midnight is after day the changes so schedule update for after Midnight the next day"
             )
@@ -262,7 +259,7 @@ class MawaqitPrayerClient:
                 self.get_new_prayer_times
             )
             self.available = True
-        except (exceptions.InvalidResponseError, ConnError):
+        except (BadCredentialsException, ConnError):
             self.available = False
             _LOGGER.debug("Error retrieving prayer times")
             async_call_later(self.hass, 60, self.async_update)
@@ -283,8 +280,9 @@ class MawaqitPrayerClient:
 
         try:
             await self.hass.async_add_executor_job(self.get_new_prayer_times)
-        except (exceptions.InvalidResponseError, ConnError) as err:
+        except (BadCredentialsException, ConnError) as err:
             raise ConfigEntryNotReady from err
+
 
         await self.async_update()
         self.config_entry.add_update_listener(self.async_options_updated)
