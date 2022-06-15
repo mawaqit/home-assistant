@@ -18,6 +18,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later, async_track_point_in_time
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers import aiohttp_client
+from datetime import datetime, timedelta
 
 
 from .const import (
@@ -166,19 +167,36 @@ class MawaqitPrayerClient:
         day_times = month_times[str(index_day)]
         salat_name = ["Fajr", "Shurouq", "Dhuhr", "Asr", "Maghrib", "Isha" ]
         res = {salat_name[i]: day_times[i] for i in range(len(salat_name))}
-        res['Midnight']=(datetime.strptime(day_times[5], '%H:%M') + timedelta(minutes=1)).strftime("%H:%M") #1 minutes after isha to update 
+        res['next_mawaqit']=(datetime.strptime(day_times[4], '%H:%M') + timedelta(minutes=1)).strftime("%H:%M") #1 minutes after isha to update 
         # if call of the integration is done after isha time, provide d+1 data
         maintenant  = today.time().strftime("%H:%M")
-        if datetime.strptime(day_times[5], '%H:%M') < datetime.strptime(maintenant, '%H:%M'):
+        if datetime.strptime(day_times[4], '%H:%M') < datetime.strptime(maintenant, '%H:%M'):
             index_day = today.day + 1
             day_times = month_times[str(index_day)]
             res = {salat_name[i]: day_times[i] for i in range(len(salat_name))}
-            res['Midnight']=(datetime.strptime(day_times[5], '%H:%M') + timedelta(minutes=1)).strftime("%H:%M") #1 minutes after isha to update 
+            res['next_mawaqit']=(datetime.strptime(day_times[4], '%H:%M') + timedelta(minutes=1)).strftime("%H:%M") #1 minutes after isha to update 
         # complete the dic with mosque detail
-        res['Mosque_name']=data["label"]
-        res['Mosque_address']=data["localisation"]
-        res['Mosque_site']=data["url"]    
-        res['Mosque_image']=data["image"]
+        #res['Mosque_name']=data["label"]
+        #res['Mosque_address']=data["localisation"]
+        #res['Mosque_site']=data["url"]    
+        #res['Mosque_image']=data["image"]
+        
+        
+        day_times = month_times[str(index_day)]
+        day_times_tomorrow = month_times[str(index_day+1)]
+        maintenant  = today.time().strftime("%H:%M")
+        tomorrow=(datetime.today()+timedelta(days=1)).strftime("%Y-%m-%d")
+        aujourdhui=(datetime.today()+timedelta(days=0)).strftime("%Y-%m-%d")
+        print(tomorrow)
+        liste=[]
+        for j in range(len(salat_name)):
+            if datetime.strptime(day_times[j], '%H:%M') < datetime.strptime(maintenant, '%H:%M'):
+                pray=tomorrow + " " + day_times_tomorrow[j] +":00"
+            else:
+                pray=aujourdhui + " " + day_times[j] +":00"
+            liste.append(pray)
+            
+        res['next_mawaqit']=min(liste).split(" ",1)[1].rsplit(':', 1)[0]  
 
         #Iqama timing
         iqamaCalendar = data["iqamaCalendar"]
@@ -232,8 +250,23 @@ class MawaqitPrayerClient:
         _LOGGER.debug("Scheduling next update for Mawaqit prayer times")
 
         now = dt_util.utcnow()
+        now = dt_util.now()
 
-        midnight_dt = self.prayer_times_info["Midnight"]
+        midnight_dt = self.prayer_times_info["next_mawaqit"]
+        Fajr_dt = self.prayer_times_info["Fajr"]
+        Dhuhr_dt = self.prayer_times_info["Dhuhr"]
+        Asr_dt = self.prayer_times_info["Asr"]
+        Maghrib_dt = self.prayer_times_info["Maghrib"]
+        Isha_dt = self.prayer_times_info["Isha"]
+        liste=[]
+        liste.append(Fajr_dt)
+        liste.append(Dhuhr_dt)
+        liste.append(Asr_dt)
+        liste.append(Maghrib_dt)
+        liste.append(Isha_dt)
+        midnight_dt = min(liste)
+        
+
 
         if now > dt_util.as_utc(midnight_dt):
             next_update_at = midnight_dt + timedelta(days=0, minutes=1)
@@ -245,6 +278,7 @@ class MawaqitPrayerClient:
                 "Midnight is before the day changes so schedule update for the next start of day"
             )
             next_update_at = dt_util.start_of_local_day(now + timedelta(days=1))
+            next_update_at = midnight_dt + timedelta(days=0, minutes=1)
 
         _LOGGER.info("Next update scheduled for: %s", next_update_at)
 
@@ -266,8 +300,15 @@ class MawaqitPrayerClient:
             return
 
         for prayer, time in prayer_times.items():
+            tomorrow=(dt_util.now().date()+timedelta(days=1)).strftime("%Y-%m-%d")
+            aujourdhui=dt_util.now().date()
+            maintenant  = dt_util.now().time().strftime("%H:%M")
+            if datetime.strptime(time, '%H:%M') < datetime.strptime(maintenant, '%H:%M'):
+                pray=tomorrow
+            else:
+                pray=aujourdhui
             self.prayer_times_info[prayer] = dt_util.parse_datetime(
-                f"{dt_util.now().date()} {time}"
+                f"{pray} {time}"
             )
         await self.async_schedule_future_update()
 

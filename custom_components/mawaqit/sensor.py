@@ -20,7 +20,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     entities = []
     for sensor_type in SENSOR_TYPES:
-        if sensor_type in ["Fajr", "Shurouq", "Dhuhr", "Asr", "Maghrib", "Isha", "Midnight", "Fajr_Iqama", "Shurouq_Iqama", "Dhuhr_Iqama", "Asr_Iqama", "Maghrib_Iqama", "Isha_Iqama" ]:
+        if sensor_type in ["Fajr", "Shurouq", "Dhuhr", "Asr", "Maghrib", "Isha", "next_mawaqit", "Fajr_Iqama", "Dhuhr_Iqama", "Asr_Iqama", "Maghrib_Iqama", "Isha_Iqama" ]:
             entities.append(MawaqitPrayerTimeSensor(sensor_type, client))
 
     async_add_entities(entities, True)
@@ -106,11 +106,9 @@ class MyMosqueSensor(SensorEntity):
     async def async_update(self):
         """Get the latest data from the Mawaqit API."""
         current_dir = os.path.dirname(os.path.realpath(__file__))
-        #f = open('{}/data/my_mosquee_NN.txt'.format(current_dir))
-        #data = json.load(f)
-        #f.close()
-        with open('{}/data/my_mosquee_NN.txt'.format(current_dir), encoding='utf-8', errors='ignore') as json_data:
-            data = json.load(json_data, strict=False)
+        f = open('{}/data/my_mosquee_NN.txt'.format(current_dir))
+        data = json.load(f)
+        f.close()
         for (k, v) in data.items():
             if str(k) != "uuid" and str(k) != "id" and str(k) != "slug":
                 self._attributes[k] = str(v)
