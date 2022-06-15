@@ -1,7 +1,7 @@
 {
   "domain": "mawaqit_prayer_times",
   "name": "Mawaqit Prayer Times",
-  "documentation": "https://www.home-assistant.io/integrations/mawaqit_prayer_times",
+  "documentation": "https://github.com/mawaqit/home-assistant",
   "requirements": [],
   "codeowners": ["@mawaqit"],
   "config_flow": true,
