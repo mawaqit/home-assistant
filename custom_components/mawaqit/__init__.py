@@ -255,6 +255,7 @@ class MawaqitPrayerClient:
         midnight_dt = self.prayer_times_info["next_mawaqit"]
         Fajr_dt = self.prayer_times_info["Fajr"]
         Dhuhr_dt = self.prayer_times_info["Dhuhr"]
+        Shurouq_dt = self.prayer_times_info["Shurouq"]
         Asr_dt = self.prayer_times_info["Asr"]
         Maghrib_dt = self.prayer_times_info["Maghrib"]
         Isha_dt = self.prayer_times_info["Isha"]
@@ -269,7 +270,7 @@ class MawaqitPrayerClient:
 
 
         if now > dt_util.as_utc(midnight_dt):
-            next_update_at = midnight_dt + timedelta(days=0, minutes=1)
+            next_update_at = midnight_dt + timedelta(days=0, minutes=0, seconds=30)
             _LOGGER.debug(
                 "Midnight is after day the changes so schedule update for after Midnight the next day"
             )
