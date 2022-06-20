@@ -4,7 +4,7 @@ import voluptuous as vol
 
 from .const import  CONF_CALC_METHOD, DEFAULT_CALC_METHOD, DOMAIN, NAME, CONF_SERVER, USERNAME, PASSWORD
 from .mosq_list import CALC_METHODS
-from .mawaqit import MawaqitClient
+from .mawaqit import MawaqitClient, BadCredentialsException
 
 
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_PASSWORD, CONF_USERNAME, CONF_API_KEY, CONF_TOKEN
@@ -41,13 +41,22 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if not os.path.exists('{}/data'.format(current_dir)):
                 os.makedirs('{}/data'.format(current_dir))
             # check if user credentials are correct
+            if valid==False:
+                return self.async_abort(reason="wrong_credential")
+                
             if valid:
                 # downloas mosques in the neighborhood
+                
+                
                 da = await self.neighborhood(
                     lat, longi, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
-                )
+                    
+                    )
+                if len(da)==0:
+                    return self.async_abort(reason="no_mosque")
                     
                 
+
                 text_file = open('{}/data/all_mosquee_NN.txt'.format(current_dir), "w")
                 json.dump(da, text_file)
                 text_file.close()
@@ -132,9 +141,12 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await client.close()
             return True
         except BadCredentialsException:  # pylint: disable=broad-except
+            
             pass
+            #return self.async_abort(reason="nomosque")
 
         return False
+        #return self.async_abort(reason="nomosque")
 
     async def neighborhood(self, lat, long, username, password):
         """Return mosques in the neighborhood if any."""

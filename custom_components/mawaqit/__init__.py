@@ -4,6 +4,7 @@ import logging
 import os
 import json
 import sys
+import shutil
 from datetime import datetime
 #from mawaqit_times_calculator import MawaqitClient, exceptions
 from .mawaqit import MawaqitClient, BadCredentialsException
@@ -19,6 +20,7 @@ from homeassistant.helpers.event import async_call_later, async_track_point_in_t
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers import aiohttp_client
 from datetime import datetime, timedelta
+from dateutil import parser as date_parser
 
 
 from .const import (
@@ -56,7 +58,12 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-
+def is_date_parsing(date_str):
+    try:
+        return bool(date_parser.parse(date_str))
+    except ValueError:
+        return False
+            
 async def async_setup(hass, config):
     """Import the Mawaqit Prayer component from config."""
     if DOMAIN in config:
@@ -88,6 +95,20 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_unload_entry(hass, config_entry):
     """Unload Mawaqit Prayer entry from config_entry."""
+    current_dir = os.path.dirname(os.path.realpath(__file__))
+    dir_path = '{}/data'.format(current_dir)
+    try:
+        shutil.rmtree(dir_path)
+    except OSError as e:
+        print("Error: %s : %s" % (dir_path, e.strerror))
+        
+    dir_path = '{}/__pycache__'.format(current_dir)
+    try:
+        shutil.rmtree(dir_path)
+    except OSError as e:
+        print("Error: %s : %s" % (dir_path, e.strerror))
+
+
     if hass.data[DOMAIN].event_unsub:
         hass.data[DOMAIN].event_unsub()
     hass.data.pop(DOMAIN)
@@ -167,19 +188,19 @@ class MawaqitPrayerClient:
         day_times = month_times[str(index_day)]
         salat_name = ["Fajr", "Shurouq", "Dhuhr", "Asr", "Maghrib", "Isha" ]
         res = {salat_name[i]: day_times[i] for i in range(len(salat_name))}
-        res['next_mawaqit']=(datetime.strptime(day_times[4], '%H:%M') + timedelta(minutes=1)).strftime("%H:%M") #1 minutes after isha to update 
+        #res['next_salat_time']=(datetime.strptime(day_times[4], '%H:%M') + timedelta(minutes=1)).strftime("%H:%M") #1 minutes after isha to update 
         # if call of the integration is done after isha time, provide d+1 data
         maintenant  = today.time().strftime("%H:%M")
-        if datetime.strptime(day_times[4], '%H:%M') < datetime.strptime(maintenant, '%H:%M'):
-            index_day = today.day + 1
-            day_times = month_times[str(index_day)]
-            res = {salat_name[i]: day_times[i] for i in range(len(salat_name))}
-            res['next_mawaqit']=(datetime.strptime(day_times[4], '%H:%M') + timedelta(minutes=1)).strftime("%H:%M") #1 minutes after isha to update 
-        # complete the dic with mosque detail
-        #res['Mosque_name']=data["label"]
-        #res['Mosque_address']=data["localisation"]
-        #res['Mosque_site']=data["url"]    
-        #res['Mosque_image']=data["image"]
+        #if datetime.strptime(day_times[4], '%H:%M') < datetime.strptime(maintenant, '%H:%M'):
+        #    index_day = today.day + 1
+        #    day_times = month_times[str(index_day)]
+        #    res = {salat_name[i]: day_times[i] for i in range(len(salat_name))}
+        #    res['next_mawaqit']=(datetime.strptime(day_times[4], '%H:%M') + timedelta(minutes=1)).strftime("%H:%M") #1 minutes after isha to update 
+        ## complete the dic with mosque detail
+        ##res['Mosque_name']=data["label"]
+        ##res['Mosque_address']=data["localisation"]
+        ##res['Mosque_site']=data["url"]    
+        ##res['Mosque_image']=data["image"]
         
         
         day_times = month_times[str(index_day)]
@@ -196,12 +217,23 @@ class MawaqitPrayerClient:
                 pray=aujourdhui + " " + day_times[j] +":00"
             liste.append(pray)
             
-        res['next_mawaqit']=min(liste).split(" ",1)[1].rsplit(':', 1)[0]  
+        res['next_salat_time']=min(liste).split(" ",1)[1].rsplit(':', 1)[0]
+        res['next_salat_name']=salat_name[liste.index(min(liste))]
+        #15 minutes before next salat
+        res['next_salat_preparation'] = (datetime.strptime(min(liste), '%Y-%m-%d %H:%M:%S')-timedelta(minutes=15)).strftime('%Y-%m-%d %H:%M:%S').split(" ",1)[1].rsplit(':', 1)[0]
+        res['Mosque_label']=data["label"]
+        res['Mosque_localisation']=data["localisation"]
+        res['Mosque_url']=data["url"]    
+        res['Mosque_image']=data["image"]
 
         #Iqama timing
         iqamaCalendar = data["iqamaCalendar"]
         iqama= iqamaCalendar[index_month][str(index_day)]
-        iqama=[int(s.replace("+", "")) for s in iqama]
+        try:
+            iqama=[int(s.replace("+", "")) for s in iqama]
+        except ValueError:
+            iqama = [0,0,0,0,0]
+            
         salat=[datetime.strptime(s, '%H:%M') for s in day_times]
         del salat[1] #no iqama for shurouq
         iqama_list = []
@@ -213,6 +245,7 @@ class MawaqitPrayerClient:
         return res2
 
         
+    
 
     
 
@@ -252,7 +285,7 @@ class MawaqitPrayerClient:
         now = dt_util.utcnow()
         now = dt_util.now()
 
-        midnight_dt = self.prayer_times_info["next_mawaqit"]
+        midnight_dt = self.prayer_times_info["next_salat_time"]
         Fajr_dt = self.prayer_times_info["Fajr"]
         Dhuhr_dt = self.prayer_times_info["Dhuhr"]
         Shurouq_dt = self.prayer_times_info["Shurouq"]
@@ -261,6 +294,7 @@ class MawaqitPrayerClient:
         Isha_dt = self.prayer_times_info["Isha"]
         liste=[]
         liste.append(Fajr_dt)
+        liste.append(Shurouq_dt)
         liste.append(Dhuhr_dt)
         liste.append(Asr_dt)
         liste.append(Maghrib_dt)
@@ -270,7 +304,7 @@ class MawaqitPrayerClient:
 
 
         if now > dt_util.as_utc(midnight_dt):
-            next_update_at = midnight_dt + timedelta(days=0, minutes=0, seconds=30)
+            next_update_at = midnight_dt + timedelta(days=0, minutes=1, seconds=0)
             _LOGGER.debug(
                 "Midnight is after day the changes so schedule update for after Midnight the next day"
             )
@@ -304,13 +338,18 @@ class MawaqitPrayerClient:
             tomorrow=(dt_util.now().date()+timedelta(days=1)).strftime("%Y-%m-%d")
             aujourdhui=dt_util.now().date()
             maintenant  = dt_util.now().time().strftime("%H:%M")
-            if datetime.strptime(time, '%H:%M') < datetime.strptime(maintenant, '%H:%M'):
-                pray=tomorrow
+            if is_date_parsing(time):
+              if datetime.strptime(time, '%H:%M') < datetime.strptime(maintenant, '%H:%M'):
+                  pray=tomorrow
+              else:
+                  pray=aujourdhui
+              self.prayer_times_info[prayer] = dt_util.parse_datetime(
+                  f"{pray} {time}"
+                  )
             else:
-                pray=aujourdhui
-            self.prayer_times_info[prayer] = dt_util.parse_datetime(
-                f"{pray} {time}"
-            )
+                self.prayer_times_info[prayer] = time
+            
+            
         await self.async_schedule_future_update()
 
         _LOGGER.debug("New prayer times retrieved. Updating sensors")

@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "one_instance_allowed": "Une seule instance de Mawaqit est possible.",
-            "no_mosque": "D\u00e9sol\u00e9, pas de mosqu\u00e9e \u00e9quip\u00e9e par Mawaqit proche de chez vous."
+            "no_mosque": "D\u00e9sol\u00e9, pas de mosqu\u00e9e \u00e9quip\u00e9e par Mawaqit proche de chez vous.",
+            "wrong_credential": "login ou mot de passe incorrect."
         },
         "step": {
             "user": {

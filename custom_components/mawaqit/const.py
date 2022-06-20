@@ -1,24 +1,33 @@
 """Constants for the Islamic Prayer component."""
-DOMAIN = "mawaqit_prayer_times"
+DOMAIN = "mawaqit"
 NAME = "Mawaqit Prayer Times"
 PRAYER_TIMES_ICON = "mdi:calendar-clock"
 
 SENSOR_TYPES = {
-    "Fajr": "mawaqit",
-    "Shurouq": "mawaqit",
+    "Fajr": "adhan",
+    "Shurouq": "time",
     "Sunrise": "time",
-    "Dhuhr": "mawaqit",
-    "Asr": "mawaqit",
-    "Maghrib": "mawaqit",
-    "Isha": "mawaqit",
+    "Dhuhr": "adhan",
+    "Asr": "adhan",
+    "Maghrib": "adhan",
+    "Isha": "adhan",
     "next_mawaqit": "time",
-    "Fajr_Iqama": "mawaqit",  
-    "Dhuhr_Iqama": "mawaqit",   
-    "Asr_Iqama": "mawaqit",    
-    "Maghrib_Iqama": "mawaqit",  
-    "Isha_Iqama": "mawaqit",                  
+    "Fajr_Iqama": "",  
+    "Dhuhr_Iqama": "",   
+    "Asr_Iqama": "",    
+    "Maghrib_Iqama": "",  
+    "Isha_Iqama": "",
+    "next_salat_time": "",
+    "next_salat_name": "",
+    "next_salat_preparation": "time",
+    "Mosque_label": "",
+    "Mosque_localisation": "",
+    "Mosque_url": "",
+    "Mosque_image": "",
 }
 
+
+        
 CONF_CALC_METHOD = "calculation_method"
 
 CALC_METHODS = ["nearest", "farest"]

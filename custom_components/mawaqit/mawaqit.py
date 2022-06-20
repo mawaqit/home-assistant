@@ -128,8 +128,8 @@ class MawaqitClient:
                
                 data = await response.json()
 
-                if len(data) == 0:
-                    raise NoMosqueArround
+                #if len(data) == 0:
+                #    raise NoMosqueArround
             return data #json.loads(data)
 
     async def fetch_prayer_times(self) -> dict:

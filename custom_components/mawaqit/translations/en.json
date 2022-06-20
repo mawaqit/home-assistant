@@ -2,7 +2,8 @@
   "config": {
       "abort": {
           "one_instance_allowed": "Only a single instance is necessary.",
-          "no_mosque": "Sorry, no Mawaqit mosque in the neighborhood."
+          "no_mosque": "Sorry, no Mawaqit mosque in the neighborhood.",
+          "wrong_credential": "Wrong login or password, please check"
       },
       "step": {
           "user": {

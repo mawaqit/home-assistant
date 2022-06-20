@@ -23,7 +23,8 @@
     },
     "abort": {
       "one_instance_allowed": "Only a single instance is necessary.",
-      "no_mosque": "Sorry, no Mawaqit Mosque in your neighberhood"
+      "no_mosque": "Sorry, no Mawaqit Mosque in your neighberhood",
+      "wrong_credential": "Wrong login or password, please check"
     }
   },
   "options": {
