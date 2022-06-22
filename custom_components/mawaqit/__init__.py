@@ -149,9 +149,7 @@ class MawaqitPrayerClient:
 
         current_dir = os.path.dirname(os.path.realpath(__file__))
         
-        text_file = open('{}/data/test.txt'.format(current_dir), "w")
-        text_file.write(mosquee +'----' + self.config_entry.data.get("api_key"))
-        text_file.close()
+
 
        
 
