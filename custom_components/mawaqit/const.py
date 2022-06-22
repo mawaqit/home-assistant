@@ -4,22 +4,22 @@ NAME = "Mawaqit Prayer Times"
 PRAYER_TIMES_ICON = "mdi:calendar-clock"
 
 SENSOR_TYPES = {
-    "Fajr": "adhan",
-    "Shurouq": "time",
-    "Sunrise": "time",
-    "Dhuhr": "adhan",
-    "Asr": "adhan",
-    "Maghrib": "adhan",
-    "Isha": "adhan",
+    "Fajr": "Adhan",
+    "Shurouq": "Time",
+    "Sunrise": "Time",
+    "Dhuhr": "Adhan",
+    "Asr": "Adhan",
+    "Maghrib": "Adhan",
+    "Isha": "Adhan",
     "next_mawaqit": "time",
-    "Fajr_Iqama": "",  
-    "Dhuhr_Iqama": "",   
-    "Asr_Iqama": "",    
-    "Maghrib_Iqama": "",  
-    "Isha_Iqama": "",
-    "next_salat_time": "",
-    "next_salat_name": "",
-    "next_salat_preparation": "time",
+    "Fajr Iqama": "",  
+    "Dhuhr Iqama": "",   
+    "Asr Iqama": "",    
+    "Maghrib Iqama": "",  
+    "Isha Iqama": "",
+    "Next Salat Time": "",
+    "Next Salat Name": "",
+    "Next Salat Preparation": "",
     "Mosque_label": "",
     "Mosque_localisation": "",
     "Mosque_url": "",
@@ -43,3 +43,4 @@ USERNAME = "user"
 PASSWORD = "password"
 
 API = "api"
+CONF_UUID ="uuid"

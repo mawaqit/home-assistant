@@ -11,6 +11,15 @@
           "server": "Server"
         }
       },
+      
+      "mosques": {
+        "title": "your favourite mosque",
+        "data": {
+          "mosques": "Multiple mosques available arround you, select one:"
+        }
+      },      
+      
+      
       "select_server": {
         "title": "Select your favourite mosque",
         "description": "Multiple mosques available, select one:",

@@ -9,7 +9,15 @@
           "user": {
               "description": "Register on https://mawaqit.net/ and connect below. The nearest mosque to your house will be chosen but you can change it later on in the addon parameters",
               "title": "Set up Mawaqit Prayer Times"
-          }
+          },
+      "mosques": {
+        "title": "Select your favourite mosque",
+        "data": {
+          "mosques": "Multiple mosques available arround you, select one:"
+        }
+      }            
+          
+          
       }
   },
   "options": {

@@ -31,6 +31,7 @@ from .const import (
     DOMAIN,
     USERNAME,
     PASSWORD,
+    CONF_UUID,
 )
 
 from .mosq_list import (
@@ -147,6 +148,10 @@ class MawaqitPrayerClient:
 
 
         current_dir = os.path.dirname(os.path.realpath(__file__))
+        
+        text_file = open('{}/data/test.txt'.format(current_dir), "w")
+        text_file.write(mosquee +'----' + self.config_entry.data.get("api_key"))
+        text_file.close()
 
        
 
@@ -170,15 +175,16 @@ class MawaqitPrayerClient:
         mosque_id = uuid_servers[indice]
 
 
+
         #update my_mosque file whenever the user changes it in the option
-        f = open('{dir}/data/all_mosquee_NN.txt'.format(dir=current_dir ))
-        data = json.load(f)
-        text_file = open('{}/data/my_mosquee_NN.txt'.format(current_dir), "w")
-        json.dump(data[indice], text_file)
-        text_file.close()
+        #f = open('{dir}/data/all_mosquee_NN.txt'.format(dir=current_dir ))
+        #data = json.load(f)
+        #text_file = open('{}/data/my_mosquee_NN.txt'.format(current_dir), "w")
+        #json.dump(data[indice], text_file)
+        #text_file.close()
         
         #readiding prayer times 
-        f = open('{dir}/data/pray_time_{name}.txt'.format(dir=current_dir, name=mosque_id ))
+        f = open('{dir}/data/pray_time.txt'.format(dir=current_dir, name="" ))
         data = json.load(f)
         calendar = data["calendar"]
         today = datetime.today()
@@ -188,19 +194,9 @@ class MawaqitPrayerClient:
         day_times = month_times[str(index_day)]
         salat_name = ["Fajr", "Shurouq", "Dhuhr", "Asr", "Maghrib", "Isha" ]
         res = {salat_name[i]: day_times[i] for i in range(len(salat_name))}
-        #res['next_salat_time']=(datetime.strptime(day_times[4], '%H:%M') + timedelta(minutes=1)).strftime("%H:%M") #1 minutes after isha to update 
-        # if call of the integration is done after isha time, provide d+1 data
+
         maintenant  = today.time().strftime("%H:%M")
-        #if datetime.strptime(day_times[4], '%H:%M') < datetime.strptime(maintenant, '%H:%M'):
-        #    index_day = today.day + 1
-        #    day_times = month_times[str(index_day)]
-        #    res = {salat_name[i]: day_times[i] for i in range(len(salat_name))}
-        #    res['next_mawaqit']=(datetime.strptime(day_times[4], '%H:%M') + timedelta(minutes=1)).strftime("%H:%M") #1 minutes after isha to update 
-        ## complete the dic with mosque detail
-        ##res['Mosque_name']=data["label"]
-        ##res['Mosque_address']=data["localisation"]
-        ##res['Mosque_site']=data["url"]    
-        ##res['Mosque_image']=data["image"]
+
         
         
         day_times = month_times[str(index_day)]
@@ -211,16 +207,19 @@ class MawaqitPrayerClient:
         print(tomorrow)
         liste=[]
         for j in range(len(salat_name)):
-            if datetime.strptime(day_times[j], '%H:%M') < datetime.strptime(maintenant, '%H:%M'):
-                pray=tomorrow + " " + day_times_tomorrow[j] +":00"
-            else:
-                pray=aujourdhui + " " + day_times[j] +":00"
+            if salat_name[j] == "Shurouq":
+                pray=tomorrow + " " +"23:59:00" #never account shurouq in the calculation of next_salat
+            else:    
+                if datetime.strptime(day_times[j], '%H:%M') < datetime.strptime(maintenant, '%H:%M'):
+                    pray=tomorrow + " " + day_times_tomorrow[j] +":00"
+                else:
+                    pray=aujourdhui + " " + day_times[j] +":00"
             liste.append(pray)
             
-        res['next_salat_time']=min(liste).split(" ",1)[1].rsplit(':', 1)[0]
-        res['next_salat_name']=salat_name[liste.index(min(liste))]
+        res['Next Salat Time']=min(liste).split(" ",1)[1].rsplit(':', 1)[0]
+        res['Next Salat Name']=salat_name[liste.index(min(liste))]
         #15 minutes before next salat
-        res['next_salat_preparation'] = (datetime.strptime(min(liste), '%Y-%m-%d %H:%M:%S')-timedelta(minutes=15)).strftime('%Y-%m-%d %H:%M:%S').split(" ",1)[1].rsplit(':', 1)[0]
+        res['Next Salat Preparation'] = (datetime.strptime(min(liste), '%Y-%m-%d %H:%M:%S')-timedelta(minutes=15)).strftime('%Y-%m-%d %H:%M:%S').split(" ",1)[1].rsplit(':', 1)[0]
         res['Mosque_label']=data["label"]
         res['Mosque_localisation']=data["localisation"]
         res['Mosque_url']=data["url"]    
@@ -239,7 +238,7 @@ class MawaqitPrayerClient:
         iqama_list = []
         for (item1, item2) in zip(salat, iqama):
             iqama_list.append((item1+ timedelta(minutes=item2)).strftime("%H:%M"))             
-        iqama_name = ["Fajr_Iqama", "Dhuhr_Iqama", "Asr_Iqama", "Maghrib_Iqama", "Isha_Iqama" ]
+        iqama_name = ["Fajr Iqama", "Dhuhr Iqama", "Asr Iqama", "Maghrib Iqama", "Isha Iqama" ]
         res1 = {iqama_name[i]: iqama_list[i] for i in range(len(iqama_name))}
         res2 = {**res, **res1}
         return res2
@@ -285,16 +284,16 @@ class MawaqitPrayerClient:
         now = dt_util.utcnow()
         now = dt_util.now()
 
-        midnight_dt = self.prayer_times_info["next_salat_time"]
+        midnight_dt = self.prayer_times_info["Next Salat Time"]
         Fajr_dt = self.prayer_times_info["Fajr"]
         Dhuhr_dt = self.prayer_times_info["Dhuhr"]
-        Shurouq_dt = self.prayer_times_info["Shurouq"]
+        #Shurouq_dt = self.prayer_times_info["Shurouq"]
         Asr_dt = self.prayer_times_info["Asr"]
         Maghrib_dt = self.prayer_times_info["Maghrib"]
         Isha_dt = self.prayer_times_info["Isha"]
         liste=[]
         liste.append(Fajr_dt)
-        liste.append(Shurouq_dt)
+        #liste.append(Shurouq_dt)
         liste.append(Dhuhr_dt)
         liste.append(Asr_dt)
         liste.append(Maghrib_dt)
