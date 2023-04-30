@@ -13,6 +13,12 @@ import os
 #from homeassistant.util import Throttle
 #TIME_BETWEEN_UPDATES = timedelta(minutes=60)
 
+def is_date_parsing(date_str):
+    try:
+        return bool(date_parser.parse(date_str))
+    except ValueError:
+        return False
+
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Mawaqit prayer times sensor platform."""
 
@@ -20,13 +26,19 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     entities = []
     for sensor_type in SENSOR_TYPES:
-        if sensor_type != "Mosque":
+        if sensor_type in ["Fajr", "Shurouq", "Dhuhr", "Asr", "Maghrib", "Isha", "Fajr Iqama", "Shurouq Iqama", "Dhuhr Iqama", "Asr Iqama", "Maghrib Iqama", "Isha Iqama", "Next Salat Name", "Next Salat Time" ]: #add "Next Salat Preparation" to the list in case a sensor is needed 15 min before salat time
             entities.append(MawaqitPrayerTimeSensor(sensor_type, client))
+
 
     async_add_entities(entities, True)
     name = 'My Mosque'
     sensor1 = [MyMosqueSensor(name, hass)]
     async_add_entities(sensor1, True)
+
+    
+    
+
+        
 
 class MawaqitPrayerTimeSensor(SensorEntity):
     """Representation of an Mawaqit prayer time sensor."""
@@ -63,11 +75,17 @@ class MawaqitPrayerTimeSensor(SensorEntity):
     @property
     def native_value(self):
         """Return the state of the sensor.  .astimezone(dt_util.UTC)"""
-        return (
-            self.client.prayer_times_info.get(self.sensor_type).astimezone(
-            dt_util.UTC
-        )
-        )
+        if self.sensor_type in ["Fajr", "Shurouq", "Dhuhr", "Asr", "Maghrib", "Isha", "Next Salat Time", "Fajr Iqama", "Shurouq Iqama", "Dhuhr Iqama", "Asr Iqama", "Maghrib Iqama", "Isha Iqama", "Next Salat Preparation" ]:
+            return (
+                self.client.prayer_times_info.get(self.sensor_type).astimezone(
+                    dt_util.UTC
+                    )
+                    )
+        else:
+            return (
+                self.client.prayer_times_info.get(self.sensor_type)
+                )
+            
     @property
     def should_poll(self):
         """Disable polling."""
@@ -76,7 +94,10 @@ class MawaqitPrayerTimeSensor(SensorEntity):
     @property
     def device_class(self):
         """Return the device class."""
-        return DEVICE_CLASS_TIMESTAMP
+        if self.sensor_type in ["Fajr", "Shurouq", "Dhuhr", "Asr", "Maghrib", "Isha", "Next Salat Time", "Fajr Iqama", "Shurouq Iqama", "Dhuhr Iqama", "Asr Iqama", "Maghrib Iqama", "Isha Iqama", "Next Salat Preparation" ]:
+            return DEVICE_CLASS_TIMESTAMP
+        #else:
+        #    return str
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
@@ -84,6 +105,9 @@ class MawaqitPrayerTimeSensor(SensorEntity):
             async_dispatcher_connect(self.hass, DATA_UPDATED, self.async_write_ha_state)
         )
 
+
+
+         
 
 class MyMosqueSensor(SensorEntity):
     """Representation of a mosque sensor."""
@@ -106,9 +130,10 @@ class MyMosqueSensor(SensorEntity):
     async def async_update(self):
         """Get the latest data from the Mawaqit API."""
         current_dir = os.path.dirname(os.path.realpath(__file__))
-        f = open('{}/data/my_mosquee.txt'.format(current_dir))
+        f = open('{}/data/my_mosquee_NN.txt'.format(current_dir))
         data = json.load(f)
         f.close()
+        
         for (k, v) in data.items():
             if str(k) != "uuid" and str(k) != "id" and str(k) != "slug":
                 self._attributes[k] = str(v)
@@ -130,11 +155,14 @@ class MyMosqueSensor(SensorEntity):
     @property
     def icon(self):
         """Return the icon of the sensor."""
-        return 'mdi:plex'
+        return 'mdi:mosque'
 
 
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return attributes for the sensor."""
         return self._attributes
+        
+        
+        
