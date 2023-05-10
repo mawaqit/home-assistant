@@ -9,9 +9,9 @@ from .const import DATA_UPDATED, DOMAIN, PRAYER_TIMES_ICON, SENSOR_TYPES
 
 import json
 import os
-#from datetime import datetime, timedelta
-#from homeassistant.util import Throttle
-#TIME_BETWEEN_UPDATES = timedelta(minutes=60)
+import logging
+
+_LOGGER = logging.getLogger(__name__)
 
 def is_date_parsing(date_str):
     try:
@@ -23,6 +23,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Mawaqit prayer times sensor platform."""
 
     client = hass.data[DOMAIN]
+    if not client:
+        _LOGGER.error("Error retrieving client object")
 
     entities = []
     for sensor_type in SENSOR_TYPES:

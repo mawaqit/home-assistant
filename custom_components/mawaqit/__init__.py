@@ -79,16 +79,15 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up the Mawaqit Prayer Component."""
-    
-    
 
+    hass.data.setdefault(DOMAIN, {})
     client = MawaqitPrayerClient(hass, config_entry)
 
     if not await client.async_setup():
         return False
 
-    hass.data.setdefault(DOMAIN, client)
-
+    hass.data[DOMAIN] = client
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     return True
 
 
@@ -364,8 +363,6 @@ class MawaqitPrayerClient:
 
         await self.async_update()
         self.config_entry.add_update_listener(self.async_options_updated)
-
-        self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
 
         return True
 
