@@ -2,13 +2,21 @@
     "config": {
         "abort": {
             "one_instance_allowed": "Une seule instance de Mawaqit est possible.",
-            "no_mosque": "D\u00e9sol\u00e9, pas de mosqu\u00e9e \u00e9quip\u00e9e par Mawaqit proche de chez vous."
+            "no_mosque": "D\u00e9sol\u00e9, pas de mosqu\u00e9e \u00e9quip\u00e9e par Mawaqit proche de chez vous.",
+            "wrong_credential": "login ou mot de passe incorrect."
         },
         "step": {
             "user": {
                 "description": "Inscvrivez-vous sur https://mawaqit.net/ puis connectez-vous ci-dessous. La mosqu\u00e9e la plus proche sera chosie mais vous pouvez la changer ult\u00e9rieurement dans les Param\u00e9tres du plugin Mawaqit:",
                 "title": "Installation de Mawaqit"
-            }
+            },
+      "mosques": {
+        "title": "Choisir votre mosqu\u00e9e",
+        "data": {
+          "mosques": "Diff\u00e9rentes mosqu\u00e9es autour de vous, s\u00e9lectionnez une:"
+        }
+      }  
+            
         }
     },
     "options": {

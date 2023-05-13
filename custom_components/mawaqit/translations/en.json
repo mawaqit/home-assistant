@@ -2,13 +2,22 @@
   "config": {
       "abort": {
           "one_instance_allowed": "Only a single instance is necessary.",
-          "no_mosque": "Sorry, no Mawaqit mosque in the neighborhood."
+          "no_mosque": "Sorry, no MAWAQIT mosque in the neighborhood.",
+          "wrong_credential": "Wrong login or password, please check"
       },
       "step": {
           "user": {
               "description": "Register on https://mawaqit.net/ and connect below. The nearest mosque to your house will be chosen but you can change it later on in the addon parameters",
-              "title": "Set up Mawaqit Prayer Times"
-          }
+              "title": "Set up MAWAQIT Prayer Times"
+          },
+      "mosques": {
+        "title": "Select your favourite mosque",
+        "data": {
+          "mosques": "Multiple mosques available arround you, select one:"
+        }
+      }            
+          
+          
       }
   },
   "options": {
@@ -20,5 +29,5 @@
           }
       }
   },
-  "title": "Mawaqit"
+  "title": "MAWAQIT"
 }
