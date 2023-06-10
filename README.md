@@ -1,4 +1,4 @@
-# A Mawaqit component for Home Assistant
+# A MAWAQIT component for Home Assistant
 ## Smart home, Smart mosque : automate things based on prayer times
 
 ٱلسَّلَامُ عَلَيْكُمْ وَرَحْمَةُ ٱللَّٰهِ وَبَرَكَاتُهُ
@@ -39,7 +39,7 @@ sensor:
   trigger:
   - platform: template
     value_template: >
-      {% set before = (as_timestamp(states("sensor.fajr_mawaqit")) - 20 * 60) | timestamp_custom("%H:%M", True) %} 
+      {% set before = (as_timestamp(states("sensor.fajr_adhan")) - 20 * 60) | timestamp_custom("%H:%M", True) %} 
       {% set time = states("sensor.time") %}
       {{ time == before }}
   action:
@@ -61,7 +61,7 @@ sensor:
   trigger:
     platform: template
     value_template: >
-      {% set isha_time = as_timestamp(states("sensor.isha_mawaqit")) | timestamp_custom("%H:%M", True) %} 
+      {% set isha_time = as_timestamp(states("sensor.isha_adhan")) | timestamp_custom("%H:%M", True) %} 
       {% set time = states("sensor.time")  %}
       {{ time == isha_time }}
   action:
