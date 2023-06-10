@@ -3,7 +3,7 @@
 
 ٱلسَّلَامُ عَلَيْكُمْ وَرَحْمَةُ ٱللَّٰهِ وَبَرَكَاتُهُ
 
-Essalāmu ʿalaykum
+Essalāmu ʿalaykum wa rahmatu Allahi wa barakatuh
 
 ### English
 
