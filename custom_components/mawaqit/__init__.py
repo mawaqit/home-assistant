@@ -363,7 +363,7 @@ class MawaqitPrayerClient:
                   # On convertit la date en datetime pour pouvoir faire des calculs dessus.
                   pray_date = dt_util.strptime(pray, "%Y-%m-%d")
                   # Le calcul ci-dessous permet de rajouter le nombre de jours nécessaires pour arriver au prochain vendredi.
-                  pray_date += timedelta(days=(4 - dt_util.now().weekday() + 7) % 7)
+                  pray_date += timedelta(days=(4 - pray_date.weekday() + 7) % 7)
                   # On convertit la date en string pour pouvoir la mettre dans le dictionnaire.
                   pray = pray_date.strftime("%Y-%m-%d")
                
