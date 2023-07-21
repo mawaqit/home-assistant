@@ -148,7 +148,7 @@ class MawaqitClient:
              'Api-Access-Token': format(api_token)}	
       api_url_base = 'https://mawaqit.net/api/2.0/'
       api_url = api_url_base + 'mosque/' + mosque_id + '/prayer-times'
-
+      
       async with self.session.get(api_url, data=None, headers=headers) as response:
                 if response.status != 200:
                     raise NotAuthenticatedException

@@ -217,6 +217,22 @@ class MawaqitPrayerClient:
         res['Next Salat Name']=salat_name[liste.index(min(liste))]
         #15 minutes before next salat
         res['Next Salat Preparation'] = (datetime.strptime(min(liste), '%Y-%m-%d %H:%M:%S')-timedelta(minutes=15)).strftime('%Y-%m-%d %H:%M:%S').split(" ",1)[1].rsplit(':', 1)[0]
+        
+        # if jumu'a is set as dhuhr, then jumu'a time is the same as dhuhr time
+        if data["jumuaAsDuhr"]:
+            res['Jumua'] = res['Dhuhr']
+        elif data["jumua"] is not None:
+            res['Jumua'] = data["jumua"]
+
+        # if mosque has 2 jumu'a, then the second jumu'a is Jumua 2, can be None.
+        if data["jumua2"] is not None:
+            res['Jumua 2'] = data["jumua2"]
+
+        if data["aidPrayerTime"] is not None:
+            res['Aid'] = data["aidPrayerTime"]
+        if data["aidPrayerTime2"] is not None:
+            res['Aid 2'] = data["aidPrayerTime2"]
+
         res['Mosque_label']=data["label"]
         res['Mosque_localisation']=data["localisation"]
         res['Mosque_url']=data["url"]    
@@ -331,14 +347,26 @@ class MawaqitPrayerClient:
             return
 
         for prayer, time in prayer_times.items():
-            tomorrow=(dt_util.now().date()+timedelta(days=1)).strftime("%Y-%m-%d")
-            aujourdhui=dt_util.now().date()
-            maintenant  = dt_util.now().time().strftime("%H:%M")
+
+            tomorrow = (dt_util.now().date()+timedelta(days=1)).strftime("%Y-%m-%d")
+            aujourdhui = dt_util.now().date().strftime("%Y-%m-%d")
+
+            maintenant = dt_util.now().time().strftime("%H:%M")
+
             if is_date_parsing(time):
               if datetime.strptime(time, '%H:%M') < datetime.strptime(maintenant, '%H:%M'):
-                  pray=tomorrow
+                  pray = tomorrow
               else:
-                  pray=aujourdhui
+                  pray = aujourdhui
+
+              if prayer == "Jumua" or prayer == "Jumua 2":
+                  # On convertit la date en datetime pour pouvoir faire des calculs dessus.
+                  pray_date = dt_util.strptime(pray, "%Y-%m-%d")
+                  # Le calcul ci-dessous permet de rajouter le nombre de jours nécessaires pour arriver au prochain vendredi.
+                  pray_date += timedelta(days=(4 - dt_util.now().weekday() + 7) % 7)
+                  # On convertit la date en string pour pouvoir la mettre dans le dictionnaire.
+                  pray = pray_date.strftime("%Y-%m-%d")
+               
               self.prayer_times_info[prayer] = dt_util.parse_datetime(
                   f"{pray} {time}"
                   )
