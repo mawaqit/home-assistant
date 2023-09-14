@@ -181,11 +181,11 @@ class MawaqitPrayerClient:
         #text_file.close()
         
         #readiding prayer times 
-        f = open('{dir}/data/pray_time.txt'.format(dir=current_dir, name="" ))
+        f = open('{dir}/data/pray_time.txt'.format(dir=current_dir, name=""))
         data = json.load(f)
         calendar = data["calendar"]
         today = datetime.today()
-        index_month = month = today.month -1
+        index_month = today.month - 1
         month_times = calendar[index_month]
         index_day = today.day
         day_times = month_times[str(index_day)]
@@ -194,14 +194,12 @@ class MawaqitPrayerClient:
 
         maintenant  = today.time().strftime("%H:%M")
 
-        
-        
         day_times = month_times[str(index_day)]
         day_times_tomorrow = month_times[str(index_day+1)]
         maintenant  = today.time().strftime("%H:%M")
         tomorrow=(datetime.today()+timedelta(days=1)).strftime("%Y-%m-%d")
         aujourdhui=(datetime.today()+timedelta(days=0)).strftime("%Y-%m-%d")
-        print(tomorrow)
+
         liste=[]
         for j in range(len(salat_name)):
             if salat_name[j] == "Shurouq":
@@ -228,10 +226,10 @@ class MawaqitPrayerClient:
         if data["jumua2"] is not None:
             res['Jumua 2'] = data["jumua2"]
 
-        if data["aidPrayerTime"] is not None:
-            res['Aid'] = data["aidPrayerTime"]
-        if data["aidPrayerTime2"] is not None:
-            res['Aid 2'] = data["aidPrayerTime2"]
+        #if data["aidPrayerTime"] is not None:
+        #   res['Aid'] = data["aidPrayerTime"]
+        #if data["aidPrayerTime2"] is not None:
+        #    res['Aid 2'] = data["aidPrayerTime2"]
 
         res['Mosque_label']=data["label"]
         res['Mosque_localisation']=data["localisation"]

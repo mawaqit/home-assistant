@@ -29,12 +29,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities = []
     for sensor_type in SENSOR_TYPES:
         if sensor_type in ["Fajr", "Shurouq", "Dhuhr", "Asr", "Maghrib", "Isha", 
-                           "Jumua", "Jumua 2", "Aid", "Aid 2",
+                           "Jumua", "Jumua 2", #"Aid", "Aid 2",
                            "Fajr Iqama", "Shurouq Iqama", "Dhuhr Iqama", "Asr Iqama", "Maghrib Iqama", "Isha Iqama", 
                            "Next Salat Name", "Next Salat Time"]: #add "Next Salat Preparation" to the list in case a sensor is needed 15 min before salat time
             sensor = MawaqitPrayerTimeSensor(sensor_type, client)
-            if sensor.native_value is not None:
-                entities.append(sensor)
+            entities.append(sensor)
     async_add_entities(entities, True)
     
     name = 'My Mosque'
@@ -82,7 +81,7 @@ class MawaqitPrayerTimeSensor(SensorEntity):
     def native_value(self):
         """Return the state of the sensor.  .astimezone(dt_util.UTC)"""
         if self.sensor_type in ["Fajr", "Shurouq", "Dhuhr", "Asr", "Maghrib", "Isha", 
-                                "Jumua", "Jumua 2", "Aid", "Aid 2",
+                                "Jumua", "Jumua 2", #"Aid", "Aid 2",
                                 "Fajr Iqama", "Shurouq Iqama", "Dhuhr Iqama", "Asr Iqama", "Maghrib Iqama", "Isha Iqama", 
                                 "Next Salat Time", "Next Salat Preparation"]:
             
@@ -106,7 +105,7 @@ class MawaqitPrayerTimeSensor(SensorEntity):
     def device_class(self):
         """Return the device class."""
         if self.sensor_type in ["Fajr", "Shurouq", "Dhuhr", "Asr", "Maghrib", "Isha", 
-                                "Jumua", "Jumua 2", "Aid", "Aid 2",
+                                "Jumua", "Jumua 2", #"Aid", "Aid 2",
                                 "Fajr Iqama", "Shurouq Iqama", "Dhuhr Iqama", "Asr Iqama", "Maghrib Iqama", "Isha Iqama", 
                                 "Next Salat Time", "Next Salat Preparation"]:
             return DEVICE_CLASS_TIMESTAMP
