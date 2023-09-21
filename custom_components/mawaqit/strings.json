@@ -4,25 +4,25 @@
     "step": {
       "user": {
         "title": "Mawaqit",
-        "description": "Register on https://mawaqit.net/ and connect below. The nearest mosque to your house will be chosen but you can change it later on in the addon parameters",
+        "description": "Register on https://mawaqit.net/ and connect below. The nearest mosque to your house will be chosen but you can change it later on in the add-on parameters.",
         "data": {
-          "username": "[%key:common::config_flow::data::email%]",
-          "password": "[%key:common::config_flow::data::password%]",
+          "username": "E-mail",
+          "password": "Password",
           "server": "Server"
         }
       },
       
       "mosques": {
-        "title": "your favourite mosque",
+        "title": "Your favourite mosque",
         "data": {
-          "mosques": "Multiple mosques available arround you, select one:"
+          "mosques": "Multiple mosques are available around you, select one :"
         }
       },      
       
       
       "select_server": {
         "title": "Select your favourite mosque",
-        "description": "Multiple mosques available, select one:",
+        "description": "Multiple mosques available, select one :",
         "data": {
           "username": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]",
@@ -30,11 +30,16 @@
         }
       }
     },
+
+    "error": {
+      "wrong_credential": "Wrong login or password, please retry."
+    },
+
     "abort": {
       "one_instance_allowed": "Only a single instance is necessary.",
-      "no_mosque": "Sorry, no Mawaqit Mosque in your neighberhood",
-      "wrong_credential": "Wrong login or password, please check"
+      "no_mosque": "Sorry, there's no Mawaqit mosque in your neighborhood"
     }
+
   },
   "options": {
     "step": {
@@ -46,4 +51,3 @@
     }
   }
 }
-
