@@ -4,23 +4,25 @@
 ٱلسَّلَامُ عَلَيْكُمْ وَرَحْمَةُ ٱللَّٰهِ وَبَرَكَاتُهُ
 
 Essalāmu ʿalaykum wa rahmatu Allahi wa barakatuh
+#
+## English
 
-### English
+This component allows you to integrate the data of your mawaqit mosque into HomeAssistant. To do this, a Mawaqit account from **https://mawaqit.net** is required.
 
-This component allows you to integrate the data of your mawaqit mosque into homeassistant. To do this, a mawaqit account from https://mawaqit.net is required.
+The component is added to HomeAssistant in the form of an integration. For the installation, you must copy the **[custom_components/mawaqit](custom_components/mawaqit)** folder to the _custom_components_ directory of your HomeAssistant installation (create it if it does not exist).
 
-The component is added to homeassistant in the form of an integration. For the installation, you must copy the mawaqit folder to the custom_components directory of your homeassistant installation (create it if it does not exist).
+After restarting HomeAssistant, go to _Settings > Devices & Services > Add Integration_ and search for **"Mawaqit"**. Enter the login and password of your **mawaqit.net** account and click on **Submit**. Based on your GPS coordinates (latitude/longitude) stored in HomeAssistant, the component searches for Mawaqit mosques within a radius of 20km around you and asks you to select your preferred mosque.
 
-After restarting homeassistant, go to configuration > integrations and search for "mawaqit". Enter the login and password of your mawaqit.net account and click on submit. Based on your GPS coordinates (latitude / longitude) stored in homeassistant, the component searches for mawaqit mosques within a radius of 20km around you and asks you to select your preferred mosque.
+Integration allows you to add 14 components of type ```sensor``` : the 5 prayer times, their associate Iqamas, the Shuruq, the Jumu'a time and a sensor ```sensor.my_mosque``` which summarizes all the data of your mosque (address, website, jumua, iqama, etc...)
 
-Integration allows you to add 6 sensor type components: the 5 prayer times and a sensor sensor.my_mosque which summarizes all the data of your mosque (address, website, jumua, iqama, ... etc)
+In the configuration.yaml file, you have an example of code to create automations in HomeAssistant with Mawaqit sensors, in particular to launch the athan at the time of prayer or to launch specific actions (read the Quran, increase the heating 10 minutes before Al-Fajr, open the shutters during shuruq, etc...). The actions are to be adapted according to your HomeAssistant installation.
 
-In the configuration.yaml file, you have an example of code to create automations in homeassistant with mawaqit sensors, in particular to launch the athan at the time of prayer or to launch specific actions (read the Quran, increase the heating 10 min before Al-fajr, open the shutters during shuruq ... etc). The actions are to be adapted according to your homeassistant installation.
+#
 
 
-### Automation examples
+## Automation examples
 
-/config/configuration.yaml
+```/config/configuration.yaml```
 
 ```yaml
 homeassistant:
@@ -31,11 +33,11 @@ sensor:
     - 'date_time'
 ```    
 
-/config/automations.yaml
+```/config/automations.yaml```
 
 ```yaml
 - id: 'fajr_wakeup'
-  alias: Turn on bedroom light and alexa routine, 20 min before fajr adhan
+  alias: Turn on bedroom light and Alexa routine, 20 min before Fajr Athan
   trigger:
   - platform: template
     value_template: >
@@ -46,11 +48,11 @@ sensor:
   # turn on the light of the bedroom
   - service: switch.turn_on
     entity_id: switch.sonoff_1000814ec9 # the entity id of the sonoff switch, can be an other entity
-  # play a routine on alexa
+  # play a routine on Alexa
   - service: media_player.play_media
     entity_id: media_player.zehhaf_s_echo_dot # the entity id of your alexa device
     data:
-      media_content_id: bonjour # the routine name configured on alexa mobile app, it can be a sequence of actions, like flash info, weather ...etc
+      media_content_id: bonjour # the routine name configured on Alexa mobile app, it can be a sequence of actions, like flash info, weather ...etc
       media_content_type: routine
   initial_state: true
   mode: single      
@@ -72,16 +74,16 @@ sensor:
   initial_state: true
   mode: single
 ```
+#
 
+## Français
 
-### Français
+Ce composant permet d'intégrer les données de votre mosquée Mawaqit dans HomeAssistant. Pour ce faire, Un compte Mawaqit **https://mawaqit.net** est nécessaire.
 
-Ce composant permet d'intégrer les données de votre mosquée mawaqit dans homeassistant. Pour ce faire, Un compte mawaqit https://mawaqit.net est nécessaire.
+Le composant est rajouté à HomeAssistant sous forme d'une intégration. Pour l'installation, il faut copier le dossier **[custom_components/mawaqit](custom_components/mawaqit)** dans le répertoire _custom_components_ de votre installation HomeAssistant (créez le s'il n'existe pas).
 
-Le composant est rajouté à homeassistant sous forme d'une integration. Pour l'installation, il faut copier le dossier mawaqit dans le répertoire custom_components de votre installation homeassistant (créez le s'il n'existe pas).
+Après le redémarrage de HomeAssistant, allez dans _Paramètres > Appareils et Services > Ajouter une intégration_ et cherchez **"Mawaqit"**. Entrez le login et mot de passe de votre compte **mawaqit.net** et cliquez sur **Valider**. En se basant sur vos coordonnées GPS (latitude/longitude) enregistrées dans HomeAssistant, le composant cherche les mosquées Mawaqit dans un rayon de 20 km autour de vous et vous demande de sélectionner votre mosquée préférée.
 
-Après le redémarrage de homeassistant, allez dans configuration > intégrations et cherchez "mawaqit". Entrez le login et mot de passe de votre compte mawaqit.net et cliquez sur soumettre. En se basant sur vos coordonnées GPS (latitude/longitude) enregistrées dans homeassistant, le composant cherche les mosquées mawaqit dans un rayon de 20km autour de vous et vous demande de sélectionner votre mosquée préférée.
+L'intégration permet de rajouter 14 composants de type ```sensor``` : les 5 horaires des prières, les iqamas associées, le Shuruq, les horaires de Jumu'a et un sensor ```sensor.my_mosque``` qui résume toutes les données de votre mosquée (adresse, site web, jumua, iqama, etc...).
 
-L'integration permet de rajouter 6 composants de type sensor: les 5 horaires des prières et un sensor sensor.my_mosque qui résume toutes les données de votre mosquée (adresse, site web, jumua, iqama,...etc)
-
-Dans le fichier configuration.yaml, vous avez un exemple de code pour créer des automatismes dans homeassistant avec les sensors mawaqit notamment pour lancer l'athan à l'heure de la prière ou encore pour lancer des actions spécifiques (lire le coran, augmenter le chauffage 10 min avant Al-fajr, ouvrir les volets lors du shuruq ...etc). Les actions sont à adapter en fonction de vote installation homeassistant.
+Dans le fichier configuration.yaml, vous avez un exemple de code pour créer des automatismes dans HomeAssistant avec les sensors Mawaqit notamment pour lancer l'athan à l'heure de la prière ou encore pour lancer des actions spécifiques (lire le Coran, augmenter le chauffage 10 minutes avant Al-Fajr, ouvrir les volets lors du Shuruq etc...). Les actions sont à adapter en fonction de vote installation HomeAssistant.
