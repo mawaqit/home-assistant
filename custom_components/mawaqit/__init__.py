@@ -208,9 +208,10 @@ class MawaqitPrayerClient:
         res['Next Salat Time'] = next_prayer.split(" ", 1)[1].rsplit(':', 1)[0]
         res['Next Salat Name'] = prayer_names[prayers.index(next_prayer)]
 
-        minutes_bnp = 15
         # 15 minutes Before Next Prayer
-        res['Next Salat Preparation'] = (datetime.strptime(next_prayer, '%Y-%m-%d %H:%M:%S')-timedelta(minutes=minutes_bnp)).strftime('%Y-%m-%d %H:%M:%S').split(" ", 1)[1].rsplit(':', 1)[0]
+        countdown_next_prayer = 15
+        res['Next Salat Preparation'] = (datetime.strptime(next_prayer, '%Y-%m-%d %H:%M:%S')-timedelta(minutes=countdown_next_prayer)).strftime('%Y-%m-%d %H:%M:%S').split(" ", 1)[1].rsplit(':', 1)[0]
+
         
         # if Jumu'a is set as Dhuhr, then Jumu'a time is the same as Friday's Dhuhr time
         if data["jumuaAsDuhr"]:
