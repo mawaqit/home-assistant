@@ -18,7 +18,7 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_call_later, async_track_point_in_time
+from homeassistant.helpers.event import async_call_later, async_track_point_in_time, async_track_time_change
 import homeassistant.util.dt as dt_util
 # from homeassistant.helpers import aiohttp_client
 
@@ -376,7 +376,7 @@ class MawaqitPrayerClient:
 
         # We update time prayers every day.
         h, m, s = UPDATE_TIME
-        await self.hass.async_track_time_change(self.async_update, hour=h, minute=m, second=s)
+        async_track_time_change(self.hass, self.async_update, hour=h, minute=m, second=s)
 
         return True
 
