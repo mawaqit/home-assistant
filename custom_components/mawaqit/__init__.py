@@ -184,8 +184,12 @@ class MawaqitPrayerClient:
             day_times_tomorrow = month_times[str(index_day + 1)]
         except KeyError:
             # If index_day + 1 == 32 (or 31) and the month contains only 31 (or 30) days
-            # We take the first day of the following month
-            day_times_tomorrow = calendar[index_month + 1]["1"]
+            # We take the first day of the following month (reset 0 if we're in december)
+            if index_month == 11:
+                index_next_month = 0
+            else:
+                index_next_month = index_month + 1
+            day_times_tomorrow = calendar[index_next_month]["1"]
 
         now = today.time().strftime("%H:%M")
 
@@ -265,7 +269,7 @@ class MawaqitPrayerClient:
         return res2
     
 
-    async def async_update_next_salat_sensor(self):
+    async def async_update_next_salat_sensor(self, *_):
         salat_before_update = self.prayer_times_info['Next Salat Name']
         prayers = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"]
         if salat_before_update != "Isha": # We just retrieve the next salat of the day.
@@ -284,11 +288,10 @@ class MawaqitPrayerClient:
             month_times = calendar[index_month]
 
             maghrib_hour = self.prayer_times_info['Maghrib']
-            maghrib_hour = datetime.strptime(maghrib_hour, "%Y-%m-%d %H:%M:%S")
             maghrib_hour = maghrib_hour.strftime("%H:%M")
-
-            isha_hour = self.prayer_times_info['Isha']
-            isha_hour = datetime.strptime(isha_hour, "%Y-%m-%d %H:%M:%S")
+            
+            # isha + 1 minute because this function is launched 1 minute after 'Isha, (useful only if 'Isha is at 11:59 PM)
+            isha_hour = self.prayer_times_info['Isha'] + timedelta(minutes=1)
             isha_hour = isha_hour.strftime("%H:%M")
 
             # If 'Isha is before 12 AM (Maghrib hour < 'Isha hour), we need to get the next day's Fajr.
@@ -297,7 +300,17 @@ class MawaqitPrayerClient:
                 index_day = today.day + 1
             else:
                 index_day = today.day
-            day_times = month_times[str(index_day)]
+            
+            try:
+                day_times = month_times[str(index_day)]
+            except KeyError:
+                # If index_day + 1 == 32 (or 31) and the month contains only 31 (or 30) days
+                # We take the first day of the following month (reset 0 if we're in december)
+                if index_month == 11:
+                    index_next_month = 0
+                else:
+                    index_next_month = index_month + 1
+                day_times = calendar[index_next_month]["1"]
             fajr_hour = day_times[0]
 
             self.prayer_times_info['Next Salat Name'] = "Fajr"
