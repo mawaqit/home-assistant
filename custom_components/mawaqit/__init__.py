@@ -263,70 +263,7 @@ class MawaqitPrayerClient:
         res2 = {**res, **res1}
         
         return res2
-
-
-    async def async_schedule_future_update(self):
-        """Schedule future update for sensors.
-
-        Midnight is a calculated time.  The specifics of the calculation
-        depends on the method of the prayer time calculation.  This calculated
-        midnight is the time at which the time to pray the Isha prayers have
-        expired.
-
-        Calculated Midnight: The Mawaqit midnight.
-        Traditional Midnight: Isha time + 1 minute
-
-        Update logic for prayer times:
-
-        If the Calculated Midnight is before the traditional midnight then wait
-        until the traditional midnight to run the update.  This way the day
-        will have changed over and we don't need to do any fancy calculations.
-
-        If the Calculated Midnight is after the traditional midnight, then wait
-        until after the calculated Midnight.  We don't want to update the prayer
-        times too early or else the timings might be incorrect.
-
-        Example:
-        calculated midnight = 11:23PM (before traditional midnight)
-        Update time: 12:00AM
-
-        calculated midnight = 1:35AM (after traditional midnight)
-        update time: 1:36AM.
-
-        """
-        _LOGGER.debug("Scheduling next update for Mawaqit prayer times")
-
-        now = dt_util.utcnow()
-        now = dt_util.now()
-
-        midnight_dt = self.prayer_times_info["Next Salat Time"]
-        Fajr_dt = self.prayer_times_info["Fajr"]
-        Dhuhr_dt = self.prayer_times_info["Dhuhr"]
-        Asr_dt = self.prayer_times_info["Asr"]
-        Maghrib_dt = self.prayer_times_info["Maghrib"]
-        Isha_dt = self.prayer_times_info["Isha"]
-
-        prayer_times = [Fajr_dt, Dhuhr_dt, Asr_dt, Maghrib_dt, Isha_dt]
-
-        midnight_dt = min(prayer_times)
-
-        if now > dt_util.as_utc(midnight_dt):
-            next_update_at = midnight_dt + timedelta(days=0, minutes=1, seconds=0)
-            _LOGGER.debug(
-                "Midnight is after day the changes so schedule update for after Midnight the next day"
-            )
-        else:
-            _LOGGER.debug(
-                "Midnight is before the day changes so schedule update for the next start of day"
-            )
-            next_update_at = dt_util.start_of_local_day(now + timedelta(days=1))
-            next_update_at = midnight_dt + timedelta(days=0, minutes=1)
-
-        _LOGGER.info("Next update scheduled for: %s", next_update_at)
-
-        self.event_unsub = async_track_point_in_time(
-            self.hass, self.async_update, next_update_at
-        )
+    
 
     async def async_update_next_salat_sensor(self):
         salat_before_update = self.prayer_times_info['Next Salat Name']
