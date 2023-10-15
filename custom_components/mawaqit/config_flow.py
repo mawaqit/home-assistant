@@ -41,25 +41,21 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
             )
             #create data folder if does not exist
-            username=user_input[CONF_USERNAME]
-            password=user_input[CONF_PASSWORD]
+            username = user_input[CONF_USERNAME]
+            password = user_input[CONF_PASSWORD]
             current_dir = os.path.dirname(os.path.realpath(__file__))
             if not os.path.exists('{}/data'.format(current_dir)):
                 os.makedirs('{}/data'.format(current_dir))
+
             # check if user credentials are correct
-            if valid==False:
-                return self.async_abort(reason="wrong_credential")
-                
             if valid:
-                # downloas mosques in the neighborhood
-                
                 de = await self.apimawaqit(
                     user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
                     )
                 
                 da = await self.neighborhood(
                     lat, longi, user_input[CONF_USERNAME], user_input[CONF_PASSWORD], de
-                    
+
                     )
                 if len(da)==0:
                     return self.async_abort(reason="no_mosque")
@@ -72,13 +68,12 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 text_file = open('{}/data/all_mosquee_NN.txt'.format(current_dir), "w")
                 json.dump(da, text_file)
                 text_file.close()
-
-
                 
                 # creation of the list of mosques to be displayed in the options
-                name_servers=[]
-                uuid_servers=[]
-                CALC_METHODS=[]
+                name_servers = []
+                uuid_servers = []
+                CALC_METHODS = []
+
                 with open('{}/data/all_mosquee_NN.txt'.format(current_dir), "r") as f:
                     distros_dict = json.load(f)
                 for distro in distros_dict:
@@ -92,14 +87,14 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
                 return await self.async_step_mosques()
 
-                
-
-            return await self._show_config_form(user_input)
+            else : # (if not valid)
+                self._errors["base"] = "wrong_credential"
+                return await self._show_config_form(user_input)
 
         return await self._show_config_form(user_input)
 
 
-    async def async_step_mosques(self, user_input=None ) -> FlowResult:
+    async def async_step_mosques(self, user_input=None) -> FlowResult:
         """Handle mosques step."""
         lat = self.hass.config.latitude
         longi = self.hass.config.longitude
@@ -142,27 +137,28 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title='Mawaqit', data={CONF_API_KEY: api, CONF_UUID: user_input[CONF_UUID],CONF_LATITUDE: lat,CONF_LONGITUDE: longi}
                 )
-            
-
-
-        
-        
         
         return await self._show_config_form2(user_input)
         
         
-        
-
     async def _show_config_form(self, user_input):  # pylint: disable=unused-argument
+
+        if user_input is None:
+            user_input = {}
+            user_input[CONF_USERNAME] = "login@mawaqit.net"
+            user_input[CONF_PASSWORD] = "password"
+        
+        schema = vol.Schema(
+                {vol.Required(CONF_USERNAME, description={"suggested_value":user_input[CONF_USERNAME]}): str, 
+                 vol.Required(CONF_PASSWORD, description={"suggested_value":user_input[CONF_PASSWORD]}): str}
+            )
+
         """Show the configuration form to edit location data."""
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_USERNAME, default="login@mawaqit"): str, vol.Required(CONF_PASSWORD, default="password"): str}
-            ),
+            data_schema=schema,
             errors=self._errors,
         )
-        
         
         
     async def _show_config_form2(self, user_input):  # pylint: disable=unused-argument
@@ -173,10 +169,13 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         f = open('{}/data/api.txt'.format(current_dir))
         api = f.read()
         f.close()
+
         da = await self.neighborhood(lat, longi, '', '', api) 
+
         name_servers=[]
         uuid_servers=[]
         CALC_METHODS=[]
+
         with open('{}/data/all_mosquee_NN.txt'.format(current_dir), "r") as f:
             distros_dict = json.load(f)
         for distro in distros_dict:
@@ -225,7 +224,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Return mosques in the neighborhood if any."""
         try:
             client = MawaqitClient(lat,long,'',username,password, api, '')
-            da = await  client.all_mosques_neighberhood()
+            da = await client.all_mosques_neighberhood()
             await client.close()
             return da
         except BadCredentialsException:  # pylint: disable=broad-except
@@ -237,7 +236,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Return mosques in the neighborhood if any."""
         try:
             client = MawaqitClient('','','',username,password,'')
-            da = await  client.apimawaqit()
+            da = await client.apimawaqit()
             await client.close()
             return da
         except BadCredentialsException:  # pylint: disable=broad-except
@@ -250,7 +249,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """fetch prayer time"""
         try:
             client = MawaqitClient(lat,long,mosquee,username,password,api,'')
-            db = await  client.fetch_prayer_times()
+            db = await client.fetch_prayer_times()
             await client.close()
             return db
         except BadCredentialsException:  # pylint: disable=broad-except
@@ -280,6 +279,7 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
             name_servers=[]
             uuid_servers=[]
             CALC_METHODS=[]
+
             with open('{}/data/all_mosquee_NN.txt'.format(current_dir), "r") as f:
                 distros_dict = json.load(f)
             for distro in distros_dict:
@@ -317,10 +317,10 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
         json.dump(da, text_file)
         text_file.close()
         
-        
         name_servers=[]
         uuid_servers=[]
         CALC_METHODS=[]
+
         with open('{}/data/all_mosquee_NN.txt'.format(current_dir), "r") as f:
             distros_dict = json.load(f)
         for distro in distros_dict:
@@ -328,7 +328,6 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
             uuid_servers.extend([distro["uuid"]])
             CALC_METHODS.extend([distro["label"]])
             
-
         options = {
             vol.Optional(
                 CONF_CALC_METHOD,
@@ -340,6 +339,7 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
 
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
 
+
     async def neighborhood(self, lat, long, username, password, api):
         """Return mosques in the neighborhood if any."""
         try:
@@ -350,6 +350,7 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
         except BadCredentialsException:  # pylint: disable=broad-except
             pass
         return da
+
 
     async def fetch_prayer_times(self, lat, long, mosquee, username, password, api):
         """fetch prayer time"""
