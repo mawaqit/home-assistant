@@ -27,6 +27,7 @@ from .const import (
     API,
     CONF_CALC_METHOD,
     DATA_UPDATED,
+    UPDATE_TIME,
     DEFAULT_CALC_METHOD,
     DOMAIN,
     USERNAME,
@@ -163,7 +164,7 @@ class MawaqitPrayerClient:
         mosque_id = uuid_servers[indice]
         
         # We get the prayer times of the year from pray_time.txt
-        f = open('{dir}/data/pray_time.txt'.format(dir=current_dir, name=""))
+        f = open('{dir}/data/pray_time.txt'.format(dir=current_dir), "r")
 
         data = json.load(f)
         calendar = data["calendar"]
@@ -176,14 +177,14 @@ class MawaqitPrayerClient:
         index_day = today.day
         day_times = month_times[str(index_day)] # Today's times
         
-        prayer_names = ["Fajr", "Shurouq", "Dhuhr", "Asr", "Maghrib", "Isha" ]
+        prayer_names = ["Fajr", "Shurouq", "Dhuhr", "Asr", "Maghrib", "Isha"]
         res = {prayer_names[i]: day_times[i] for i in range(len(prayer_names))}
 
         try:
             day_times_tomorrow = month_times[str(index_day + 1)]
         except KeyError:
             # If index_day + 1 == 32 (or 31) and the month contains only 31 (or 30) days
-            # We take the first prayer of the following month
+            # We take the first day of the following month
             day_times_tomorrow = calendar[index_month + 1]["1"]
 
         now = today.time().strftime("%H:%M")
@@ -208,10 +209,9 @@ class MawaqitPrayerClient:
         res['Next Salat Time'] = next_prayer.split(" ", 1)[1].rsplit(':', 1)[0]
         res['Next Salat Name'] = prayer_names[prayers.index(next_prayer)]
 
-        # 15 minutes Before Next Prayer
         countdown_next_prayer = 15
+        # 15 minutes Before Next Prayer
         res['Next Salat Preparation'] = (datetime.strptime(next_prayer, '%Y-%m-%d %H:%M:%S')-timedelta(minutes=countdown_next_prayer)).strftime('%Y-%m-%d %H:%M:%S').split(" ", 1)[1].rsplit(':', 1)[0]
-
         
         # if Jumu'a is set as Dhuhr, then Jumu'a time is the same as Friday's Dhuhr time
         if data["jumuaAsDuhr"]:
@@ -328,6 +328,50 @@ class MawaqitPrayerClient:
             self.hass, self.async_update, next_update_at
         )
 
+    async def async_update_next_salat_sensor(self):
+        salat_before_update = self.prayer_times_info['Next Salat Name']
+        prayers = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"]
+        if salat_before_update != "Isha": # We just retrieve the next salat of the day.
+            index = prayers.index(salat_before_update) + 1
+            self.prayer_times_info['Next Salat Name'] = prayers[index]
+            self.prayer_times_info['Next Salat Time'] = self.prayer_times_info[prayers[index]]
+        
+        else: # We retrieve the next Fajr (more calcualtions).
+            current_dir = os.path.dirname(os.path.realpath(__file__))
+            f = open('{dir}/data/pray_time.txt'.format(dir=current_dir), "r")
+            data = json.load(f)
+            calendar = data["calendar"]
+
+            today = datetime.today()
+            index_month = today.month - 1
+            month_times = calendar[index_month]
+
+            maghrib_hour = self.prayer_times_info['Maghrib']
+            maghrib_hour = datetime.strptime(maghrib_hour, "%Y-%m-%d %H:%M:%S")
+            maghrib_hour = maghrib_hour.strftime("%H:%M")
+
+            isha_hour = self.prayer_times_info['Isha']
+            isha_hour = datetime.strptime(isha_hour, "%Y-%m-%d %H:%M:%S")
+            isha_hour = isha_hour.strftime("%H:%M")
+
+            # If 'Isha is before 12 AM (Maghrib hour < 'Isha hour), we need to get the next day's Fajr.
+            # Else, we get the current day's Fajr.
+            if maghrib_hour < isha_hour:
+                index_day = today.day + 1
+            else:
+                index_day = today.day
+            day_times = month_times[str(index_day)]
+            fajr_hour = day_times[0]
+
+            self.prayer_times_info['Next Salat Name'] = "Fajr"
+            self.prayer_times_info['Next Salat Time'] = dt_util.parse_datetime(f"{today.year}-{today.month}-{index_day} {fajr_hour}:00")
+
+        countdown_next_prayer = 15
+        self.prayer_times_info['Next Salat Preparation'] = self.prayer_times_info['Next Salat Time'] - timedelta(minutes=countdown_next_prayer)
+
+        _LOGGER.debug("Next salat info updated, updating sensors")
+        async_dispatcher_send(self.hass, DATA_UPDATED)
+
     async def async_update(self, *_):
         """Update sensors with new prayer times."""
         try:
@@ -366,9 +410,16 @@ class MawaqitPrayerClient:
                   )
             else:
                 self.prayer_times_info[prayer] = time
-            
-            
-        await self.async_schedule_future_update()
+
+        # We schedule updates for next_salat_time and next_salat_name at each prayer time + 1 minute.
+        prayers = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"]
+        prayer_times = [self.prayer_times_info[prayer] for prayer in prayers]
+
+        for prayer in prayer_times:
+            next_update_at = prayer + timedelta(minutes=1)
+            async_track_point_in_time(
+                self.hass, self.async_update_next_salat_sensor, next_update_at
+            )
 
         _LOGGER.debug("New prayer times retrieved. Updating sensors.")
         async_dispatcher_send(self.hass, DATA_UPDATED)
@@ -385,6 +436,10 @@ class MawaqitPrayerClient:
 
         await self.async_update()
         self.config_entry.add_update_listener(self.async_options_updated)
+
+        # We update time prayers every day.
+        h, m, s = UPDATE_TIME
+        await self.hass.async_track_time_change(self.async_update, hour=h, minute=m, second=s)
 
         return True
 
