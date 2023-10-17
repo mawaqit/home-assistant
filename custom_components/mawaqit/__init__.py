@@ -409,3 +409,4 @@ class MawaqitPrayerClient:
         if hass.data[DOMAIN].event_unsub:
             hass.data[DOMAIN].event_unsub()
         await hass.data[DOMAIN].async_update()
+        
