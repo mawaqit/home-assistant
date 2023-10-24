@@ -13,8 +13,6 @@ SENSOR_TYPES = {
     "Isha": "Adhan",
     "Jumua": "Adhan",
     "Jumua 2": "Adhan",
-    #"Aid": "Adhan",
-    #"Aid 2": "Adhan",
     "next_mawaqit": "time",
     "Fajr Iqama": "",  
     "Dhuhr Iqama": "",   
@@ -29,8 +27,6 @@ SENSOR_TYPES = {
     "Mosque_url": "",
     "Mosque_image": "",
 }
-
-
         
 CONF_CALC_METHOD = "calculation_method"
 
@@ -39,8 +35,9 @@ DEFAULT_CALC_METHOD = "nearest"
 
 DATA_UPDATED = "Mawaqit_prayer_data_updated"
 
-CONF_SERVER = "server"
+UPDATE_TIME = (1, 0, 0)
 
+CONF_SERVER = "server"
 
 USERNAME = "user"
 
