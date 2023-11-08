@@ -224,7 +224,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Return mosques in the neighborhood if any."""
         try:
             client = MawaqitClient(lat,long,'',username,password, api, '')
-            da = await client.all_mosques_neighberhood()
+            da = await client.all_mosques_neighborhood()
             await client.close()
             return da
         except BadCredentialsException:  # pylint: disable=broad-except
@@ -344,7 +344,7 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
         """Return mosques in the neighborhood if any."""
         try:
             client = MawaqitClient(lat,long,'',username,password, api, '')
-            da = await  client.all_mosques_neighberhood()
+            da = await  client.all_mosques_neighborhood()
             await client.close()
             return da
         except BadCredentialsException:  # pylint: disable=broad-except
