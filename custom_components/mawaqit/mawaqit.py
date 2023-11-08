@@ -1,4 +1,3 @@
-
 """ Python wrapper for the mawaqit  API """
 from __future__ import annotations
 import json
@@ -27,7 +26,7 @@ class NotAuthenticatedException(Exception):
 class BadCredentialsException(Exception):
     pass
 
-class NoMosqueArround(Exception):
+class NoMosqueAround(Exception):
     pass
 
 
@@ -59,8 +58,6 @@ class MawaqitClient:
         self.token = token      
         self.session = session if session else ClientSession()
 
-  
-
     async def __aenter__(self) -> MawaqitClient:
         return self
 
@@ -76,18 +73,12 @@ class MawaqitClient:
         """Close the session."""
         await self.session.close()
 
-
-
     @backoff.on_exception(
         backoff.expo,
         NotAuthenticatedException,
         max_tries=20,
         on_backoff=relogin,
     )
-
-
-
-
 
     async def apimawaqit(self) -> str:
         if self.token == '': 
@@ -100,9 +91,6 @@ class MawaqitClient:
           return json.loads(data)["apiAccessToken"]
         else:
             return self.token  
-
-
-
 
     async def all_mosques_neighborhood(self):
         if self.token == '': 
@@ -124,12 +112,12 @@ class MawaqitClient:
                 if response.status != 200:
                     raise NotAuthenticatedException
                 #if len(response.text()) == 0:
-                #    raise NoMosqueArround
+                #    raise NoMosqueAround
                
                 data = await response.json()
 
                 #if len(data) == 0:
-                #    raise NoMosqueArround
+                #    raise NoMosqueAround
             return data #json.loads(data)
 
     async def fetch_prayer_times(self) -> dict:
@@ -142,7 +130,6 @@ class MawaqitClient:
       if self.token == '': 
           api_token = await self.apimawaqit()
       else: api_token = self.token
-      
 
       headers = {'Content-Type': 'application/json',
              'Api-Access-Token': format(api_token)}	
@@ -153,10 +140,8 @@ class MawaqitClient:
                 if response.status != 200:
                     raise NotAuthenticatedException
                 data = await response.json()
+
       return data
-
-
-
 
     async def login(self) -> None:
         """Log into the mawaqit website."""

@@ -1,10 +1,10 @@
 {
-  "title": "Mawaqit Prayer Times",
+  "title": "MAWAQIT",
   "config": {
     "step": {
       "user": {
-        "title": "Mawaqit",
-        "description": "Register on https://mawaqit.net/ and connect below. The nearest mosque to your house will be chosen but you can change it later on in the add-on parameters.",
+        "title": "MAWAQIT",
+        "description": "Register on https://mawaqit.net/ and connect below. The 5 nearest mosques to your location will be suggested and you will choose your favourite one.",
         "data": {
           "username": "E-mail",
           "password": "Password",
@@ -19,7 +19,6 @@
         }
       },      
       
-      
       "select_server": {
         "title": "Select your favourite mosque",
         "description": "Multiple mosques available, select one :",
@@ -32,12 +31,13 @@
     },
 
     "error": {
-      "wrong_credential": "Wrong login or password, please retry."
+      "wrong_credential": "Wrong login or password, please retry.",
+      "cannot_connect_to_server": "Cannot connect to the server, please retry later."
     },
 
     "abort": {
       "one_instance_allowed": "Only a single instance is necessary.",
-      "no_mosque": "Sorry, there's no Mawaqit mosque in your neighborhood"
+      "no_mosque": "Sorry, there's no MAWAQIT mosque in your neighborhood."
     }
 
   },
@@ -45,7 +45,7 @@
     "step": {
       "init": {
         "data": {
-          "calculation_method": "Change your favourite mosque"
+          "calculation_method": "Change your mosque :"
         }
       }
     }
