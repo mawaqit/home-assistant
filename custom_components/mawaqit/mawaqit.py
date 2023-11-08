@@ -104,7 +104,7 @@ class MawaqitClient:
 
 
 
-    async def all_mosques_neighberhood(self):
+    async def all_mosques_neighborhood(self):
         if self.token == '': 
             api = await self.apimawaqit()
         else: api = self.token
@@ -133,8 +133,8 @@ class MawaqitClient:
             return data #json.loads(data)
 
     async def fetch_prayer_times(self) -> dict:
-      if self.mosquee == '': # and len(self.all_mosques_neighberhood())>0: 
-            mosque_id =   await (self.all_mosques_neighberhood())
+      if self.mosquee == '': # and len(self.all_mosques_neighborhood())>0: 
+            mosque_id =   await (self.all_mosques_neighborhood())
             mosque_id = mosque_id[0]["uuid"]
       else: 
           mosque_id= self.mosquee 
