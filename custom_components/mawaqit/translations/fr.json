@@ -37,7 +37,7 @@
       },
   
       "abort": {
-        "one_instance_allowed": "Une seule instance de MAWAQIT est possible.",
+        "one_instance_allowed": "Une seule instance (entrée) MAWAQIT est suffisante. Si vous souhaitez modifier votre mosquée, veuillez cliquer sur le bouton \"Configurer\" de l'instance existante.",
         "no_mosque": "D\u00e9sol\u00e9, aucune mosqu\u00e9e MAWAQIT n'est disponible près de chez vous."
       }
   

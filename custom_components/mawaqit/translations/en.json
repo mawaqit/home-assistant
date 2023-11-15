@@ -36,7 +36,7 @@
     },
 
     "abort": {
-      "one_instance_allowed": "Only a single instance is necessary.",
+      "one_instance_allowed": "One MAWAQIT entry is enough. If you want to change your mosque, please click on the \"Configure\" button of the existing entry.",
       "no_mosque": "Sorry, there's no MAWAQIT mosque in your neighborhood."
     }
 

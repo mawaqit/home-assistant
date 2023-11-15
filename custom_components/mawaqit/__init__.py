@@ -95,6 +95,16 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_unload_entry(hass, config_entry):
     """Unload Mawaqit Prayer entry from config_entry."""
+
+    if hass.data[DOMAIN].event_unsub:
+        hass.data[DOMAIN].event_unsub()
+    hass.data.pop(DOMAIN)
+
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+
+async def async_remove_entry(hass, config_entry):
+    """Remove Mawaqit Prayer entry from config_entry."""
+
     current_dir = os.path.dirname(os.path.realpath(__file__))
     dir_path = '{}/data'.format(current_dir)
     try:
@@ -108,11 +118,7 @@ async def async_unload_entry(hass, config_entry):
     except OSError as e:
         print("Error: %s : %s" % (dir_path, e.strerror))
 
-    if hass.data[DOMAIN].event_unsub:
-        hass.data[DOMAIN].event_unsub()
-    hass.data.pop(DOMAIN)
-
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    return await hass.config_entries.async_remove(config_entry)
 
 
 class MawaqitPrayerClient:
@@ -148,7 +154,7 @@ class MawaqitPrayerClient:
         uuid_servers=[]
         CALC_METHODS=[]
 
-        with open('{}/data/all_mosquee_NN.txt'.format(current_dir), "r") as f:
+        with open('{}/data/all_mosques_NN.txt'.format(current_dir), "r") as f:
           distros_dict = json.load(f)
 
         for distro in distros_dict:
