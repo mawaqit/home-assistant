@@ -44,4 +44,4 @@ USERNAME = "user"
 PASSWORD = "password"
 
 API = "api"
-CONF_UUID ="uuid"
+CONF_UUID = "uuid"
