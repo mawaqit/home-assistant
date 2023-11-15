@@ -11,6 +11,8 @@ import backoff
 import aiohttp
 from aiohttp import ClientSession
 
+import asyncio
+
 JSON = Union[Dict[str, Any], List[Dict[str, Any]]]
 
 API_URL_BASE = "https://mawaqit.net/api/2.0"

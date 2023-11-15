@@ -1,22 +1,18 @@
 """Adds config flow for Mawaqit."""
-from homeassistant import config_entries
+import logging
+import aiohttp
+import os
+import json
+from typing import Any
 import voluptuous as vol
 
 from .const import  CONF_CALC_METHOD, DEFAULT_CALC_METHOD, DOMAIN, NAME, CONF_SERVER, USERNAME, PASSWORD, CONF_UUID
 from .mawaqit import MawaqitClient, BadCredentialsException, NoMosqueAround
 
+from homeassistant import config_entries
 
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_PASSWORD, CONF_USERNAME, CONF_API_KEY, CONF_TOKEN
-
-import logging
-import asyncio
-import aiohttp
-import os
-import shutil
-import json
-import time
 import homeassistant.helpers.config_validation as cv
-from typing import Any
 from homeassistant.data_entry_flow import FlowResult
 
 
@@ -322,11 +318,14 @@ def read_all_mosques_NN_file():
     CALC_METHODS = []
 
     with open('{}/data/all_mosques_NN.txt'.format(CURRENT_DIR), "r") as f:
-        distros_dict = json.load(f)
-    for distro in distros_dict:
-        name_servers.extend([distro["label"]])
-        uuid_servers.extend([distro["uuid"]])
-        CALC_METHODS.extend([distro["label"]])
+        dict_mosques = json.load(f)
+    for mosque in dict_mosques:
+        distance = mosque["proximity"]
+        distance = distance/1000
+        distance = round(distance, 2)
+        name_servers.extend([mosque["label"] + ' (' + str(distance) + 'km)'])
+        uuid_servers.extend([mosque["uuid"]])
+        CALC_METHODS.extend([mosque["label"]])
 
     return name_servers, uuid_servers, CALC_METHODS
 
@@ -348,10 +347,6 @@ def get_mawaqit_token_from_file():
     mawaqit_token = f.read()
     f.close()
     return mawaqit_token
-
-def delete_data_folder():
-    if os.path.exists('{}/data'.format(CURRENT_DIR)):
-        shutil.rmtree('{}/data'.format(CURRENT_DIR))
 
 def is_data_folder_empty():
     return not os.listdir('{}/data'.format(CURRENT_DIR))
