@@ -117,17 +117,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         mawaqit_token = f.read()
         f.close()
 
-
         if user_input is not None:
-            nearest_mosques = await self.all_mosques_neighborhood(lat=lat,
-                                                                  longi=longi,
-                                                                  username=user_input[CONF_USERNAME],
-                                                                  password=user_input[CONF_PASSWORD],
-                                                                  token=mawaqit_token)
-
-            text_file = open('{}/data/my_mosque_NN.txt'.format(current_dir), "w")
-            json.dump(nearest_mosques[index], text_file)
-            text_file.close()    
             
             name_servers=[]
             uuid_servers=[]
@@ -141,24 +131,30 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 
             mosque = user_input[CONF_UUID]
             index = name_servers.index(mosque)
-            mosque_id = uuid_servers[index]      
+            mosque_id = uuid_servers[index]
+
+            nearest_mosques = await self.all_mosques_neighborhood(lat, longi, token=mawaqit_token)                                                
+
+            text_file = open('{}/data/my_mosque_NN.txt'.format(current_dir), "w")
+            json.dump(nearest_mosques[index], text_file)
+            text_file.close()
             
             # the mosque chosen by user
-            dict_calendar = await self.fetch_prayer_times(lat=lat, longi=longi, api=api, mosque_id=mosque_id)
+            dict_calendar = await self.fetch_prayer_times(mosque=mosque_id, token=mawaqit_token)
                     
             text_file = open('{dir}/data/pray_time{name}.txt'.format(dir=current_dir, name=""), "w")
             json.dump(dict_calendar, text_file)
             text_file.close()
 
             title = 'MAWAQIT' + ' - ' + nearest_mosques[index]["name"]
-            data = {CONF_API_KEY: api, CONF_UUID: mosque_id, CONF_LATITUDE: lat, CONF_LONGITUDE: longi}
+            data = {CONF_API_KEY: mawaqit_token, CONF_UUID: mosque_id, CONF_LATITUDE: lat, CONF_LONGITUDE: longi}
             
             return self.async_create_entry(title=title, data=data)
         
         return await self._show_config_form2()
         
         
-    async def _show_config_form(self, user_input):  # pylint: disable=unused-argument
+    async def _show_config_form(self, user_input):
 
         if user_input is None:
             user_input = {}
@@ -178,7 +174,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
         
         
-    async def _show_config_form2(self):  # pylint: disable=unused-argument
+    async def _show_config_form2(self):
         """Show the configuration form to edit location data."""
         lat = self.hass.config.latitude
         longi = self.hass.config.longitude
@@ -188,7 +184,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         mawaqit_token = f.read()
         f.close()
 
-        nearest_mosques = await self.all_mosques_neighborhood(lat=lat, longi=longi, token=mawaqit_token)
+        nearest_mosques = await self.all_mosques_neighborhood(lat, longi, token=mawaqit_token)
 
         text_file = open('{}/data/all_mosques_NN.txt'.format(current_dir), "w")
         json.dump(nearest_mosques, text_file)
@@ -223,7 +219,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
 
     async def _test_credentials(self, username, password):
-        """Return true if credentials is valid."""
+        """Return True if the MAWAQIT credentials is valid."""
         try:
             client = MawaqitClient(username=username, password=password)
             await client.login()
@@ -231,22 +227,10 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return True
         except BadCredentialsException:
             return False
-
-
-    async def all_mosques_neighborhood(self, lat, long, username, password, token):
-        """Return mosques in the neighborhood if any."""
-        try:
-            client = MawaqitClient(lat=lat, long=long, username=username, password=password, token=token)
-            nearest_mosques = await client.all_mosques_neighborhood()
-            await client.close()
-        except BadCredentialsException:
-            pass
-
-        return nearest_mosques
-
+        
 
     async def get_mawaqit_api_token(self, username, password):
-        """Return the MAWAQIT API Token."""
+        """Return the MAWAQIT API token."""
         try:
             client = MawaqitClient(username=username, password=password)
             token = await client.get_api_token()
@@ -255,13 +239,26 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             pass
 
         return token
-        
+
+
+    async def all_mosques_neighborhood(self, lat, long, username = None, password = None, token = None):
+        """Return mosques in the neighborhood if any."""
+        try:
+            client = MawaqitClient(latitude=lat, longitude=long, username=username, password=password, token=token)
+            await client.get_api_token()
+            nearest_mosques = await client.all_mosques_neighborhood()
+            await client.close()
+        except BadCredentialsException:
+            pass
+
+        return nearest_mosques
         
 
-    async def fetch_prayer_times(self, lat, long, mosque, username, password, token):
+    async def fetch_prayer_times(self, lat = None, long = None, mosque = None, username = None, password = None, token = None):
         """Get prayer times from the MAWAQIT API. Returns a dict."""
         try:
-            client = MawaqitClient(lat=lat, long=long, mosque=mosque, username=username, password=password, token=token)
+            client = MawaqitClient(latitude=lat, longitude=long, mosque=mosque, username=username, password=password, token=token)
+            await client.get_api_token()
             dict_calendar = await client.fetch_prayer_times()
             await client.close()
         except BadCredentialsException:
@@ -281,12 +278,8 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             lat = self.hass.config.latitude
             longi = self.hass.config.longitude
-            current_dir = os.path.dirname(os.path.realpath(__file__))  
             
-            f = open('{}/data/api.txt'.format(current_dir))
-            mawaqit_token = f.read()
-            f.close()
-            nearest_mosques = await self.neighborhood(lat=lat, long=longi, token=mawaqit_token)
+            current_dir = os.path.dirname(os.path.realpath(__file__))  
             
             name_servers=[]
             uuid_servers=[]
@@ -302,24 +295,29 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
             mosque = user_input['calculation_method']
             index = name_servers.index(mosque)
             mosque_id = uuid_servers[index]
-            
+
+            f = open('{}/data/api.txt'.format(current_dir))
+            mawaqit_token = f.read()
+            f.close()
+
+            try:
+                nearest_mosques = await self.neighborhood(latitude=lat, longitude=longi, token=mawaqit_token)
+            except NoMosqueAround:
+                # TODO
+                raise NoMosqueAround("No mosque around.")
+
             text_file = open('{}/data/my_mosque_NN.txt'.format(current_dir), "w")
             json.dump(nearest_mosques[index], text_file)
             text_file.close()
             
             # the mosque chosen by user
-            dict_calendar = await self.fetch_prayer_times(lat=lat, 
-                                               long=longi, 
-                                               mosque=mosque_id, 
-                                               username=user_input[CONF_USERNAME], 
-                                               password=user_input[CONF_PASSWORD], 
-                                               token=mawaqit_token)
+            dict_calendar = await self.fetch_prayer_times(mosque=mosque_id, token=mawaqit_token)
                     
             text_file = open('{dir}/data/pray_time{name}.txt'.format(dir=current_dir, name=""), "w")
             json.dump(dict_calendar, text_file)
             text_file.close()
 
-            title = 'MAWAQIT' + ' - ' + da[index]["name"]
+            title = 'MAWAQIT' + ' - ' + nearest_mosques[index]["name"]
 
             data = {CONF_API_KEY: mawaqit_token, CONF_UUID: mosque_id, CONF_LATITUDE: lat, CONF_LONGITUDE: longi}
 
@@ -339,7 +337,7 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
         mawaqit_token = f.read()
         f.close()
 
-        nearest_mosques = await self.neighborhood(lat=lat, long=longi, token=mawaqit_token)
+        nearest_mosques = await self.neighborhood(lat, longi, token=mawaqit_token)
         
         text_file = open('{}/data/all_mosques_NN.txt'.format(current_dir), "w")
         json.dump(nearest_mosques, text_file)
@@ -349,7 +347,7 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
         uuid_servers=[]
         CALC_METHODS=[]
 
-        with open('{}/data/all_mosque_NN.txt'.format(current_dir), "r") as f:
+        with open('{}/data/all_mosques_NN.txt'.format(current_dir), "r") as f:
             distros_dict = json.load(f)
         for distro in distros_dict:
             name_servers.extend([distro["label"]])
@@ -368,10 +366,11 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
 
 
-    async def neighborhood(self, lat, long, username, password, api):
+    async def neighborhood(self, latitude, longitude, mosque = None, username = None, password = None, token = None):
         """Return mosques in the neighborhood if any. Returns a list of dicts."""
         try:
-            client = MawaqitClient(lat,long,'',username,password, api, '')
+            client = MawaqitClient(latitude, longitude, mosque, username, password, token, session=None)
+            await client.get_api_token()
             nearest_mosques = await client.all_mosques_neighborhood()
             await client.close()
         except BadCredentialsException:
@@ -379,10 +378,11 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
         return nearest_mosques
 
 
-    async def fetch_prayer_times(self, lat, long, mosque, username, password, api):
+    async def fetch_prayer_times(self, latitude = None, longitude = None, mosque = None, username = None, password = None, token = None):
         """Get prayer times from the MAWAQIT API. Returns a dict."""
         try:
-            client = MawaqitClient(lat, long, mosque, username, password, api, '')
+            client = MawaqitClient(latitude, longitude, mosque, username, password, token, session=None)
+            await client.get_api_token()
             dict_calendar = await client.fetch_prayer_times()
             await client.close()
             return dict_calendar
