@@ -118,8 +118,6 @@ async def async_remove_entry(hass, config_entry):
     except OSError as e:
         print("Error: %s : %s" % (dir_path, e.strerror))
 
-    return await hass.config_entries.async_remove(config_entry)
-
 
 class MawaqitPrayerClient:
     """Mawaqit Prayer Client Object."""
