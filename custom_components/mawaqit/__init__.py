@@ -243,26 +243,27 @@ class MawaqitPrayerClient:
         res['Mosque_localisation']=data["localisation"]
         res['Mosque_url']=data["url"]
         res['Mosque_image']=data["image"]
-
-        # The Iqama countdown from Adhan is stored in pray_time.txt as well.
-        iqamaCalendar = data["iqamaCalendar"]
-        iqamas = iqamaCalendar[index_month][str(index_day)] # Today's iqama times.
-        try:
-            # The iqama countdown is stored as a string with a + sign.
-            # So, we need to remove the + and convert the countdown to an int.
-            iqamas = [int(countdown.replace("+", "")) for countdown in iqamas]
-        except ValueError:
-            iqamas = [0, 0, 0, 0, 0]
             
         # We store the prayer times of the day in HH:MM format.
         prayers = [datetime.strptime(prayer, '%H:%M') for prayer in day_times]
         del prayers[1] # Because there's no iqama for shurouq.
 
+        # The Iqama countdown from Adhan is stored in pray_time.txt as well.
+        iqamaCalendar = data["iqamaCalendar"]
+        iqamas = iqamaCalendar[index_month][str(index_day)] # Today's iqama times.
+
         # We store the iqama times of the day in HH:MM format.
         iqama_times = []
 
         for (prayer, iqama) in zip(prayers, iqamas):
-            iqama_times.append((prayer + timedelta(minutes=iqama)).strftime("%H:%M"))     
+            # The iqama can be either stored as a minutes countdown starting by a '+', or as a fixed time (HH:MM).
+            if '+' in iqama:
+                iqama_times.append((prayer + timedelta(minutes=iqama)).strftime("%H:%M"))
+            elif ':' in iqama:
+                iqama_times.append(iqama)
+            else:
+                # if there's a bug, we just append the prayer time for now.
+                iqama.append(prayer)
 
         iqama_names = ["Fajr Iqama", "Dhuhr Iqama", "Asr Iqama", "Maghrib Iqama", "Isha Iqama"]
 
