@@ -130,12 +130,10 @@ class MawaqitPrayerClient:
         self.available = True
         self.event_unsub = None
 
-
     @property
     def calc_method(self):
         """Return the calculation method."""
         return self.config_entry.options[CONF_CALC_METHOD]
-
 
     def get_new_prayer_times(self):
         """Fetch prayer times for today."""
@@ -182,7 +180,6 @@ class MawaqitPrayerClient:
         day_times = month_times[str(index_day)] # Today's times
         
         prayer_names = ["Fajr", "Shurouq", "Dhuhr", "Asr", "Maghrib", "Isha"]
-        res = {prayer_names[i]: day_times[i] for i in range(len(prayer_names))}
 
         try:
             day_times_tomorrow = month_times[str(index_day + 1)]
@@ -199,15 +196,20 @@ class MawaqitPrayerClient:
 
         today = datetime.today().strftime("%Y-%m-%d")
         tomorrow = (datetime.today() + timedelta(days=1)).strftime("%Y-%m-%d")
-        
+
+        prayer_names = ["Fajr", "Shurouq", "Dhuhr", "Asr", "Maghrib", "Isha"]
         prayers = []
+        res = {}
+
         for j in range(len(prayer_names)):
             if prayer_names[j] == "Shurouq":
-                pray = tomorrow + " " + "23:59:00" # We never take in account shurouq in the calculation of next_salat
+                pray = tomorrow + " " + "23:59:00" # We never take Shurouq in account in the calculation of next_salat
             else:    
                 if datetime.strptime(day_times[j], '%H:%M') < datetime.strptime(now, '%H:%M'):
+                    res[prayer_names[j]] = day_times_tomorrow[j]
                     pray = tomorrow + " " + day_times_tomorrow[j] + ":00"
                 else:
+                    res[prayer_names[j]] = day_times[j]
                     pray = today + " " + day_times[j] + ":00"
 
             prayers.append(pray)
@@ -274,10 +276,10 @@ class MawaqitPrayerClient:
         
         return res2
     
-
     async def async_update_next_salat_sensor(self, *_):
         # DEBUG
         with open("logs.txt", "a") as f:
+            f.write("\n\nBEFORE :\n")
             f.write(f"async_update_next_salat_sensor launched : {datetime.now().strftime('%d/%m at %H:%M:%S')}\n")
             f.write(f"self.prayer_times_info['Next Salat Name'] : {self.prayer_times_info['Next Salat Name']}\n")
             f.write(f"self.prayer_times_info['Next Salat Time'] : {self.prayer_times_info['Next Salat Time']}\n")
@@ -330,6 +332,13 @@ class MawaqitPrayerClient:
             self.prayer_times_info['Next Salat Name'] = "Fajr"
             self.prayer_times_info['Next Salat Time'] = dt_util.parse_datetime(f"{today.year}-{today.month}-{index_day} {fajr_hour}:00")
 
+        # DEBUG
+        with open("logs.txt", "a") as f:
+            f.write("AFTER :\n")
+            f.write(f"self.prayer_times_info['Next Salat Name'] : {self.prayer_times_info['Next Salat Name']}\n")
+            f.write(f"self.prayer_times_info['Next Salat Time'] : {self.prayer_times_info['Next Salat Time']}\n")
+        # END DEBUG
+
         countdown_next_prayer = 15
         self.prayer_times_info['Next Salat Preparation'] = self.prayer_times_info['Next Salat Time'] - timedelta(minutes=countdown_next_prayer)
 
@@ -369,6 +378,7 @@ class MawaqitPrayerClient:
                   pray_date += timedelta(days=(4 - pray_date.weekday() + 7) % 7)
                   # We convert the date to string to be able to put it in the dictionary.
                   pray = pray_date.strftime("%Y-%m-%d")
+
               self.prayer_times_info[prayer] = dt_util.parse_datetime(
                   f"{pray} {time}"
                   )
@@ -381,6 +391,7 @@ class MawaqitPrayerClient:
 
         for prayer in prayer_times:
             next_update_at = prayer + timedelta(minutes=1)
+            _LOGGER.error("Next update at: %s (prayer number %s)", next_update_at, prayer_times.index(prayer) + 1)
             async_track_point_in_time(
                 self.hass, self.async_update_next_salat_sensor, next_update_at
             )
