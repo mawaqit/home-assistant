@@ -258,6 +258,7 @@ class MawaqitPrayerClient:
         for (prayer, iqama) in zip(prayers, iqamas):
             # The iqama can be either stored as a minutes countdown starting by a '+', or as a fixed time (HH:MM).
             if '+' in iqama:
+                iqama = int(iqama.replace('+', ''))
                 iqama_times.append((prayer + timedelta(minutes=iqama)).strftime("%H:%M"))
             elif ':' in iqama:
                 iqama_times.append(iqama)
@@ -275,6 +276,14 @@ class MawaqitPrayerClient:
     
 
     async def async_update_next_salat_sensor(self, *_):
+        # DEBUG
+        with open("logs.txt", "a") as f:
+            f.write(f"async_update_next_salat_sensor launched : {datetime.now().strftime('%d/%m at %H:%M:%S')}\n")
+            f.write(f"self.prayer_times_info['Next Salat Name'] : {self.prayer_times_info['Next Salat Name']}\n")
+            f.write(f"self.prayer_times_info['Next Salat Time'] : {self.prayer_times_info['Next Salat Time']}\n")
+        # END DEBUG
+
+
         salat_before_update = self.prayer_times_info['Next Salat Name']
         prayers = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"]
         if salat_before_update != "Isha": # We just retrieve the next salat of the day.
