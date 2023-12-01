@@ -178,8 +178,6 @@ class MawaqitPrayerClient:
 
         index_day = today.day
         day_times = month_times[str(index_day)] # Today's times
-        
-        prayer_names = ["Fajr", "Shurouq", "Dhuhr", "Asr", "Maghrib", "Isha"]
 
         try:
             day_times_tomorrow = month_times[str(index_day + 1)]
@@ -201,18 +199,15 @@ class MawaqitPrayerClient:
         prayers = []
         res = {}
 
-        for j in range(len(prayer_names)):
-            if prayer_names[j] == "Shurouq":
-                pray = tomorrow + " " + "23:59:00" # We never take Shurouq in account in the calculation of next_salat
-            else:    
-                if datetime.strptime(day_times[j], '%H:%M') < datetime.strptime(now, '%H:%M'):
-                    res[prayer_names[j]] = day_times_tomorrow[j]
-                    pray = tomorrow + " " + day_times_tomorrow[j] + ":00"
-                else:
-                    res[prayer_names[j]] = day_times[j]
-                    pray = today + " " + day_times[j] + ":00"
-
-            prayers.append(pray)
+        for i in range(len(prayer_names)):
+            if datetime.strptime(day_times[i], '%H:%M') < datetime.strptime(now, '%H:%M'):
+                res[prayer_names[i]] = day_times_tomorrow[i]
+                pray = tomorrow + " " + day_times_tomorrow[i] + ":00"
+            else:
+                res[prayer_names[i]] = day_times[i]
+                pray = today + " " + day_times[i] + ":00"
+            if prayer_names[i] != "Shurouq":
+                prayers.append(pray)
         
         # Then the next prayer is the nearest prayer time, so the min of the prayers list
         next_prayer = min(prayers)
