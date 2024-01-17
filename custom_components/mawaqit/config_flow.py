@@ -64,9 +64,6 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if valid:
             mawaqit_token = await self.get_mawaqit_api_token(username, password)
 
-            # create data folder if does not exist
-            create_data_folder()
-
             text_file = open('{}/data/api.txt'.format(CURRENT_DIR), "w")
             text_file.write(mawaqit_token)
             text_file.close()

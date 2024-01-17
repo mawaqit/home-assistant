@@ -149,21 +149,6 @@ class MawaqitPrayerClient:
         name_servers=[]
         uuid_servers=[]
         CALC_METHODS=[]
-
-        with open('{}/data/all_mosques_NN.txt'.format(current_dir), "r") as f:
-          distros_dict = json.load(f)
-
-        for distro in distros_dict:
-          name_servers.extend([distro["label"]])
-          uuid_servers.extend([distro["uuid"]])
-          CALC_METHODS.extend([distro["label"]])
-
-        if mosque == "nearest" or mosque == "no mosque in neighborhood":
-            indice = 0
-        else:
-            indice = name_servers.index(mosque)
-
-        mosque_id = uuid_servers[indice]
         
         # We get the prayer times of the year from pray_time.txt
         f = open('{dir}/data/pray_time.txt'.format(dir=current_dir), "r")
@@ -272,13 +257,6 @@ class MawaqitPrayerClient:
         return res2
     
     async def async_update_next_salat_sensor(self, *_):
-        # DEBUG
-        with open("logs.txt", "a") as f:
-            f.write("\n\nBEFORE :\n")
-            f.write(f"async_update_next_salat_sensor launched : {datetime.now().strftime('%d/%m at %H:%M:%S')}\n")
-            f.write(f"self.prayer_times_info['Next Salat Name'] : {self.prayer_times_info['Next Salat Name']}\n")
-            f.write(f"self.prayer_times_info['Next Salat Time'] : {self.prayer_times_info['Next Salat Time']}\n")
-        # END DEBUG
 
 
         salat_before_update = self.prayer_times_info['Next Salat Name']
@@ -327,13 +305,6 @@ class MawaqitPrayerClient:
             self.prayer_times_info['Next Salat Name'] = "Fajr"
             self.prayer_times_info['Next Salat Time'] = dt_util.parse_datetime(f"{today.year}-{today.month}-{index_day} {fajr_hour}:00")
 
-        # DEBUG
-        with open("logs.txt", "a") as f:
-            f.write("AFTER :\n")
-            f.write(f"self.prayer_times_info['Next Salat Name'] : {self.prayer_times_info['Next Salat Name']}\n")
-            f.write(f"self.prayer_times_info['Next Salat Time'] : {self.prayer_times_info['Next Salat Time']}\n")
-        # END DEBUG
-
         countdown_next_prayer = 15
         self.prayer_times_info['Next Salat Preparation'] = self.prayer_times_info['Next Salat Time'] - timedelta(minutes=countdown_next_prayer)
 
@@ -341,6 +312,9 @@ class MawaqitPrayerClient:
         async_dispatcher_send(self.hass, DATA_UPDATED)
 
     async def async_update(self, *_):
+        # TODO : Reload pray_time.txt so we avoid bugs if prayer_times changes (for example if the mosque decides to change the iqama delay of a prayer)
+        # get ID from my_mosque.txt, then create MawaqitClient and generate the dict with the prayer times.
+        
         """Update sensors with new prayer times."""
         try:
             prayer_times = await self.hass.async_add_executor_job(
@@ -384,12 +358,16 @@ class MawaqitPrayerClient:
         prayers = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"]
         prayer_times = [self.prayer_times_info[prayer] for prayer in prayers]
 
+        # We cancel the previous scheduled updates (if there is any) to avoid multiple updates for the same prayer.
+        if self.cancel_events_next_salat:
+            for cancel_event in self.cancel_events_next_salat:
+                cancel_event()
+        self.cancel_events_next_salat = []
+
         for prayer in prayer_times:
             next_update_at = prayer + timedelta(minutes=1)
-            _LOGGER.error("Next update at: %s (prayer number %s)", next_update_at, prayer_times.index(prayer) + 1)
-            async_track_point_in_time(
-                self.hass, self.async_update_next_salat_sensor, next_update_at
-            )
+            cancel_event = async_track_point_in_time(self.hass, self.async_update_next_salat_sensor, next_update_at)
+            self.cancel_events_next_salat.append(cancel_event)
 
         _LOGGER.debug("New prayer times retrieved. Updating sensors.")
         async_dispatcher_send(self.hass, DATA_UPDATED)
