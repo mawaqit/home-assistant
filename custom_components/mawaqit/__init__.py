@@ -314,7 +314,7 @@ class MawaqitPrayerClient:
     async def async_update(self, *_):
         # TODO : Reload pray_time.txt so we avoid bugs if prayer_times changes (for example if the mosque decides to change the iqama delay of a prayer)
         # get ID from my_mosque.txt, then create MawaqitClient and generate the dict with the prayer times.
-        
+
         """Update sensors with new prayer times."""
         try:
             prayer_times = await self.hass.async_add_executor_job(
@@ -359,9 +359,11 @@ class MawaqitPrayerClient:
         prayer_times = [self.prayer_times_info[prayer] for prayer in prayers]
 
         # We cancel the previous scheduled updates (if there is any) to avoid multiple updates for the same prayer.
-        if self.cancel_events_next_salat:
+        try:
             for cancel_event in self.cancel_events_next_salat:
                 cancel_event()
+        except AttributeError:
+            pass
         self.cancel_events_next_salat = []
 
         for prayer in prayer_times:

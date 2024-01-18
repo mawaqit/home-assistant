@@ -242,8 +242,8 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
             longi = self.hass.config.longitude
             
             name_servers, uuid_servers, CALC_METHODS = read_all_mosques_NN_file()
-                
-            mosque = user_input['calculation_method']
+            
+            mosque = user_input[CONF_CALC_METHOD]
             index = name_servers.index(mosque)
             mosque_id = uuid_servers[index]
 
@@ -286,13 +286,19 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
         write_all_mosques_NN_file(nearest_mosques)
         
         name_servers, uuid_servers, CALC_METHODS = read_all_mosques_NN_file()
-            
+
+        current_mosque = read_my_mosque_NN_file()["uuid"]
+
+        try:
+            index = uuid_servers.index(current_mosque)
+            default_name = name_servers[index]
+        except ValueError:
+            default_name = "None"
+
         options = {
-            vol.Optional(
+            vol.Required(
                 CONF_CALC_METHOD,
-                default=self.config_entry.options.get(
-                    CONF_CALC_METHOD, DEFAULT_CALC_METHOD
-                ),
+                default=default_name,
             ): vol.In(name_servers)
         }
 
@@ -329,6 +335,11 @@ def read_all_mosques_NN_file():
 def write_all_mosques_NN_file(mosques):
     with open('{}/data/all_mosques_NN.txt'.format(CURRENT_DIR), "w") as f:
         json.dump(mosques, f)
+
+def read_my_mosque_NN_file():
+    with open('{}/data/my_mosque_NN.txt'.format(CURRENT_DIR), "r") as f:
+        mosque = json.load(f)
+    return mosque
 
 def write_my_mosque_NN_file(mosque):
     text_file = open('{}/data/my_mosque_NN.txt'.format(CURRENT_DIR), "w")
