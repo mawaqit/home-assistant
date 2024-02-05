@@ -2,8 +2,9 @@
   "domain": "mawaqit",
   "name": "MAWAQIT",
   "documentation": "https://github.com/mawaqit/home-assistant",
-  "requirements": [],
-  "codeowners": ["@MAWAQIT"],
+  "requirements": ["mawaqit==0.0.1"],
+  "integration_type": "hub",
+  "codeowners": ["@MAWAQIT", "@mohaThr"],
   "config_flow": true,
   "iot_class": "cloud_polling",
   "version": "2.0.0"

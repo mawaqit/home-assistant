@@ -8,7 +8,7 @@ import shutil
 from datetime import datetime, timedelta
 from dateutil import parser as date_parser
 
-from .mawaqit import BadCredentialsException #, MawaqitClient
+from mawaqit.consts import BadCredentialsException
 
 from requests.exceptions import ConnectionError as ConnError
 
@@ -191,8 +191,12 @@ class MawaqitPrayerClient:
             else:
                 res[prayer_names[i]] = day_times[i]
                 pray = today + " " + day_times[i] + ":00"
-            if prayer_names[i] != "Shurouq":
-                prayers.append(pray)
+            
+            # # We never take in account shurouq in the calculation of next_salat
+            if prayer_names[i] == "Shurouq":
+                pray = tomorrow + " " + "23:59:59"
+
+            prayers.append(pray)
         
         # Then the next prayer is the nearest prayer time, so the min of the prayers list
         next_prayer = min(prayers)
@@ -258,9 +262,9 @@ class MawaqitPrayerClient:
     
     async def async_update_next_salat_sensor(self, *_):
 
-
         salat_before_update = self.prayer_times_info['Next Salat Name']
         prayers = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"]
+
         if salat_before_update != "Isha": # We just retrieve the next salat of the day.
             index = prayers.index(salat_before_update) + 1
             self.prayer_times_info['Next Salat Name'] = prayers[index]
@@ -313,7 +317,7 @@ class MawaqitPrayerClient:
 
     async def async_update(self, *_):
         # TODO : Reload pray_time.txt so we avoid bugs if prayer_times changes (for example if the mosque decides to change the iqama delay of a prayer)
-        # get ID from my_mosque.txt, then create MawaqitClient and generate the dict with the prayer times.
+        # get ID from my_mosque.txt, then create AsyncMawaqitClient and generate the dict with the prayer times.
 
         """Update sensors with new prayer times."""
         try:
