@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "one_instance_allowed": "Nur eine Instanz ist notwendig.",
+            "no_mosque": "Entschuldigung, es gibt keine MAWAQIT-Moschee in der Nähe."
+        },
+        "step": {
+            "user": {
+                "description": "Registrieren Sie sich auf https://mawaqit.net/ und verbinden Sie sich unten. Die nächstgelegene Moschee zu Ihrem Zuhause wird ausgewählt, aber Sie können sie später in den Add-On-Parametern ändern.",
+                "data": {
+                  "username": "E-Mail",
+                  "password": "Passwort",
+                  "server": "Server"
+                },
+                "title": "MAWAQIT Gebetszeiten einrichten"
+            }
+        },
+        "mosques": {
+          "title": "Wählen Sie Ihre Lieblingsmoschee",
+          "data": {
+            "mosques": "Mehrere Moscheen sind in Ihrer Umgebung verfügbar, wählen Sie eine aus:"
+          }
+        }            
+            
+            
+    },
+    "error": {
+      "wrong_credential": "Falscher Benutzername oder Passwort, bitte versuchen Sie es erneut."
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calculation_method": "Ändern Sie Ihre Lieblingsmoschee"
+                }
+            }
+        }
+    },
+    "title": "MAWAQIT"
+  }
+  
