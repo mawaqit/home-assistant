@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "one_instance_allowed": "Only a single instance is necessary.",
-            "no_mosque": "عذرًا، لا يوجد مسجد MAWAQIT في الحي."
+            "one_instance_allowed": "مطلوب فقط نسخة واحدة.",
+            "no_mosque": "عذرا، لا يوجد مسجد مواقيت في الحي."
         },
         "step": {
             "user": {
@@ -12,7 +12,7 @@
                   "password": "كلمة المرور",
                   "server": "الخادم"
                 },
-                "title": "تثبيت أوقات الصلاة MAWAQIT"
+                "title": "تثبيت أوقات الصلاة مواقيت"
             }
         },
         "mosques": {
@@ -37,6 +37,6 @@
             }
         }
     },
-    "title": "MAWAQIT"
+    "title": "مواقيت"
   }
   
