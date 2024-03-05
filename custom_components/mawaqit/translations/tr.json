@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "one_instance_allowed": "Yalnızca bir örnek gerekli.",
+            "no_mosque": "Üzgünüz, mahallenizde MAWAQIT camisi bulunmuyor."
+        },
+        "step": {
+            "user": {
+                "description": "https://mawaqit.net/ adresine kaydolun ve aşağıya bağlanın. Evinizin en yakın camisi seçilecek ancak daha sonra eklenti parametrelerinde değiştirebilirsiniz.",
+                "data": {
+                  "username": "E-posta",
+                  "password": "Şifre",
+                  "server": "Sunucu"
+                },
+                "title": "MAWAQIT Namaz Zamanları Kurulumu"
+            }
+        },
+        "mosques": {
+          "title": "Favori caminizi seçin",
+          "data": {
+            "mosques": "Çevrenizde birçok cami mevcut, birini seçin:"
+          }
+        }            
+            
+            
+    },
+    "error": {
+      "wrong_credential": "Hatalı kullanıcı adı veya şifre, lütfen tekrar deneyin."
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calculation_method": "Favori caminizi değiştirin"
+                }
+            }
+        }
+    },
+    "title": "MAWAQIT"
+  }
+  

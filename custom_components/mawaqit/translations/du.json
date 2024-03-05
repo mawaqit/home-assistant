@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "one_instance_allowed": "Slechts één instantie is nodig.",
+            "no_mosque": "Sorry, er is geen MAWAQIT-moskee in de buurt."
+        },
+        "step": {
+            "user": {
+                "description": "Registreer op https://mawaqit.net/ en verbind hieronder. De dichtstbijzijnde moskee bij u thuis zal worden gekozen, maar u kunt dit later wijzigen in de add-onparameters.",
+                "data": {
+                  "username": "E-mail",
+                  "password": "Wachtwoord",
+                  "server": "Server"
+                },
+                "title": "Instellen van MAWAQIT Gebedstijden"
+            }
+        },
+        "mosques": {
+          "title": "Selecteer uw favoriete moskee",
+          "data": {
+            "mosques": "Er zijn meerdere moskeeën beschikbaar in uw omgeving, kies er een:"
+          }
+        }            
+            
+            
+    },
+    "error": {
+      "wrong_credential": "Verkeerde gebruikersnaam of wachtwoord, probeer opnieuw."
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calculation_method": "Verander uw favoriete moskee"
+                }
+            }
+        }
+    },
+    "title": "MAWAQIT"
+  }
+  

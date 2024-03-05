@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "one_instance_allowed": "Only a single instance is necessary.",
+            "no_mosque": "عذرًا، لا يوجد مسجد MAWAQIT في الحي."
+        },
+        "step": {
+            "user": {
+                "description": "سجّل على https://mawaqit.net/ وقم بالاتصال أدناه. سيتم اختيار أقرب مسجد إلى منزلك ولكن يمكنك تغييره لاحقًا في معلمات الإضافة.",
+                "data": {
+                  "username": "البريد الإلكتروني",
+                  "password": "كلمة المرور",
+                  "server": "الخادم"
+                },
+                "title": "تثبيت أوقات الصلاة MAWAQIT"
+            }
+        },
+        "mosques": {
+          "title": "اختر مسجدك المفضل",
+          "data": {
+            "mosques": "يتوفر عدة مساجد حولك، اختر واحدًا:"
+          }
+        }            
+            
+            
+    },
+    "error": {
+      "wrong_credential": "اسم المستخدم أو كلمة المرور غير صحيحة، يرجى المحاولة مرة أخرى.",
+      "one_instance_allowed": "يكفي إنشاء نسخة واحدة فقط."
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calculation_method": "تغيير مسجدك المفضل"
+                }
+            }
+        }
+    },
+    "title": "MAWAQIT"
+  }
+  
