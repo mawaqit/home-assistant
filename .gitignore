@@ -2,3 +2,4 @@ custom_components/mawaqit/data
 custom_components/mawaqit/test.py
 custom_components/.DS_Store
 .DS_Store
+__pycache__/
