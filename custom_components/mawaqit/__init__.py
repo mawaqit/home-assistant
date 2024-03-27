@@ -35,10 +35,22 @@ from .const import (
     CONF_UUID,
 )
 
-from .mosq_list import (
-    CALC_METHODS,
-)
+import json
 
+CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
+file_path = f"{CURRENT_DIR}/mosq_list_data"
+
+try:
+    with open(file_path, "r") as text_file:
+        data = json.load(text_file)
+
+    # Accessing the CALC_METHODS object
+    CALC_METHODS = data["CALC_METHODS"]
+except FileNotFoundError:
+    #First Run
+    print(f"The file {file_path} was not found.")
+    CALC_METHODS = []
+    
 # from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_PASSWORD, CONF_USERNAME, CONF_API_KEY, CONF_TOKEN
 
 _LOGGER = logging.getLogger(__name__)
