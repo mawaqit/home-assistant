@@ -80,7 +80,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # creation of the list of mosques to be displayed in the options
             name_servers, uuid_servers, CALC_METHODS = read_all_mosques_NN_file()
             
-            file_path = f"{CURRENT_DIR}/mosq_list_data"
+            file_path = f"{CURRENT_DIR}/data/mosq_list_data"
             with open(file_path, "w+") as text_file:
                 json.dump({"CALC_METHODS": CALC_METHODS}, text_file)
 

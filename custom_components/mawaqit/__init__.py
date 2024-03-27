@@ -38,7 +38,7 @@ from .const import (
 import json
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
-file_path = f"{CURRENT_DIR}/mosq_list_data"
+file_path = f"{CURRENT_DIR}/data/mosq_list_data"
 
 try:
     with open(file_path, "r") as text_file:
