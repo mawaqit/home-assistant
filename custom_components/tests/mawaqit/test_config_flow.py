@@ -57,7 +57,7 @@ async def test_async_step_user_connection_error(hass: HomeAssistant):
 
     # Patching the methods used in the flow to simulate external interactions
     with patch(
-        "homeassistant.components.mawaqit.config_flow.MawaqitPrayerFlowHandler._test_credentials",
+        "homeassistant.components.mawaqit.mawaqit_wrapper._test_credentials",
         side_effect=connection_error_instance,
     ), patch(
         "homeassistant.components.mawaqit.config_flow.is_data_folder_empty",
@@ -82,7 +82,7 @@ async def test_async_step_user_invalid_credentials(hass: HomeAssistant):
 
     # Patch the credentials test to simulate a login failure
     with patch(
-        "homeassistant.components.mawaqit.config_flow.MawaqitPrayerFlowHandler._test_credentials",
+        "homeassistant.components.mawaqit.mawaqit_wrapper._test_credentials",
         return_value=False,
     ), patch(
         "homeassistant.components.mawaqit.config_flow.is_data_folder_empty",
@@ -106,16 +106,16 @@ async def test_async_step_user_valid_credentials(hass: HomeAssistant):
 
     # Patch the credentials test to simulate a login failure
     with patch(
-        "homeassistant.components.mawaqit.config_flow.MawaqitPrayerFlowHandler._test_credentials",
+        "homeassistant.components.mawaqit.mawaqit_wrapper._test_credentials",
         return_value=True,
     ), patch(
         "homeassistant.components.mawaqit.config_flow.is_data_folder_empty",
         return_value=True,
     ), patch(
-        "homeassistant.components.mawaqit.config_flow.MawaqitPrayerFlowHandler.get_mawaqit_api_token",
+        "homeassistant.components.mawaqit.mawaqit_wrapper.get_mawaqit_api_token",
         return_value="MAWAQIT_API_TOKEN",
     ), patch(
-        "homeassistant.components.mawaqit.config_flow.MawaqitPrayerFlowHandler.all_mosques_neighborhood",
+        "homeassistant.components.mawaqit.mawaqit_wrapper.all_mosques_neighborhood",
         return_value={},
     ):
         # Simulate user input with incorrect credentials
@@ -138,13 +138,13 @@ async def test_async_step_user_no_neighborhood(hass: HomeAssistant):
         "homeassistant.components.mawaqit.config_flow.is_data_folder_empty",
         return_value=True,
     ), patch(
-        "homeassistant.components.mawaqit.config_flow.MawaqitPrayerFlowHandler._test_credentials",
+        "homeassistant.components.mawaqit.mawaqit_wrapper._test_credentials",
         return_value=True,
     ), patch(
-        "homeassistant.components.mawaqit.config_flow.MawaqitPrayerFlowHandler.get_mawaqit_api_token",
+        "homeassistant.components.mawaqit.mawaqit_wrapper.get_mawaqit_api_token",
         return_value="MAWAQIT_API_TOKEN",
     ), patch(
-        "homeassistant.components.mawaqit.config_flow.MawaqitPrayerFlowHandler.all_mosques_neighborhood",
+        "homeassistant.components.mawaqit.mawaqit_wrapper.all_mosques_neighborhood",
         side_effect=NoMosqueAround,
     ):
         # Simulate user input to trigger the flow's logic
@@ -216,8 +216,8 @@ async def test_async_step_mosques(hass, mock_mosques_test_data):
     # Mock external dependencies
     with patch("homeassistant.components.mawaqit.config_flow.get_mawaqit_token_from_file",return_value="TOKEN",), \
         patch("homeassistant.components.mawaqit.config_flow.read_all_mosques_NN_file",return_value=mocked_mosques_data,), \
-        patch("homeassistant.components.mawaqit.config_flow.MawaqitPrayerFlowHandler.all_mosques_neighborhood",return_value=mock_mosques,), \
-        patch("homeassistant.components.mawaqit.config_flow.MawaqitPrayerFlowHandler.fetch_prayer_times",return_value={},):#empty data
+        patch("homeassistant.components.mawaqit.mawaqit_wrapper.all_mosques_neighborhood",return_value=mock_mosques,), \
+        patch("homeassistant.components.mawaqit.mawaqit_wrapper.fetch_prayer_times",return_value={},):#empty data
         # Initialize the flow
         flow = config_flow.MawaqitPrayerFlowHandler()
         flow.hass = hass
@@ -285,8 +285,8 @@ async def test_options_flow_valid_input(hass: HomeAssistant, config_entry_setup,
     """Test the options flow."""
     with patch('homeassistant.components.mawaqit.config_flow.read_all_mosques_NN_file', return_value=mocked_mosques_data), \
         patch("homeassistant.components.mawaqit.config_flow.get_mawaqit_token_from_file", return_value="TOKEN"), \
-        patch('homeassistant.components.mawaqit.config_flow.MawaqitPrayerOptionsFlowHandler.all_mosques_neighborhood', return_value=mock_mosques), \
-        patch("homeassistant.components.mawaqit.config_flow.MawaqitPrayerFlowHandler.fetch_prayer_times", return_value={}):# empty data
+        patch('homeassistant.components.mawaqit.mawaqit_wrapper.all_mosques_neighborhood', return_value=mock_mosques), \
+        patch("homeassistant.components.mawaqit.mawaqit_wrapper.fetch_prayer_times", return_value={}):# empty data
         
         # Initialize the options flow
         flow = config_flow.MawaqitPrayerOptionsFlowHandler(config_entry_setup)
@@ -310,7 +310,7 @@ async def test_options_flow_error_no_mosques_around(hass: HomeAssistant, config_
     """Test the options flow."""
     with patch('homeassistant.components.mawaqit.config_flow.read_all_mosques_NN_file', return_value=mocked_mosques_data), \
         patch("homeassistant.components.mawaqit.config_flow.get_mawaqit_token_from_file", return_value="TOKEN"), \
-        patch('homeassistant.components.mawaqit.config_flow.MawaqitPrayerOptionsFlowHandler.all_mosques_neighborhood', side_effect=NoMosqueAround):
+        patch('homeassistant.components.mawaqit.mawaqit_wrapper.all_mosques_neighborhood', side_effect=NoMosqueAround):
 
         
         # Initialize the options flow
@@ -338,7 +338,7 @@ async def test_options_flow_no_input_reopens_form(hass: HomeAssistant, config_en
     mock_mosques , mocked_mosques_data = mock_mosques_test_data
 
     """Test the options flow."""
-    with patch('homeassistant.components.mawaqit.config_flow.MawaqitPrayerOptionsFlowHandler.all_mosques_neighborhood', return_value={}), \
+    with patch('homeassistant.components.mawaqit.mawaqit_wrapper.all_mosques_neighborhood', return_value={}), \
         patch('homeassistant.components.mawaqit.config_flow.read_all_mosques_NN_file', return_value=mocked_mosques_data), \
         patch('homeassistant.components.mawaqit.config_flow.read_my_mosque_NN_file', return_value=mock_mosques[0]):
         
@@ -358,7 +358,7 @@ async def test_options_flow_no_input_error_reopens_form(hass: HomeAssistant, con
     _ , mocked_mosques_data = mock_mosques_test_data
     
     """Test the options flow."""
-    with patch('homeassistant.components.mawaqit.config_flow.MawaqitPrayerOptionsFlowHandler.all_mosques_neighborhood', return_value={}), \
+    with patch('homeassistant.components.mawaqit.mawaqit_wrapper.all_mosques_neighborhood', return_value={}), \
         patch('homeassistant.components.mawaqit.config_flow.read_all_mosques_NN_file', return_value=mocked_mosques_data), \
         patch('homeassistant.components.mawaqit.config_flow.read_my_mosque_NN_file', return_value={"uuid": "non_existent_uuid"}):#, \
         
