@@ -223,8 +223,7 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
                 title=title,
                 data=data
             )
-
-            return self.async_create_entry(title=None, data=None)
+            return self.config_entry
         
         lat = self.hass.config.latitude
         longi = self.hass.config.longitude
