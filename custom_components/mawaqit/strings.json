@@ -31,8 +31,8 @@
       "wrong_credential": "Wrong login or password, please retry.",
       "cannot_connect_to_server": "Cannot connect to the server, please retry later."
     },
-    "abort": {
-      "one_instance_allowed": "Une seule instance (entrée) MAWAQIT est suffisante. Si vous souhaitez modifier votre mosquée, veuillez cliquer sur le bouton \"Configurer\" de l'instance existante.",
+    "abort": { 
+      "one_instance_allowed": "A single MAWAQIT entry is necessary. If you want to reconfigure your mosque, you can click on \"Configure\" next to the existing entry.",
       "no_mosque": "Sorry, there's no MAWAQIT mosque in your neighborhood."
     }
   },
