@@ -175,7 +175,7 @@ class MyMosqueSensor(SensorEntity):
                 data = json.load(f)
             return data
 
-        data = read()
+        data = await self.hass.async_add_executor_job(read)
 
         for k, v in data.items():
             if str(k) != "uuid" and str(k) != "id" and str(k) != "slug":
