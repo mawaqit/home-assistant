@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "no_mosque": "Sorry, there's no MAWAQIT mosque in your neighborhood.",
-            "one_instance_allowed": "Une seule instance (entr\u00e9e) MAWAQIT est suffisante. Si vous souhaitez modifier votre mosqu\u00e9e, veuillez cliquer sur le bouton \"Configurer\" de l'instance existante."
+            "one_instance_allowed": "A single MAWAQIT entry is necessary. If you want to reconfigure your mosque, you can click on \"Configure\" next to the existing entry."
         },
         "error": {
             "cannot_connect_to_server": "Cannot connect to the server, please retry later.",
