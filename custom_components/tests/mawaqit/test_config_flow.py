@@ -19,8 +19,8 @@ async def test_step_user_one_instance_allowed(hass: HomeAssistant):
     flow = config_flow.MawaqitPrayerFlowHandler()
     flow.hass = hass
     with patch(
-        "homeassistant.components.mawaqit.config_flow.is_data_folder_empty",
-        return_value=False,
+        "homeassistant.components.mawaqit.config_flow.is_another_instance",
+        return_value=True,
     ):
         result = await flow.async_step_user(None)
 
@@ -36,8 +36,8 @@ async def test_show_form_user_no_input_reopens_form(hass: HomeAssistant):
     flow.hass = hass
 
     with patch(
-        "homeassistant.components.mawaqit.config_flow.is_data_folder_empty",
-        return_value=True,
+        "homeassistant.components.mawaqit.config_flow.is_another_instance",
+        return_value=False,
     ):
         # Invoke the initial step of the flow without user input
         result = await flow.async_step_user(user_input=None)
@@ -67,8 +67,8 @@ async def test_async_step_user_connection_error(hass: HomeAssistant):
             side_effect=connection_error_instance,
         ),
         patch(
-            "homeassistant.components.mawaqit.config_flow.is_data_folder_empty",
-            return_value=True,
+            "homeassistant.components.mawaqit.config_flow.is_another_instance",
+            return_value=False,
         ),
     ):
         # Simulate user input to trigger the flow's logic
@@ -96,8 +96,8 @@ async def test_async_step_user_invalid_credentials(hass: HomeAssistant):
             return_value=False,
         ),
         patch(
-            "homeassistant.components.mawaqit.config_flow.is_data_folder_empty",
-            return_value=True,
+            "homeassistant.components.mawaqit.config_flow.is_another_instance",
+            return_value=False,
         ),
     ):
         # Simulate user input with incorrect credentials
@@ -124,8 +124,8 @@ async def test_async_step_user_valid_credentials(hass: HomeAssistant):
             return_value=True,
         ),
         patch(
-            "homeassistant.components.mawaqit.config_flow.is_data_folder_empty",
-            return_value=True,
+            "homeassistant.components.mawaqit.config_flow.is_another_instance",
+            return_value=False,
         ),
         patch(
             "homeassistant.components.mawaqit.mawaqit_wrapper.get_mawaqit_api_token",
@@ -155,8 +155,8 @@ async def test_async_step_user_no_neighborhood(hass: HomeAssistant):
     # Patching the methods used in the flow to simulate external interactions
     with (
         patch(
-            "homeassistant.components.mawaqit.config_flow.is_data_folder_empty",
-            return_value=True,
+            "homeassistant.components.mawaqit.config_flow.is_another_instance",
+            return_value=False,
         ),
         patch(
             "homeassistant.components.mawaqit.mawaqit_wrapper._test_credentials",
@@ -371,7 +371,6 @@ async def test_options_flow_valid_input(
         mosque_uuid = mocked_mosques_data[1][1]  # uuid of the first mosque
 
         # TODO chage this if we remove the create_entry line 278
-        print("**********************33333333333333333333333333333")
         result = await flow.async_step_init(
             user_input={CONF_CALC_METHOD: mosque_uuid_label}
         )
@@ -380,51 +379,6 @@ async def test_options_flow_valid_input(
             result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         )  # Assert that an entry is created/updated
         # assert result["data"][CONF_UUID] == mosque_uuid
-
-
-# @pytest.mark.asyncio
-# async def test_options_flow_valid_input_v2(
-#     hass: HomeAssistant, config_entry_setup, mock_mosques_test_data
-# ):
-#     mock_mosques, mocked_mosques_data = mock_mosques_test_data
-
-#     """Test the options flow."""
-#     with (
-#         patch(
-#             "homeassistant.components.mawaqit.config_flow.read_all_mosques_NN_file",
-#             return_value=mocked_mosques_data,
-#         ),
-#         patch(
-#             "homeassistant.components.mawaqit.mawaqit_wrapper.get_mawaqit_token_from_env",
-#             return_value="TOKEN",
-#         ),
-#         patch(
-#             "homeassistant.components.mawaqit.mawaqit_wrapper.all_mosques_neighborhood",
-#             return_value=mock_mosques,
-#         ),
-#         patch(
-#             "homeassistant.components.mawaqit.mawaqit_wrapper.fetch_prayer_times",
-#             return_value={},
-#         ),
-#     ):  # empty data
-#         # Initialize the options flow
-#         flow = config_flow.MawaqitPrayerOptionsFlowHandler(config_entry_setup)
-#         flow.hass = hass  # Assign HomeAssistant instance
-
-#         # Simulate user input in the options flow
-#         mosque_uuid_label = mocked_mosques_data[0][
-#             1
-#         ]  # Assuming the user selects the first mosque
-#         mosque_uuid = mocked_mosques_data[1][1]  # uuid of the first mosque
-
-#         # TODO chage this if we remove the create_entry line 278
-#         result = await flow.async_step_init(
-#             user_input={CONF_CALC_METHOD: mosque_uuid_label}
-#         )
-#         assert (
-#             result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-#         )  # Assert that an entry is created/updated
-#         # assert result["data"][CONF_UUID] == mosque_uuid
 
 
 @pytest.mark.asyncio
@@ -645,22 +599,56 @@ async def test_create_data_folder_does_not_exist(mock_data_folder):
     mock_makedirs.assert_called_once()
 
 
-# @pytest.mark.asyncio
-# async def test_get_mawaqit_token_from_file():
-#     # test for get_mawaqit_token_from_file
-#     token = "some-token"
-#     with patch("builtins.open", mock_open(read_data=token)):
-#         assert config_flow.get_mawaqit_token_from_file() == token
+@pytest.mark.usefixtures("test_folder_setup")
+@pytest.mark.parametrize(
+    "file_exists, expected_result",
+    [
+        (True, True),  # The file exists, function should return True
+        (False, False),  # The file does not exist, function should return False
+    ],
+)
+def test_is_already_configured(file_exists, expected_result, test_folder_setup):
+    with (
+        patch(
+            "homeassistant.components.mawaqit.config_flow.CURRENT_DIR",
+            new=test_folder_setup,
+        ),
+        patch(
+            "homeassistant.components.mawaqit.config_flow.os.path.isfile",
+            return_value=file_exists,
+        ) as mock_isfile,
+    ):
+        result = config_flow.is_already_configured()
+        assert result == expected_result
+        mock_isfile.assert_called_once_with(
+            f"{test_folder_setup}/data/my_mosque_NN.txt"
+        )
 
 
-# @pytest.mark.asyncio
-# async def test_is_data_folder_empty_true():
-#     # test for is_data_folder_empty
-#     with patch("os.listdir", return_value=[]):
-#         assert config_flow.is_data_folder_empty() == True
-
-
-# @pytest.mark.asyncio
-# async def test_is_data_folder_empty_false():
-#     with patch("os.listdir", return_value=["some_file.txt"]):
-#         assert config_flow.is_data_folder_empty() == False
+@pytest.mark.usefixtures("test_folder_setup")
+@pytest.mark.parametrize(
+    "configured, expected_result",
+    [
+        (
+            True,
+            True,
+        ),  # is_already_configured returns True, is_another_instance should also return True
+        (
+            False,
+            False,
+        ),  # is_already_configured returns False, is_another_instance should return False
+    ],
+)
+def test_is_another_instance(configured, expected_result, test_folder_setup):
+    with (
+        patch(
+            "homeassistant.components.mawaqit.config_flow.CURRENT_DIR",
+            new=test_folder_setup,
+        ),
+        patch(
+            "homeassistant.components.mawaqit.config_flow.is_already_configured",
+            return_value=configured,
+        ),
+    ):
+        result = config_flow.is_another_instance()
+        assert result == expected_result
