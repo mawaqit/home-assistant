@@ -1,5 +1,5 @@
 {
     "name": "MAWAQIT",
-    "render-readme": "TRUE",
+    "render_readme": "TRUE",
     "persistent_directory": "mawaqit/data"
 }

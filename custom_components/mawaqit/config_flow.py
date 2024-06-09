@@ -336,14 +336,6 @@ def create_data_folder():
         os.makedirs("{}/data".format(CURRENT_DIR))
 
 
-# def get_mawaqit_token_from_file():
-#     # f = open("{}/data/api.txt".format(CURRENT_DIR))
-#     # mawaqit_token = f.read()
-#     # f.close()
-#     mawaqit_token = mawaqit_wrapper.get_mawaqit_api_token()
-#     return mawaqit_token
-
-
 def is_already_configured():
     return os.path.isfile("{}/data/my_mosque_NN.txt".format(CURRENT_DIR))
 
