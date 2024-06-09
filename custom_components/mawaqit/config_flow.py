@@ -85,10 +85,10 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 username, password
             )
 
-            # text_file = open("{}/data/api.txt".format(CURRENT_DIR), "w")
-            # text_file.write(mawaqit_token)
-            # text_file.close()
-            mawaqit_wrapper.set_mawaqit_token_from_env(mawaqit_token)
+            #text_file = open("{}/data/.env".format(CURRENT_DIR), "w")
+            #text_file.write("MAWAQIT_API_KEY=" + mawaqit_token)
+            #text_file.close()
+            os.environ['MAWAQIT_API_KEY'] = mawaqit_token
 
             try:
                 nearest_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
@@ -97,10 +97,10 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except NoMosqueAround:
                 return self.async_abort(reason="no_mosque")
 
-            write_all_mosques_NN_file(nearest_mosques)
+            await write_all_mosques_NN_file(nearest_mosques, self.hass)
 
             # creation of the list of mosques to be displayed in the options
-            name_servers, uuid_servers, CALC_METHODS = read_all_mosques_NN_file()
+            name_servers, uuid_servers, CALC_METHODS = await read_all_mosques_NN_file(self.hass)
 
             file_path = f"{CURRENT_DIR}/data/mosq_list_data"
             with open(file_path, "w+") as text_file:
@@ -121,10 +121,10 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         lat = self.hass.config.latitude
         longi = self.hass.config.longitude
 
-        mawaqit_token = mawaqit_wrapper.get_mawaqit_token_from_env()
+        mawaqit_token = get_mawaqit_token_from_file()
 
         if user_input is not None:
-            name_servers, uuid_servers, CALC_METHODS = read_all_mosques_NN_file()
+            name_servers, uuid_servers, CALC_METHODS = await read_all_mosques_NN_file(self.hass)
 
             mosque = user_input[CONF_UUID]
             index = name_servers.index(mosque)
@@ -134,7 +134,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 lat, longi, token=mawaqit_token
             )
 
-            write_my_mosque_NN_file(nearest_mosques[index])
+            await write_my_mosque_NN_file(nearest_mosques[index], self.hass)
 
             # the mosque chosen by user
             dict_calendar = await mawaqit_wrapper.fetch_prayer_times(
@@ -184,15 +184,15 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         lat = self.hass.config.latitude
         longi = self.hass.config.longitude
 
-        mawaqit_token = mawaqit_wrapper.get_mawaqit_token_from_env()
+        mawaqit_token = get_mawaqit_token_from_file()
 
         nearest_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
             lat, longi, token=mawaqit_token
         )
 
-        write_all_mosques_NN_file(nearest_mosques)
+        await write_all_mosques_NN_file(nearest_mosques, self.hass)
 
-        name_servers, uuid_servers, CALC_METHODS = read_all_mosques_NN_file()
+        name_servers, uuid_servers, CALC_METHODS = await read_all_mosques_NN_file(self.hass)
 
         return self.async_show_form(
             step_id="mosques",
@@ -222,13 +222,13 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
             lat = self.hass.config.latitude
             longi = self.hass.config.longitude
 
-            name_servers, uuid_servers, CALC_METHODS = read_all_mosques_NN_file()
+            name_servers, uuid_servers, CALC_METHODS = await read_all_mosques_NN_file(self.hass)
 
             mosque = user_input[CONF_CALC_METHOD]
             index = name_servers.index(mosque)
             mosque_id = uuid_servers[index]
 
-            mawaqit_token = mawaqit_wrapper.get_mawaqit_token_from_env()
+            mawaqit_token = get_mawaqit_token_from_file()
 
             try:
                 nearest_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
@@ -237,8 +237,8 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
             except NoMosqueAround:
                 raise NoMosqueAround("No mosque around.")
 
-            write_my_mosque_NN_file(nearest_mosques[index])
-
+            await write_my_mosque_NN_file(nearest_mosques[index], self.hass)
+            
             # the mosque chosen by user
             dict_calendar = await mawaqit_wrapper.fetch_prayer_times(
                 mosque=mosque_id, token=mawaqit_token
@@ -262,23 +262,22 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
             self.hass.config_entries.async_update_entry(
                 self.config_entry, title=title, data=data
             )
-            # return self.config_entry
-            return self.async_create_entry(title=None, data=None)
+            return self.config_entry
 
         lat = self.hass.config.latitude
         longi = self.hass.config.longitude
 
-        mawaqit_token = mawaqit_wrapper.get_mawaqit_token_from_env()
+        mawaqit_token = get_mawaqit_token_from_file()
 
         nearest_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
             lat, longi, token=mawaqit_token
         )
 
-        write_all_mosques_NN_file(nearest_mosques)
+        await write_all_mosques_NN_file(nearest_mosques, self.hass)
 
-        name_servers, uuid_servers, CALC_METHODS = read_all_mosques_NN_file()
+        name_servers, uuid_servers, CALC_METHODS = await read_all_mosques_NN_file(self.hass)
 
-        current_mosque = read_my_mosque_NN_file()["uuid"]
+        current_mosque = await read_my_mosque_NN_file(self.hass)["uuid"]
 
         try:
             index = uuid_servers.index(current_mosque)
@@ -296,44 +295,62 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
 
 
-def read_all_mosques_NN_file():
-    name_servers = []
-    uuid_servers = []
-    CALC_METHODS = []
-
-    with open("{}/data/all_mosques_NN.txt".format(CURRENT_DIR), "r") as f:
-        dict_mosques = json.load(f)
-    for mosque in dict_mosques:
-        distance = mosque["proximity"]
-        distance = distance / 1000
-        distance = round(distance, 2)
-        name_servers.extend([mosque["label"] + " (" + str(distance) + "km)"])
-        uuid_servers.extend([mosque["uuid"]])
-        CALC_METHODS.extend([mosque["label"]])
-
-    return name_servers, uuid_servers, CALC_METHODS
-
-
-def write_all_mosques_NN_file(mosques):
-    with open("{}/data/all_mosques_NN.txt".format(CURRENT_DIR), "w") as f:
-        json.dump(mosques, f)
-
-
-def read_my_mosque_NN_file():
-    with open("{}/data/my_mosque_NN.txt".format(CURRENT_DIR), "r") as f:
-        mosque = json.load(f)
-    return mosque
+async def read_all_mosques_NN_file(hass):
+    
+    def read():
+        name_servers = []
+        uuid_servers = []
+        CALC_METHODS = []
+        
+        with open('{}/data/all_mosques_NN.txt'.format(CURRENT_DIR)) as f:
+            dict_mosques = json.load(f)
+            for mosque in dict_mosques:
+                distance = mosque["proximity"]
+                distance = distance / 1000
+                distance = round(distance, 2)
+                name_servers.extend([mosque["label"] + " (" + str(distance) + "km)"])
+                uuid_servers.extend([mosque["uuid"]])
+                CALC_METHODS.extend([mosque["label"]])
+    
+        return name_servers, uuid_servers, CALC_METHODS
+        
+    return await hass.async_add_executor_job(read)
 
 
-def write_my_mosque_NN_file(mosque):
-    text_file = open("{}/data/my_mosque_NN.txt".format(CURRENT_DIR), "w")
-    json.dump(mosque, text_file)
-    text_file.close()
+async def write_all_mosques_NN_file(mosques, hass):
+    
+    def write():
+        with open('{}/data/all_mosques_NN.txt'.format(CURRENT_DIR), 'w') as f:
+            json.dump(mosques, f)
+            
+    return await hass.async_add_executor_job(write)
+
+
+async def read_my_mosque_NN_file(hass):
+    
+    def read():
+        with open('{}/data/my_mosque_NN.txt'.format(CURRENT_DIR)) as f:
+            mosque = json.load(f)
+            return mosque
+    
+    return await hass.async_add_executor_job(read)
+
+
+async def write_my_mosque_NN_file(mosque, hass):
+    def write():
+        with open('{}/data/my_mosque_NN.txt'.format(CURRENT_DIR), 'w') as f:
+            json.dump(mosque, f)
+            
+    return await hass.async_add_executor_job(write)
 
 
 def create_data_folder():
     if not os.path.exists("{}/data".format(CURRENT_DIR)):
         os.makedirs("{}/data".format(CURRENT_DIR))
+
+
+def get_mawaqit_token_from_file():
+    return os.environ.get('MAWAQIT_API_KEY', 'NA')
 
 
 def is_already_configured():
@@ -343,4 +360,5 @@ def is_already_configured():
 def is_another_instance() -> bool:
     if is_already_configured():
         return True
-    return False
+    else:
+        return False
