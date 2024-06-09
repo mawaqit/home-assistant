@@ -1,5 +1,5 @@
 import logging
-
+import os
 from mawaqit import AsyncMawaqitClient
 from mawaqit.consts import BadCredentialsException
 
@@ -13,7 +13,10 @@ async def _test_credentials(username, password):
         await client.login()
         return True
     except BadCredentialsException:
+        _LOGGER.error("Error : Bad Credentials")
         return False
+    except Exception as e:
+        _LOGGER.error("Error %s", e)
     finally:
         await client.close()
 
@@ -25,6 +28,8 @@ async def get_mawaqit_api_token(username, password):
         token = await client.get_api_token()
     except BadCredentialsException as e:
         _LOGGER.error("Error on retrieving API Token: %s", e)
+    except Exception as e:
+        _LOGGER.error("Error %s", e)
     finally:
         await client.close()
     return token
@@ -42,6 +47,8 @@ async def all_mosques_neighborhood(
         nearest_mosques = await client.all_mosques_neighborhood()
     except BadCredentialsException as e:
         _LOGGER.error("Error on retrieving mosques: %s", e)
+    except Exception as e:
+        _LOGGER.error("Error %s", e)
     finally:
         await client.close()
 
@@ -62,7 +69,17 @@ async def fetch_prayer_times(
 
     except BadCredentialsException as e:
         _LOGGER.error("Error on retrieving prayer times: %s", e)
+    except Exception as e:
+        _LOGGER.error("Error %s", e)
     finally:
         await client.close()
 
     return dict_calendar
+
+
+def get_mawaqit_token_from_env():
+    return os.environ.get("MAWAQIT_API_KEY", "NA")
+
+
+def set_mawaqit_token_from_env(mawaqit_token):
+    os.environ["MAWAQIT_API_KEY"] = mawaqit_token

@@ -85,9 +85,10 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 username, password
             )
 
-            text_file = open("{}/data/api.txt".format(CURRENT_DIR), "w")
-            text_file.write(mawaqit_token)
-            text_file.close()
+            # text_file = open("{}/data/api.txt".format(CURRENT_DIR), "w")
+            # text_file.write(mawaqit_token)
+            # text_file.close()
+            mawaqit_wrapper.set_mawaqit_token_from_env(mawaqit_token)
 
             try:
                 nearest_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
@@ -120,7 +121,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         lat = self.hass.config.latitude
         longi = self.hass.config.longitude
 
-        mawaqit_token = get_mawaqit_token_from_file()
+        mawaqit_token = mawaqit_wrapper.get_mawaqit_token_from_env()
 
         if user_input is not None:
             name_servers, uuid_servers, CALC_METHODS = read_all_mosques_NN_file()
@@ -183,7 +184,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         lat = self.hass.config.latitude
         longi = self.hass.config.longitude
 
-        mawaqit_token = get_mawaqit_token_from_file()
+        mawaqit_token = mawaqit_wrapper.get_mawaqit_token_from_env()
 
         nearest_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
             lat, longi, token=mawaqit_token
@@ -227,7 +228,7 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
             index = name_servers.index(mosque)
             mosque_id = uuid_servers[index]
 
-            mawaqit_token = get_mawaqit_token_from_file()
+            mawaqit_token = mawaqit_wrapper.get_mawaqit_token_from_env()
 
             try:
                 nearest_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
@@ -266,7 +267,7 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
         lat = self.hass.config.latitude
         longi = self.hass.config.longitude
 
-        mawaqit_token = get_mawaqit_token_from_file()
+        mawaqit_token = mawaqit_wrapper.get_mawaqit_token_from_env()
 
         nearest_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
             lat, longi, token=mawaqit_token
@@ -334,22 +335,19 @@ def create_data_folder():
         os.makedirs("{}/data".format(CURRENT_DIR))
 
 
-def get_mawaqit_token_from_file():
-    f = open("{}/data/api.txt".format(CURRENT_DIR))
-    mawaqit_token = f.read()
-    f.close()
-    return mawaqit_token
+# def get_mawaqit_token_from_file():
+#     # f = open("{}/data/api.txt".format(CURRENT_DIR))
+#     # mawaqit_token = f.read()
+#     # f.close()
+#     mawaqit_token = mawaqit_wrapper.get_mawaqit_api_token()
+#     return mawaqit_token
 
 
-def is_data_folder_empty():
-    return not os.listdir("{}/data".format(CURRENT_DIR))
+def is_already_configured():
+    return os.path.isfile("{}/data/my_mosque_NN.txt".format(CURRENT_DIR))
 
 
 def is_another_instance() -> bool:
-    if is_data_folder_empty():
-        return False
-    files_in_directory = os.listdir(f"{CURRENT_DIR}/data")
-    # Check if the data folder contains only one file named api.txt and no other files
-    if len(files_in_directory) == 1 and files_in_directory[0] == "api.txt":
-        return False
-    return True
+    if is_already_configured():
+        return True
+    return False

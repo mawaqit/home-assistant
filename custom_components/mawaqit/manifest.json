@@ -3,7 +3,7 @@
   "name": "MAWAQIT",
   "codeowners": [
     "@MAWAQIT",
-    "@mohaThr",
+    "@moha-tah",
     "@Yeyvo"
   ],
   "config_flow": true,
@@ -13,5 +13,6 @@
   "requirements": [
     "mawaqit==0.0.1"
   ],
-  "version": "2.1.0"
+  "version": "2.1.0",
+  "issue_tracker": "https://github.com/mawaqit/home-assistant/issues"
 }

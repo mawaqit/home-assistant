@@ -15,7 +15,7 @@ from tests.common import MockConfigEntry
 
 @pytest.mark.asyncio
 async def test_step_user_one_instance_allowed(hass: HomeAssistant):
-    # test if if the data folder is not empty we abort
+    # test if if the data folder is doesn't contain specific config file we abort
     flow = config_flow.MawaqitPrayerFlowHandler()
     flow.hass = hass
     with patch(
@@ -246,7 +246,7 @@ async def test_async_step_mosques(hass, mock_mosques_test_data):
     # Mock external dependencies
     with (
         patch(
-            "homeassistant.components.mawaqit.config_flow.get_mawaqit_token_from_file",
+            "homeassistant.components.mawaqit.mawaqit_wrapper.get_mawaqit_token_from_env",
             return_value="TOKEN",
         ),
         patch(
@@ -348,7 +348,7 @@ async def test_options_flow_valid_input(
             return_value=mocked_mosques_data,
         ),
         patch(
-            "homeassistant.components.mawaqit.config_flow.get_mawaqit_token_from_file",
+            "homeassistant.components.mawaqit.mawaqit_wrapper.get_mawaqit_token_from_env",
             return_value="TOKEN",
         ),
         patch(
@@ -395,7 +395,7 @@ async def test_options_flow_valid_input(
 #             return_value=mocked_mosques_data,
 #         ),
 #         patch(
-#             "homeassistant.components.mawaqit.config_flow.get_mawaqit_token_from_file",
+#             "homeassistant.components.mawaqit.mawaqit_wrapper.get_mawaqit_token_from_env",
 #             return_value="TOKEN",
 #         ),
 #         patch(
@@ -440,7 +440,7 @@ async def test_options_flow_error_no_mosques_around(
             return_value=mocked_mosques_data,
         ),
         patch(
-            "homeassistant.components.mawaqit.config_flow.get_mawaqit_token_from_file",
+            "homeassistant.components.mawaqit.mawaqit_wrapper.get_mawaqit_token_from_env",
             return_value="TOKEN",
         ),
         patch(
@@ -645,22 +645,22 @@ async def test_create_data_folder_does_not_exist(mock_data_folder):
     mock_makedirs.assert_called_once()
 
 
-@pytest.mark.asyncio
-async def test_get_mawaqit_token_from_file():
-    # test for get_mawaqit_token_from_file
-    token = "some-token"
-    with patch("builtins.open", mock_open(read_data=token)):
-        assert config_flow.get_mawaqit_token_from_file() == token
+# @pytest.mark.asyncio
+# async def test_get_mawaqit_token_from_file():
+#     # test for get_mawaqit_token_from_file
+#     token = "some-token"
+#     with patch("builtins.open", mock_open(read_data=token)):
+#         assert config_flow.get_mawaqit_token_from_file() == token
 
 
-@pytest.mark.asyncio
-async def test_is_data_folder_empty_true():
-    # test for is_data_folder_empty
-    with patch("os.listdir", return_value=[]):
-        assert config_flow.is_data_folder_empty() == True
+# @pytest.mark.asyncio
+# async def test_is_data_folder_empty_true():
+#     # test for is_data_folder_empty
+#     with patch("os.listdir", return_value=[]):
+#         assert config_flow.is_data_folder_empty() == True
 
 
-@pytest.mark.asyncio
-async def test_is_data_folder_empty_false():
-    with patch("os.listdir", return_value=["some_file.txt"]):
-        assert config_flow.is_data_folder_empty() == False
+# @pytest.mark.asyncio
+# async def test_is_data_folder_empty_false():
+#     with patch("os.listdir", return_value=["some_file.txt"]):
+#         assert config_flow.is_data_folder_empty() == False
