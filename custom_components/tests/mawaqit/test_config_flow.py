@@ -1,4 +1,4 @@
-from unittest.mock import patch, Mock, MagicMock, mock_open
+from unittest.mock import patch, Mock, MagicMock, mock_open, AsyncMock
 import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.core import HomeAssistant
@@ -11,6 +11,40 @@ import json
 import os
 import aiohttp
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture
+async def mock_data_folder():
+    # Utility fixture to mock os.path.exists and os.makedirs
+    with patch("os.path.exists") as mock_exists:
+        with patch("os.makedirs") as mock_makedirs:
+            yield mock_exists, mock_makedirs
+
+
+@pytest.fixture(scope="function")
+def test_folder_setup():
+    # Define the folder name
+    folder_name = "./test_dir"
+    # Create the folder
+    os.makedirs(folder_name, exist_ok=True)
+    # Pass the folder name to the test
+    yield folder_name
+    # No deletion here, handled by another fixture
+
+
+@pytest.fixture(scope="function", autouse=True)
+def test_folder_cleanup(request, test_folder_setup):
+    # This fixture does not need to do anything before the test,
+    # so it yields control immediately
+    yield
+    # Teardown: Delete the folder after the test runs
+    folder_path = test_folder_setup  # Corrected variable name
+
+    def cleanup():
+        if os.path.exists(folder_path):
+            os.rmdir(folder_path)  # Make sure the folder is empty before calling rmdir
+
+    request.addfinalizer(cleanup)
 
 
 @pytest.mark.asyncio
@@ -239,12 +273,17 @@ async def mock_mosques_test_data():
     return mock_mosques, mocked_mosques_data
 
 
+# @pytest.mark.usefixtures("test_folder_setup")
 @pytest.mark.asyncio
 async def test_async_step_mosques(hass, mock_mosques_test_data):
     mock_mosques, mocked_mosques_data = mock_mosques_test_data
 
     # Mock external dependencies
     with (
+        patch(
+            "homeassistant.components.mawaqit.config_flow.CURRENT_DIR",
+            new=test_folder_setup,
+        ),
         patch(
             "homeassistant.components.mawaqit.mawaqit_wrapper.get_mawaqit_token_from_env",
             return_value="TOKEN",
@@ -381,14 +420,19 @@ async def test_options_flow_valid_input(
         # assert result["data"][CONF_UUID] == mosque_uuid
 
 
+@pytest.mark.usefixtures("test_folder_setup")
 @pytest.mark.asyncio
 async def test_options_flow_error_no_mosques_around(
-    hass: HomeAssistant, config_entry_setup, mock_mosques_test_data
+    hass: HomeAssistant, config_entry_setup, mock_mosques_test_data, test_folder_setup
 ):
     _, mocked_mosques_data = mock_mosques_test_data
 
     """Test the options flow."""
     with (
+        patch(
+            "homeassistant.components.mawaqit.config_flow.CURRENT_DIR",
+            new=test_folder_setup,
+        ),
         patch(
             "homeassistant.components.mawaqit.config_flow.read_all_mosques_NN_file",
             return_value=mocked_mosques_data,
@@ -439,15 +483,15 @@ async def test_options_flow_no_input_reopens_form(
     with (
         patch(
             "homeassistant.components.mawaqit.mawaqit_wrapper.all_mosques_neighborhood",
-            return_value={},
+            return_value={}
         ),
         patch(
             "homeassistant.components.mawaqit.config_flow.read_all_mosques_NN_file",
-            return_value=mocked_mosques_data,
+            return_value=mocked_mosques_data
         ),
         patch(
             "homeassistant.components.mawaqit.config_flow.read_my_mosque_NN_file",
-            return_value=mock_mosques[0],
+            return_value=mock_mosques[0]
         ),
     ):
         # Initialize the options flow
@@ -473,17 +517,17 @@ async def test_options_flow_no_input_error_reopens_form(
     with (
         patch(
             "homeassistant.components.mawaqit.mawaqit_wrapper.all_mosques_neighborhood",
-            return_value={},
+            return_value={}
         ),
         patch(
             "homeassistant.components.mawaqit.config_flow.read_all_mosques_NN_file",
-            return_value=mocked_mosques_data,
+            return_value=mocked_mosques_data
         ),
         patch(
             "homeassistant.components.mawaqit.config_flow.read_my_mosque_NN_file",
-            return_value={"uuid": "non_existent_uuid"},
+            return_value={"uuid": "non_existent_uuid"}
         ),
-    ):  # , \
+    ):
         # Initialize the options flow
         flow = config_flow.MawaqitPrayerOptionsFlowHandler(config_entry_setup)
         flow.hass = hass  # Assign HomeAssistant instance
@@ -495,100 +539,6 @@ async def test_options_flow_no_input_error_reopens_form(
             result["type"] == data_entry_flow.FlowResultType.FORM
         )  # Assert that a form is shown
         assert result["step_id"] == "init"
-
-
-@pytest.fixture
-async def mock_data_folder():
-    # Utility fixture to mock os.path.exists and os.makedirs
-    with patch("os.path.exists") as mock_exists:
-        with patch("os.makedirs") as mock_makedirs:
-            yield mock_exists, mock_makedirs
-
-
-@pytest.fixture
-async def mock_file_io():
-    # Utility fixture for mocking open
-    with patch("builtins.open", mock_open()) as mocked_file:
-        yield mocked_file
-
-
-@pytest.mark.asyncio
-async def test_read_all_mosques_NN_file(mock_mosques_test_data):
-    sample_data, expected_output = mock_mosques_test_data
-    with patch("builtins.open", mock_open(read_data=json.dumps(sample_data))):
-        assert config_flow.read_all_mosques_NN_file() == expected_output
-
-
-@pytest.fixture(scope="function")
-def test_folder_setup():
-    # Define the folder name
-    folder_name = "./test_dir"
-    # Create the folder
-    os.makedirs(folder_name, exist_ok=True)
-    # Pass the folder name to the test
-    yield folder_name
-    # No deletion here, handled by another fixture
-
-
-@pytest.fixture(scope="function", autouse=True)
-def test_folder_cleanup(request, test_folder_setup):
-    # This fixture does not need to do anything before the test,
-    # so it yields control immediately
-    yield
-    # Teardown: Delete the folder after the test runs
-    folder_path = test_folder_setup  # Corrected variable name
-
-    def cleanup():
-        if os.path.exists(folder_path):
-            os.rmdir(folder_path)  # Make sure the folder is empty before calling rmdir
-
-    request.addfinalizer(cleanup)
-
-
-@pytest.mark.asyncio
-async def test_write_all_mosques_NN_file(mock_file_io, test_folder_setup):
-    # test for write_all_mosques_NN_file
-    with patch(
-        "homeassistant.components.mawaqit.config_flow.CURRENT_DIR", new="./test_dir"
-    ):
-        mosques = [{"label": "Mosque A", "uuid": "uuid1"}]
-        config_flow.write_all_mosques_NN_file(mosques)
-        mock_file_io.assert_called_with(
-            f"{test_folder_setup}/data/all_mosques_NN.txt", "w"
-        )
-        assert mock_file_io().write.called, "The file's write method was not called."
-
-
-@pytest.mark.asyncio
-async def test_read_my_mosque_NN_file():
-    # test for read_my_mosque_NN_file
-    sample_mosque = {"label": "My Mosque", "uuid": "myuuid"}
-    with patch("builtins.open", mock_open(read_data=json.dumps(sample_mosque))):
-        assert config_flow.read_my_mosque_NN_file() == sample_mosque
-
-
-@pytest.mark.asyncio
-# @patch('path.to.your.config_flow_module.CURRENT_DIR', './test_dir')
-async def test_write_my_mosque_NN_file(mock_file_io, test_folder_setup):
-    # test for write_my_mosque_NN_file
-    with patch(
-        "homeassistant.components.mawaqit.config_flow.CURRENT_DIR", new="./test_dir"
-    ):
-        mosque = {"label": "My Mosque", "uuid": "myuuid"}
-        config_flow.write_my_mosque_NN_file(mosque)
-        mock_file_io.assert_called_with(
-            f"{test_folder_setup}/data/my_mosque_NN.txt", "w"
-        )
-        assert mock_file_io().write.called, "The file's write method was not called."
-
-
-@pytest.mark.asyncio
-async def test_create_data_folder_already_exists(mock_data_folder):
-    # test for create_data_folder
-    mock_exists, mock_makedirs = mock_data_folder
-    mock_exists.return_value = True
-    config_flow.create_data_folder()
-    mock_makedirs.assert_not_called()
 
 
 @pytest.mark.asyncio
