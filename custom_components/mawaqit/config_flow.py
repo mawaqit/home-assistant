@@ -92,10 +92,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 username, password
             )
 
-            # text_file = open("{}/data/.env".format(CURRENT_DIR), "w")
-            # text_file.write("MAWAQIT_API_KEY=" + mawaqit_token)
-            # text_file.close()
-            os.environ["MAWAQIT_API_KEY"] = mawaqit_token
+            os.environ['MAWAQIT_API_KEY'] = mawaqit_token
 
             try:
                 nearest_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
@@ -112,8 +109,12 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
             file_path = f"{CURRENT_DIR}/data/mosq_list_data"
-            with open(file_path, "w+") as text_file:
-                json.dump({"CALC_METHODS": CALC_METHODS}, text_file)
+
+            def write():
+                with open(file_path, "w+") as text_file:
+                    json.dump({"CALC_METHODS": CALC_METHODS}, text_file)
+
+            await self.hass.async_add_executor_job(write)
 
             return await self.async_step_mosques()
 
@@ -152,11 +153,11 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 mosque=mosque_id, token=mawaqit_token
             )
 
-            text_file = open(
-                "{dir}/data/pray_time{name}.txt".format(dir=CURRENT_DIR, name=""), "w"
-            )
-            json.dump(dict_calendar, text_file)
-            text_file.close()
+            def write():
+                with open("{dir}/data/pray_time{name}.txt".format(dir=CURRENT_DIR, name=""), "w") as f:
+                    json.dump(dict_calendar, f)
+
+            await self.hass.async_add_executor_job(write)
 
             title = "MAWAQIT" + " - " + nearest_mosques[index]["name"]
             data = {
@@ -259,11 +260,11 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
                 mosque=mosque_id, token=mawaqit_token
             )
 
-            text_file = open(
-                "{dir}/data/pray_time{name}.txt".format(dir=CURRENT_DIR, name=""), "w"
-            )
-            json.dump(dict_calendar, text_file)
-            text_file.close()
+            def write():
+                with open("{dir}/data/pray_time{name}.txt".format(dir=CURRENT_DIR, name=""), "w") as f:
+                    json.dump(dict_calendar, f)
+
+            await self.hass.async_add_executor_job(write)
 
             title = "MAWAQIT" + " - " + nearest_mosques[index]["name"]
 

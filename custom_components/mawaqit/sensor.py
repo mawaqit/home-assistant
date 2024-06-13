@@ -169,9 +169,13 @@ class MyMosqueSensor(SensorEntity):
     async def async_update(self):
         """Get the latest data from the Mawaqit API."""
         current_dir = os.path.dirname(os.path.realpath(__file__))
-        f = open("{}/data/my_mosque_NN.txt".format(current_dir))
-        data = json.load(f)
-        f.close()
+
+        def read():
+            with open("{}/data/my_mosque_NN.txt".format(current_dir), "r") as f:
+                data = json.load(f)
+            return data
+
+        data = await self.hass.async_add_executor_job(read)
 
         for k, v in data.items():
             if str(k) != "uuid" and str(k) != "id" and str(k) != "slug":

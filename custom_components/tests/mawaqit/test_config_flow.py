@@ -1,3 +1,4 @@
+import tempfile
 from unittest.mock import patch, Mock, MagicMock, mock_open, AsyncMock
 import pytest
 from homeassistant import config_entries, data_entry_flow
@@ -21,30 +22,15 @@ async def mock_data_folder():
             yield mock_exists, mock_makedirs
 
 
-@pytest.fixture(scope="function")
-def test_folder_setup():
-    # Define the folder name
-    folder_name = "./test_dir"
-    # Create the folder
-    os.makedirs(folder_name, exist_ok=True)
-    # Pass the folder name to the test
-    yield folder_name
-    # No deletion here, handled by another fixture
-
-
 @pytest.fixture(scope="function", autouse=True)
-def test_folder_cleanup(request, test_folder_setup):
-    # This fixture does not need to do anything before the test,
-    # so it yields control immediately
-    yield
-    # Teardown: Delete the folder after the test runs
-    folder_path = test_folder_setup  # Corrected variable name
-
-    def cleanup():
-        if os.path.exists(folder_path):
-            os.rmdir(folder_path)  # Make sure the folder is empty before calling rmdir
-
-    request.addfinalizer(cleanup)
+def test_folder_setup():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        data_folder = os.path.join(temp_dir, "data")
+        os.makedirs(
+            data_folder, exist_ok=True
+        )  # This is now redundant but kept for clarity
+        yield temp_dir  # Use this temporary directory for the duration of the test
+        # No need for explicit cleanup
 
 
 @pytest.mark.asyncio
@@ -273,9 +259,9 @@ async def mock_mosques_test_data():
     return mock_mosques, mocked_mosques_data
 
 
-# @pytest.mark.usefixtures("test_folder_setup")
+@pytest.mark.usefixtures("test_folder_setup")
 @pytest.mark.asyncio
-async def test_async_step_mosques(hass, mock_mosques_test_data):
+async def test_async_step_mosques(hass, mock_mosques_test_data, test_folder_setup):
     mock_mosques, mocked_mosques_data = mock_mosques_test_data
 
     # Mock external dependencies
@@ -483,15 +469,15 @@ async def test_options_flow_no_input_reopens_form(
     with (
         patch(
             "homeassistant.components.mawaqit.mawaqit_wrapper.all_mosques_neighborhood",
-            return_value={}
+            return_value={},
         ),
         patch(
             "homeassistant.components.mawaqit.config_flow.read_all_mosques_NN_file",
-            return_value=mocked_mosques_data
+            return_value=mocked_mosques_data,
         ),
         patch(
             "homeassistant.components.mawaqit.config_flow.read_my_mosque_NN_file",
-            return_value=mock_mosques[0]
+            return_value=mock_mosques[0],
         ),
     ):
         # Initialize the options flow
@@ -517,15 +503,15 @@ async def test_options_flow_no_input_error_reopens_form(
     with (
         patch(
             "homeassistant.components.mawaqit.mawaqit_wrapper.all_mosques_neighborhood",
-            return_value={}
+            return_value={},
         ),
         patch(
             "homeassistant.components.mawaqit.config_flow.read_all_mosques_NN_file",
-            return_value=mocked_mosques_data
+            return_value=mocked_mosques_data,
         ),
         patch(
             "homeassistant.components.mawaqit.config_flow.read_my_mosque_NN_file",
-            return_value={"uuid": "non_existent_uuid"}
+            return_value={"uuid": "non_existent_uuid"},
         ),
     ):
         # Initialize the options flow
