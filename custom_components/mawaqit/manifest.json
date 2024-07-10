@@ -12,7 +12,7 @@
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/mawaqit/home-assistant/issues",
   "requirements": [
-    "mawaqit>=0.0.1"
+    "mawaqit==0.0.1"
   ],
   "version": "2.1.0"
 }
