@@ -1,42 +1,55 @@
 {
+    "title": "MAWAQIT",
     "config": {
-        "abort": {
-            "one_instance_allowed": "Une seule instance de Mawaqit est possible.",
-            "no_mosque": "D\u00e9sol\u00e9, pas de mosqu\u00e9e \u00e9quip\u00e9e par Mawaqit preès de chez vous.",
-            "wrong_credential": "Login ou mot de passe incorrect."
-        },
-        "step": {
-            "user": {
-                "description": "Inscrivez-vous sur https://mawaqit.net/ puis connectez-vous ci-dessous. La mosqu\u00e9e la plus proche sera choisie mais vous pouvez la changer ult\u00e9rieurement dans les param\u00e8tres du plugin Mawaqit :",
-                "data": {
-                    "username": "E-mail",
-                    "password": "Mot de passe",
-                    "server": "Server"
-                  },
-                "title": "Installation de Mawaqit"
-            },
-      "mosques": {
-        "title": "Choisir votre mosqu\u00e9e",
-        "data": {
-          "mosques": "Diff\u00e9rentes mosqu\u00e9es sont disponibles autour de vous, s\u00e9lectionnez une:"
-        }
-      }  
-            
-        },
-
-        "error": {
-            "wrong_credential": "Mauvais login ou mot de passe, veuillez réessayer."
+      "step": {
+        "user": {
+          "title": "MAWAQIT",
+          "description": "Inscrivez-vous sur https://mawaqit.net/ puis connectez-vous ci-dessous. La mosqu\u00e9e la plus proche sera choisie mais vous pouvez la changer ult\u00e9rieurement dans les param\u00e8tres du plugin Mawaqit :",
+          "data": {
+            "username": "E-mail",
+            "password": "Mot de passe",
+            "server": "Serveur"
           }
-
+        },
+        
+        "mosques": {
+          "title": "Votre mosqu\u00e9e favorite",
+          "data": {
+            "mosques": "Diff\u00e9rentes mosqu\u00e9es sont disponibles autour de vous, s\u00e9lectionnez-en une :"
+          }
+        },      
+        
+        
+        "select_server": {
+          "title": "Choisissiez votre mosqu\u00e9e favorite",
+          "description": "Plusieurs mosqu\u00e9es sont disponibles autour de vous, s\u00e9lectionnez-en une :",
+          "data": {
+            "username": "[%key:common::config_flow::data::email%]",
+            "password": "[%key:common::config_flow::data::password%]",
+            "server": "Serveur"
+          }
+        }
+      },
+  
+      "error": {
+        "wrong_credential": "Mauvais login ou mot de passe, veuillez réessayer.",
+        "cannot_connect_to_server": "Impossible de se connecter au serveur, veuillez réessayer."
+      },
+  
+      "abort": {
+        "one_instance_allowed": "Une seule instance (entrée) MAWAQIT est suffisante. Si vous souhaitez modifier votre mosquée, veuillez cliquer sur le bouton \"Configurer\" de l'instance existante.",
+        "no_mosque": "D\u00e9sol\u00e9, aucune mosqu\u00e9e MAWAQIT n'est disponible près de chez vous."
+      }
+  
     },
     "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "calculation_method": "Changer votre mosqu\u00e9e "
-                }
-            }
+      "step": {
+        "init": {
+          "data": {
+            "calculation_method": "Changer votre mosqu\u00e9e :"
+          }
         }
-    },
-    "title": "Mawaqit"
-}
+      }
+    }
+  }
+  
