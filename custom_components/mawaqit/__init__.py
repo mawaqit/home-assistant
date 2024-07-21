@@ -298,7 +298,7 @@ class MawaqitPrayerClient:
                 prayers[index]
             ]
 
-        else:  # We retrieve the next Fajr (more calcualtions).
+        else:  # We retrieve the next Fajr (more calculations).
             current_dir = os.path.dirname(os.path.realpath(__file__))
             f = open("{dir}/data/pray_time.txt".format(dir=current_dir), "r")
             data = json.load(f)

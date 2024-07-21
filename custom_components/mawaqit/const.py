@@ -30,7 +30,7 @@ SENSOR_TYPES = {
         
 CONF_CALC_METHOD = "calculation_method"
 
-CALC_METHODS = ["nearest", "farest"]
+CALC_METHODS = ["nearest", "farthest"]
 DEFAULT_CALC_METHOD = "nearest"
 
 DATA_UPDATED = "Mawaqit_prayer_data_updated"
