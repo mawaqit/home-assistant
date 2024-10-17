@@ -1,208 +1,83 @@
-import tempfile
-from unittest.mock import patch, Mock, MagicMock, mock_open, AsyncMock
-import pytest
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.core import HomeAssistant
-from homeassistant.components.mawaqit import DOMAIN
-from homeassistant.components.mawaqit import config_flow
-from homeassistant.components.mawaqit.const import CONF_CALC_METHOD
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_UUID
-from mawaqit.consts import NoMosqueAround
-import json
+"""Tests for the Mawaqit integration's config flow in Home Assistant."""
+
 import os
-import aiohttp
+from unittest.mock import MagicMock, patch
+
+from aiohttp.client_exceptions import ClientConnectorError
+from mawaqit.consts import NoMosqueAround, NoMosqueFound
+import pytest
+
+from homeassistant import config_entries, data_entry_flow
+from homeassistant.components.mawaqit import DOMAIN, config_flow
+from homeassistant.components.mawaqit.const import (
+    CANNOT_CONNECT_TO_SERVER,
+    CONF_CALC_METHOD,
+    CONF_SEARCH,
+    CONF_TYPE_SEARCH,
+    CONF_TYPE_SEARCH_COORDINATES,
+    CONF_TYPE_SEARCH_KEYWORD,
+    MAWAQIT_STORAGE_VERSION,
+    MAWAQIT_TEST_STORAGE_KEY,
+    NO_MOSQUE_FOUND_KEYWORD,
+    WRONG_CREDENTIAL,
+)
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_UUID
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.storage import Store
+
 from tests.common import MockConfigEntry
+
+# ----- TEST SETUP ----- #
 
 
 @pytest.fixture
-async def mock_data_folder():
-    # Utility fixture to mock os.path.exists and os.makedirs
-    with patch("os.path.exists") as mock_exists:
-        with patch("os.makedirs") as mock_makedirs:
-            yield mock_exists, mock_makedirs
+async def setup_test_environment(hass: HomeAssistant):
+    """Prepare the test environment."""
+    # --setup
+    # Create a mock store for testing
+    test_store = Store(hass, MAWAQIT_STORAGE_VERSION, MAWAQIT_TEST_STORAGE_KEY)
+
+    # Create the data folder for testing
+    os.makedirs(os.path.join(os.getcwd(), "data"), exist_ok=True)
+
+    yield test_store
+
+    # --teardown
+    await test_store.async_remove()
+
+    # Clean up the data folder after the test
+    for file in os.listdir(os.path.join(os.getcwd(), "data")):
+        file_path = os.path.join(os.getcwd(), "data", file)
+        os.unlink(file_path)
+
+    os.rmdir(os.path.join(os.getcwd(), "data"))
 
 
-@pytest.fixture(scope="function", autouse=True)
-def test_folder_setup():
-    with tempfile.TemporaryDirectory() as temp_dir:
-        data_folder = os.path.join(temp_dir, "data")
-        os.makedirs(
-            data_folder, exist_ok=True
-        )  # This is now redundant but kept for clarity
-        yield temp_dir  # Use this temporary directory for the duration of the test
-        # No need for explicit cleanup
-
-
-@pytest.mark.asyncio
-async def test_step_user_one_instance_allowed(hass: HomeAssistant):
-    # test if if the data folder is doesn't contain specific config file we abort
-    flow = config_flow.MawaqitPrayerFlowHandler()
-    flow.hass = hass
-    with patch(
-        "homeassistant.components.mawaqit.config_flow.is_another_instance",
-        return_value=True,
-    ):
-        result = await flow.async_step_user(None)
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "one_instance_allowed"
-
-
-@pytest.mark.asyncio
-async def test_show_form_user_no_input_reopens_form(hass: HomeAssistant):
-    """Test that the form is served with no input."""
-    # Initialize the flow handler with the HomeAssistant instance
-    flow = config_flow.MawaqitPrayerFlowHandler()
-    flow.hass = hass
-
-    with patch(
-        "homeassistant.components.mawaqit.config_flow.is_another_instance",
-        return_value=False,
-    ):
-        # Invoke the initial step of the flow without user input
-        result = await flow.async_step_user(user_input=None)
-
-        # Validate that the form is returned to the user
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["step_id"] == "user"
-
-
-@pytest.mark.asyncio
-async def test_async_step_user_connection_error(hass: HomeAssistant):
-    """Test the user step handles connection errors correctly."""
-    flow = config_flow.MawaqitPrayerFlowHandler()
-    flow.hass = hass
-
-    # Create an instance of ClientConnectorError with mock arguments
-    mock_conn_key = MagicMock()
-    mock_os_error = MagicMock()
-    connection_error_instance = aiohttp.client_exceptions.ClientConnectorError(
-        mock_conn_key, mock_os_error
+@pytest.fixture
+async def config_entry_setup(hass: HomeAssistant):
+    """Create a mock config entry for tests."""
+    entry = MockConfigEntry(
+        version=10,
+        minor_version=1,
+        domain=DOMAIN,
+        title="MAWAQIT - Mosque1",
+        data={
+            "api_key": "TOKEN",
+            "uuid": "aaaaa-bbbbb-cccccc-0000",
+            "latitude": 32.87336,
+            "longitude": -117.22743,
+        },
+        source=config_entries.SOURCE_USER,
     )
 
-    # Patching the methods used in the flow to simulate external interactions
-    with (
-        patch(
-            "homeassistant.components.mawaqit.mawaqit_wrapper._test_credentials",
-            side_effect=connection_error_instance,
-        ),
-        patch(
-            "homeassistant.components.mawaqit.config_flow.is_another_instance",
-            return_value=False,
-        ),
-    ):
-        # Simulate user input to trigger the flow's logic
-        result = await flow.async_step_user(
-            {CONF_USERNAME: "testuser", CONF_PASSWORD: "testpass"}
-        )
+    entry.add_to_hass(hass)  # register the MockConfigEntry to Hass
 
-        # Check that the flow returns a form with an error message due to the connection error
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "user"
-        assert "base" in result["errors"]
-        assert result["errors"]["base"] == "cannot_connect_to_server"
-
-
-@pytest.mark.asyncio
-async def test_async_step_user_invalid_credentials(hass: HomeAssistant):
-    """Test the user step with invalid credentials."""
-    flow = config_flow.MawaqitPrayerFlowHandler()
-    flow.hass = hass
-
-    # Patch the credentials test to simulate a login failure
-    with (
-        patch(
-            "homeassistant.components.mawaqit.mawaqit_wrapper._test_credentials",
-            return_value=False,
-        ),
-        patch(
-            "homeassistant.components.mawaqit.config_flow.is_another_instance",
-            return_value=False,
-        ),
-    ):
-        # Simulate user input with incorrect credentials
-        result = await flow.async_step_user(
-            {CONF_USERNAME: "wronguser", CONF_PASSWORD: "wrongpass"}
-        )
-
-        # Validate that the error is correctly handled and reported
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert "base" in result["errors"]
-        assert result["errors"]["base"] == "wrong_credential"
-
-
-@pytest.mark.asyncio
-async def test_async_step_user_valid_credentials(hass: HomeAssistant):
-    """Test the user step with invalid credentials."""
-    flow = config_flow.MawaqitPrayerFlowHandler()
-    flow.hass = hass
-
-    # Patch the credentials test to simulate a login failure
-    with (
-        patch(
-            "homeassistant.components.mawaqit.mawaqit_wrapper._test_credentials",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.mawaqit.config_flow.is_another_instance",
-            return_value=False,
-        ),
-        patch(
-            "homeassistant.components.mawaqit.mawaqit_wrapper.get_mawaqit_api_token",
-            return_value="MAWAQIT_API_TOKEN",
-        ),
-        patch(
-            "homeassistant.components.mawaqit.mawaqit_wrapper.all_mosques_neighborhood",
-            return_value={},
-        ),
-    ):
-        # Simulate user input with incorrect credentials
-        result = await flow.async_step_user(
-            {CONF_USERNAME: "wronguser", CONF_PASSWORD: "wrongpass"}
-        )
-
-        # Validate that the error is correctly handled and reported
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "mosques"
-
-
-@pytest.mark.asyncio
-async def test_async_step_user_no_neighborhood(hass: HomeAssistant):
-    """Test the user step when no mosque is found in the neighborhood."""
-    flow = config_flow.MawaqitPrayerFlowHandler()
-    flow.hass = hass
-
-    # Patching the methods used in the flow to simulate external interactions
-    with (
-        patch(
-            "homeassistant.components.mawaqit.config_flow.is_another_instance",
-            return_value=False,
-        ),
-        patch(
-            "homeassistant.components.mawaqit.mawaqit_wrapper._test_credentials",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.mawaqit.mawaqit_wrapper.get_mawaqit_api_token",
-            return_value="MAWAQIT_API_TOKEN",
-        ),
-        patch(
-            "homeassistant.components.mawaqit.mawaqit_wrapper.all_mosques_neighborhood",
-            side_effect=NoMosqueAround,
-        ),
-    ):
-        # Simulate user input to trigger the flow's logic
-        result = await flow.async_step_user(
-            {CONF_USERNAME: "testuser", CONF_PASSWORD: "testpass"}
-        )
-
-        # Check that the flow is aborted due to the lack of mosques nearby
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "no_mosque"
+    return entry
 
 
 @pytest.fixture
 async def mock_mosques_test_data():
+    """Provide mock data for mosques."""
     mock_mosques = [
         {
             "uuid": "aaaaa-bbbbb-cccccc-0000",
@@ -259,19 +134,494 @@ async def mock_mosques_test_data():
     return mock_mosques, mocked_mosques_data
 
 
-@pytest.mark.usefixtures("test_folder_setup")
-@pytest.mark.asyncio
-async def test_async_step_mosques(hass, mock_mosques_test_data, test_folder_setup):
-    mock_mosques, mocked_mosques_data = mock_mosques_test_data
+@pytest.fixture
+def mock_config_entry_setup():
+    """Create a mock ConfigEntry."""
+    # Set up any necessary properties of the entry here
+    # For example: entry.entry_id = "test_entry"
+    return MagicMock(spec=config_entries.ConfigEntry)
 
-    # Mock external dependencies
+
+# ----- USER FORM ----- #
+
+
+@pytest.mark.asyncio
+async def test_step_user_one_instance_allowed(
+    hass: HomeAssistant, setup_test_environment
+) -> None:
+    """Verify that when another instance of the Mawaqit integration is already configured, the flow returns a form prompting the user to either keep the existing instance or reset it."""
+    flow = config_flow.MawaqitPrayerFlowHandler()
+    flow.hass = hass
     with (
+        patch.object(flow, "store", new=setup_test_environment),
         patch(
-            "homeassistant.components.mawaqit.config_flow.CURRENT_DIR",
-            new=test_folder_setup,
+            "homeassistant.components.mawaqit.utils.is_another_instance",
+            return_value=True,
+        ),
+    ):
+        result = await flow.async_step_user(None)
+
+        assert result.get("type") == data_entry_flow.FlowResultType.FORM
+        assert result.get("step_id") == "keep_or_reset"
+
+
+@pytest.mark.asyncio
+async def test_show_form_user_no_input_reopens_form(
+    hass: HomeAssistant, setup_test_environment
+) -> None:
+    """Test that the form is served with no input."""
+    # Initialize the flow handler with the HomeAssistant instance
+    flow = config_flow.MawaqitPrayerFlowHandler()
+    flow.hass = hass
+
+    with (
+        patch.object(flow, "store", new=setup_test_environment),
+        patch(
+            "homeassistant.components.mawaqit.utils.is_another_instance",
+            return_value=False,
+        ),
+    ):
+        # Invoke the initial step of the flow without user input
+        result = await flow.async_step_user(user_input=None)
+
+        # Validate that the form is returned to the user
+        assert result.get("type") == data_entry_flow.FlowResultType.FORM
+        assert result.get("step_id") == "user"
+
+
+@pytest.mark.asyncio
+async def test_async_step_user_connection_error(
+    hass: HomeAssistant, setup_test_environment
+) -> None:
+    """Test the user step handles connection errors correctly."""
+    flow = config_flow.MawaqitPrayerFlowHandler()
+    flow.hass = hass
+
+    # Create an instance of ClientConnectorError with mock arguments
+    mock_conn_key = MagicMock()
+    mock_os_error = MagicMock()
+    connection_error_instance = ClientConnectorError(mock_conn_key, mock_os_error)
+
+    # Patching the methods used in the flow to simulate external interactions
+    with (
+        patch.object(flow, "store", new=setup_test_environment),
+        patch(
+            "homeassistant.components.mawaqit.mawaqit_wrapper.test_credentials",
+            side_effect=connection_error_instance,
         ),
         patch(
-            "homeassistant.components.mawaqit.mawaqit_wrapper.get_mawaqit_token_from_env",
+            "homeassistant.components.mawaqit.utils.is_another_instance",
+            return_value=False,
+        ),
+    ):
+        # Simulate user input to trigger the flow's logic
+        result = await flow.async_step_user(
+            {CONF_USERNAME: "testuser", CONF_PASSWORD: "testpass"}
+        )
+
+        # Check that the flow returns a form with an error message due to the connection error
+        assert result.get("type") == data_entry_flow.FlowResultType.FORM
+        assert result.get("step_id") == "user"
+
+        errors = result.get("errors")
+        assert errors is not None and "base" in errors
+        assert errors["base"] == CANNOT_CONNECT_TO_SERVER
+
+
+@pytest.mark.asyncio
+async def test_async_step_user_invalid_credentials(
+    hass: HomeAssistant, setup_test_environment
+) -> None:
+    """Test the user step with invalid credentials."""
+    flow = config_flow.MawaqitPrayerFlowHandler()
+    flow.hass = hass
+
+    # Patch the credentials test to simulate a login failure
+    with (
+        patch.object(flow, "store", new=setup_test_environment),
+        patch(
+            "homeassistant.components.mawaqit.mawaqit_wrapper.test_credentials",
+            return_value=False,
+        ),
+        patch(
+            "homeassistant.components.mawaqit.utils.is_another_instance",
+            return_value=False,
+        ),
+    ):
+        # Simulate user input with incorrect credentials
+        result = await flow.async_step_user(
+            {CONF_USERNAME: "wronguser", CONF_PASSWORD: "wrongpass"}
+        )
+
+        # Validate that the error is correctly handled and reported
+        assert result.get("type") == data_entry_flow.FlowResultType.FORM
+
+        errors = result.get("errors")
+        assert errors is not None and "base" in errors
+        assert errors["base"] == WRONG_CREDENTIAL
+
+
+@pytest.mark.asyncio
+async def test_async_step_user_valid_credentials(
+    hass: HomeAssistant, setup_test_environment
+) -> None:
+    """Test the user step with valid credentials."""
+    flow = config_flow.MawaqitPrayerFlowHandler()
+    flow.hass = hass
+
+    # Patch the credentials test to simulate a login success
+    with (
+        patch.object(flow, "store", new=setup_test_environment),
+        patch(
+            "homeassistant.components.mawaqit.mawaqit_wrapper.test_credentials",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.mawaqit.mawaqit_wrapper.get_mawaqit_api_token",
+            return_value="MAWAQIT_API_TOKEN",
+        ),
+        patch(
+            "homeassistant.components.mawaqit.mawaqit_wrapper.all_mosques_neighborhood",
+            return_value={},
+        ),
+    ):
+        # Simulate user input with correct credentials
+        result = await flow.async_step_user(
+            {CONF_USERNAME: "correctuser", CONF_PASSWORD: "correctpass"}
+        )
+
+        # Validate that the next form is displayed (mosques form)
+        assert result.get("type") == data_entry_flow.FlowResultType.FORM
+        assert result.get("step_id") == "search_method"
+
+
+# ----- SEARCH METHOD SELECTION FORM ----- #
+
+
+@pytest.mark.asyncio
+async def test_async_step_search_method_coordinate_no_neighborhood(
+    hass: HomeAssistant, setup_test_environment
+) -> None:
+    """Test the search method selection step with coordinates search method and where no neighbor mosques are found."""
+    flow = config_flow.MawaqitPrayerFlowHandler()
+    flow.hass = hass
+
+    # Patching the methods used in the flow to simulate external interactions
+    with (
+        patch.object(flow, "store", new=setup_test_environment),
+        patch(
+            "homeassistant.components.mawaqit.utils.read_mawaqit_token",
+            return_value="TOKEN",
+        ),
+        patch(
+            "homeassistant.components.mawaqit.mawaqit_wrapper.all_mosques_neighborhood",
+            side_effect=NoMosqueAround,
+        ),
+    ):
+        # Simulate user input to trigger the flow's logic
+        result = await flow.async_step_search_method(
+            {CONF_TYPE_SEARCH: CONF_TYPE_SEARCH_COORDINATES}
+        )
+
+        # Check that the flow is aborted due to the lack of mosques nearby
+        assert result.get("type") == data_entry_flow.FlowResultType.ABORT
+        assert result.get("reason") == "no_mosque"
+
+
+@pytest.mark.asyncio
+async def test_async_step_search_method_coordinate_valid(
+    hass: HomeAssistant, mock_mosques_test_data, setup_test_environment
+) -> None:
+    """Test the search method selection step with coordinates search method and where neighbor mosques are found."""
+    flow = config_flow.MawaqitPrayerFlowHandler()
+    flow.hass = hass
+    mock_mosques, mocked_mosques_data = mock_mosques_test_data
+    # Patching the methods used in the flow to simulate external interactions
+    with (
+        patch.object(flow, "store", new=setup_test_environment),
+        patch(
+            "homeassistant.components.mawaqit.utils.read_mawaqit_token",
+            return_value="TOKEN",
+        ),
+        patch(
+            "homeassistant.components.mawaqit.mawaqit_wrapper.all_mosques_neighborhood",
+            return_value=mock_mosques,
+        ),
+        patch(
+            "homeassistant.components.mawaqit.config_flow.read_all_mosques_NN_file",
+            return_value=mocked_mosques_data,
+        ),
+    ):
+        # Simulate user input to trigger the flow's logic
+        result = await flow.async_step_search_method(
+            {CONF_TYPE_SEARCH: CONF_TYPE_SEARCH_COORDINATES}
+        )
+
+        # Check that
+        assert result.get("type") == data_entry_flow.FlowResultType.FORM
+        assert result.get("step_id") == "mosques_coordinates"
+
+
+@pytest.mark.asyncio
+async def test_async_step_search_method_keyword(
+    hass: HomeAssistant, mock_mosques_test_data, setup_test_environment
+) -> None:
+    """Test the search method selection step with keyword search choice and check if the flow proceeds to the keyword search form."""
+    flow = config_flow.MawaqitPrayerFlowHandler()
+    flow.hass = hass
+    mock_mosques, mocked_mosques_data = mock_mosques_test_data
+    # Patching the methods used in the flow to simulate external interactions
+    with (
+        patch.object(flow, "store", new=setup_test_environment),
+        patch(
+            "homeassistant.components.mawaqit.utils.read_mawaqit_token",
+            return_value="TOKEN",
+        ),
+    ):
+        # Simulate user input to trigger the flow's logic
+        result = await flow.async_step_search_method(
+            {CONF_TYPE_SEARCH: CONF_TYPE_SEARCH_KEYWORD}
+        )
+
+        # Check that
+        assert result.get("type") == data_entry_flow.FlowResultType.FORM
+        assert result.get("step_id") == "keyword_search"
+
+
+@pytest.mark.asyncio
+async def test_async_step_search_method_input_None(
+    hass: HomeAssistant, mock_mosques_test_data, setup_test_environment
+) -> None:
+    """Test the search method selection step with no input provided and check if the flow show again the search method selection form."""
+    flow = config_flow.MawaqitPrayerFlowHandler()
+    flow.hass = hass
+    mock_mosques, mocked_mosques_data = mock_mosques_test_data
+    # Patching the methods used in the flow to simulate external interactions
+    with (
+        patch.object(flow, "store", new=setup_test_environment),
+        patch(
+            "homeassistant.components.mawaqit.utils.read_mawaqit_token",
+            return_value="TOKEN",
+        ),
+    ):
+        # Simulate user input to trigger the flow's logic
+        result = await flow.async_step_search_method(None)
+
+        # Check that
+        assert result.get("type") == data_entry_flow.FlowResultType.FORM
+        assert result.get("step_id") == "search_method"
+
+
+@pytest.mark.asyncio
+async def test_async_step_search_method_Input_UNKNOWN(
+    hass: HomeAssistant, mock_mosques_test_data, setup_test_environment
+) -> None:
+    """Test the search method selection step with an unknown input provided and check if the flow show again the search method selection form."""
+    flow = config_flow.MawaqitPrayerFlowHandler()
+    flow.hass = hass
+    mock_mosques, mocked_mosques_data = mock_mosques_test_data
+    # Patching the methods used in the flow to simulate external interactions
+    with (
+        patch.object(flow, "store", new=setup_test_environment),
+        patch(
+            "homeassistant.components.mawaqit.utils.read_mawaqit_token",
+            return_value="TOKEN",
+        ),
+    ):
+        # Simulate user input to trigger the flow's logic
+        result = await flow.async_step_search_method({CONF_TYPE_SEARCH: "UNKNOWN"})
+
+        # Check that
+        assert result.get("type") == data_entry_flow.FlowResultType.FORM
+        assert result.get("step_id") == "search_method"
+
+
+# ----- MOSQUES KEYWORD SEARCH FORM ----- #
+
+
+@pytest.mark.asyncio
+async def test_async_step_keyword_search_initial(hass: HomeAssistant) -> None:
+    """Test the initial keyword search step with no user input."""
+    flow = config_flow.MawaqitPrayerFlowHandler()
+    flow.hass = hass
+
+    result = await flow.async_step_keyword_search(user_input=None)
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("step_id") == "keyword_search"
+
+
+@pytest.mark.asyncio
+async def test_async_step_keyword_search_with_keyword(
+    hass: HomeAssistant, mock_mosques_test_data, setup_test_environment
+) -> None:
+    """Test the keyword search step with a keyword provided."""
+    flow = config_flow.MawaqitPrayerFlowHandler()
+    flow.hass = hass
+
+    mock_mosques, mocked_mosques_data = mock_mosques_test_data
+
+    with (
+        patch.object(flow, "store", new=setup_test_environment),
+        patch(
+            "homeassistant.components.mawaqit.utils.read_mawaqit_token",
+            return_value="TOKEN",
+        ),
+        patch(
+            "homeassistant.components.mawaqit.mawaqit_wrapper.all_mosques_by_keyword",
+            return_value=mock_mosques,
+        ),
+        patch(
+            "homeassistant.components.mawaqit.config_flow.read_all_mosques_NN_file",
+            return_value=mocked_mosques_data,
+        ),
+    ):
+        result = await flow.async_step_keyword_search(
+            user_input={CONF_SEARCH: "mosque_test_keyword"}
+        )
+        assert result.get("type") == data_entry_flow.FlowResultType.FORM
+        assert result.get("step_id") == "keyword_search"
+
+
+@pytest.mark.asyncio
+async def test_async_step_keyword_search_with_keyword_no_mosque_found(
+    hass: HomeAssistant, mock_mosques_test_data, setup_test_environment
+) -> None:
+    """Test the keyword search step with a keyword provided and no mosque was found."""
+
+    flow = config_flow.MawaqitPrayerFlowHandler()
+    flow.hass = hass
+
+    mock_mosques, mocked_mosques_data = mock_mosques_test_data
+
+    with (
+        patch.object(flow, "store", new=setup_test_environment),
+        patch(
+            "homeassistant.components.mawaqit.utils.read_mawaqit_token",
+            return_value="TOKEN",
+        ),
+        patch(
+            "homeassistant.components.mawaqit.mawaqit_wrapper.all_mosques_by_keyword",
+            side_effect=NoMosqueFound,
+        ),
+        patch(
+            "homeassistant.components.mawaqit.config_flow.read_all_mosques_NN_file",
+            return_value=mocked_mosques_data,
+        ),
+    ):
+        result = await flow.async_step_keyword_search(
+            user_input={CONF_SEARCH: "mosque_test_keyword"}
+        )
+        assert result.get("type") == data_entry_flow.FlowResultType.FORM
+        assert result.get("step_id") == "keyword_search"
+
+        errors = result.get("errors")
+        assert errors is not None and "base" in errors
+        assert errors["base"] == NO_MOSQUE_FOUND_KEYWORD
+
+
+@pytest.mark.asyncio
+async def test_async_step_keyword_search_with_keyword_new_keyword(
+    hass: HomeAssistant, mock_mosques_test_data, setup_test_environment
+) -> None:
+    """Test the keyword search step with a keyword provided."""
+    flow = config_flow.MawaqitPrayerFlowHandler()
+    flow.hass = hass
+
+    mock_mosques, mocked_mosques_data = mock_mosques_test_data
+
+    with (
+        patch.object(flow, "store", new=setup_test_environment),
+        patch.object(flow, "previous_keyword_search", "previous_mosque_test_keyword"),
+        patch(
+            "homeassistant.components.mawaqit.utils.read_mawaqit_token",
+            return_value="TOKEN",
+        ),
+        patch(
+            "homeassistant.components.mawaqit.mawaqit_wrapper.all_mosques_by_keyword",
+            return_value=mock_mosques,
+        ),
+        patch(
+            "homeassistant.components.mawaqit.config_flow.read_all_mosques_NN_file",
+            return_value=mocked_mosques_data,
+        ),
+    ):
+        result = await flow.async_step_keyword_search(
+            user_input={CONF_SEARCH: "new_mosque_test_keyword", CONF_UUID: "uuid1"}
+        )
+        assert result.get("type") == data_entry_flow.FlowResultType.FORM
+        assert result.get("step_id") == "keyword_search"
+
+
+@pytest.mark.asyncio
+async def test_async_step_keyword_search_with_keyword_same_keyword(
+    hass: HomeAssistant, mock_mosques_test_data, setup_test_environment
+) -> None:
+    """Test the keyword search step with a keyword provided."""
+    flow = config_flow.MawaqitPrayerFlowHandler()
+    flow.hass = hass
+
+    mock_mosques, mocked_mosques_data = mock_mosques_test_data
+    previous_keyword_search = "mosque_test_keyword"
+
+    with (
+        patch.object(flow, "store", new=setup_test_environment),
+        patch.object(flow, "previous_keyword_search", previous_keyword_search),
+        patch(
+            "homeassistant.components.mawaqit.utils.read_mawaqit_token",
+            return_value="TOKEN",
+        ),
+        patch(
+            "homeassistant.components.mawaqit.mawaqit_wrapper.all_mosques_by_keyword",
+            return_value=mock_mosques,
+        ),
+        patch(
+            "homeassistant.components.mawaqit.utils.read_all_mosques_NN_file",
+            return_value=mocked_mosques_data,
+        ),
+        patch(
+            "homeassistant.components.mawaqit.utils.read_raw_all_mosques_NN_file",
+            return_value=mock_mosques,
+        ),
+        patch(
+            "homeassistant.components.mawaqit.mawaqit_wrapper.fetch_prayer_times",
+            return_value={},
+        ),
+    ):
+        # Now simulate the user selecting a mosque and submitting the form
+        # Assuming the user selects the first mosque
+        mosque_uuid_label = mocked_mosques_data[0][0]
+        mosque_uuid = mocked_mosques_data[1][0]  # uuid of the first mosque
+
+        result = await flow.async_step_keyword_search(
+            user_input={
+                CONF_SEARCH: previous_keyword_search,
+                CONF_UUID: mosque_uuid_label,
+            }
+        )
+
+        assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert "data" in result and result["data"][CONF_UUID] == mosque_uuid
+
+
+# ----- MOSQUES COORDINATES FORM ----- #
+
+
+@pytest.mark.asyncio
+async def test_async_step_mosques_coordinates(
+    hass: HomeAssistant, mock_mosques_test_data, setup_test_environment
+) -> None:
+    """Test the mosques step in the config flow."""
+    mock_mosques, mocked_mosques_data = mock_mosques_test_data
+    flow = config_flow.MawaqitPrayerFlowHandler()
+    flow.hass = hass
+    flow.context = {}  # TODO: check if this is necessary # pylint: disable=fixme
+
+    # Mock external dependencies
+    # Pre-fill the token and mosques list as if the user step has been completed
+    with (
+        patch.object(flow, "store", new=setup_test_environment),
+        patch(
+            "homeassistant.components.mawaqit.utils.read_mawaqit_token",
             return_value="TOKEN",
         ),
         patch(
@@ -286,46 +636,40 @@ async def test_async_step_mosques(hass, mock_mosques_test_data, test_folder_setu
             "homeassistant.components.mawaqit.mawaqit_wrapper.fetch_prayer_times",
             return_value={},
         ),
-    ):  # empty data
-        # Initialize the flow
-        flow = config_flow.MawaqitPrayerFlowHandler()
-        flow.hass = hass
-
-        # # Pre-fill the token and mosques list as if the user step has been completed
-        flow.context = {}
-
+    ):
         # Call the mosques step
-        result = await flow.async_step_mosques()
+        result = await flow.async_step_mosques_coordinates()
 
         # Verify the form is displayed with correct mosques options
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result.get("type") == data_entry_flow.FlowResultType.FORM
         # print(result["data_schema"].schema)
-        assert CONF_UUID in result["data_schema"].schema
+
+        assert (
+            "data_schema" in result
+            and result["data_schema"] is not None
+            and CONF_UUID in result["data_schema"].schema
+        )
 
         # Now simulate the user selecting a mosque and submitting the form
-        mosque_uuid_label = mocked_mosques_data[0][
-            0
-        ]  # Assuming the user selects the first mosque
+        # Assuming the user selects the first mosque
+        mosque_uuid_label = mocked_mosques_data[0][0]
         mosque_uuid = mocked_mosques_data[1][0]  # uuid of the first mosque
 
-        result = await flow.async_step_mosques({CONF_UUID: mosque_uuid_label})
+        result = await flow.async_step_mosques_coordinates(
+            {CONF_UUID: mosque_uuid_label}
+        )
 
         # Verify the flow processes the selection correctly
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["data"][CONF_UUID] == mosque_uuid
+        assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
+
+        assert "data" in result and result["data"][CONF_UUID] == mosque_uuid
 
 
-@pytest.fixture
-def mock_config_entry_setup():
-    """Create a mock ConfigEntry."""
-    entry = MagicMock(spec=config_entries.ConfigEntry)
-    # Set up any necessary properties of the entry here
-    # For example: entry.entry_id = "test_entry"
-    return entry
+# ----- OPTION FLOW FORM ----- #
 
 
 @pytest.mark.asyncio
-async def test_async_get_options_flow(mock_config_entry_setup):
+async def test_async_get_options_flow(mock_config_entry_setup) -> None:
     """Test the options flow is correctly instantiated with the config entry."""
 
     options_flow = config_flow.MawaqitPrayerFlowHandler.async_get_options_flow(
@@ -338,42 +682,32 @@ async def test_async_get_options_flow(mock_config_entry_setup):
     assert options_flow.config_entry == mock_config_entry_setup
 
 
-@pytest.fixture
-async def config_entry_setup(hass: HomeAssistant):
-    """Create a mock config entry for tests."""
-    entry = MockConfigEntry(
-        version=10,
-        minor_version=1,
-        domain=DOMAIN,
-        title="MAWAQIT - Mosque1",
-        data={
-            "api_key": "TOKEN",
-            "uuid": "aaaaa-bbbbb-cccccc-0000",
-            "latitude": 32.87336,
-            "longitude": -117.22743,
-        },
-        source=config_entries.SOURCE_USER,
-    )
-
-    entry.add_to_hass(hass)  # register the MockConfigEntry to Hass
-
-    return entry
-
-
 @pytest.mark.asyncio
 async def test_options_flow_valid_input(
-    hass: HomeAssistant, config_entry_setup, mock_mosques_test_data
-):
+    hass: HomeAssistant,
+    config_entry_setup,
+    mock_mosques_test_data,
+    setup_test_environment,
+) -> None:
+    """Test the options flow with valid input."""
     mock_mosques, mocked_mosques_data = mock_mosques_test_data
 
-    """Test the options flow."""
+    # Initialize the options flow
+    flow = config_flow.MawaqitPrayerOptionsFlowHandler(config_entry_setup)
+    flow.hass = hass  # Assign HomeAssistant instance
+
     with (
+        patch.object(flow, "store", new=setup_test_environment),
         patch(
-            "homeassistant.components.mawaqit.config_flow.read_all_mosques_NN_file",
+            "homeassistant.components.mawaqit.utils.read_all_mosques_NN_file",
             return_value=mocked_mosques_data,
         ),
         patch(
-            "homeassistant.components.mawaqit.mawaqit_wrapper.get_mawaqit_token_from_env",
+            "homeassistant.components.mawaqit.utils.read_raw_all_mosques_NN_file",
+            return_value=mock_mosques,
+        ),
+        patch(
+            "homeassistant.components.mawaqit.utils.read_mawaqit_token",
             return_value="TOKEN",
         ),
         patch(
@@ -384,89 +718,37 @@ async def test_options_flow_valid_input(
             "homeassistant.components.mawaqit.mawaqit_wrapper.fetch_prayer_times",
             return_value={},
         ),
-    ):  # empty data
-        # Initialize the options flow
-        flow = config_flow.MawaqitPrayerOptionsFlowHandler(config_entry_setup)
-        flow.hass = hass  # Assign HomeAssistant instance
+    ):
+        # Simulate user input in the options flow , Assuming the user selects the first mosque
+        mosque_uuid_label = mocked_mosques_data[0][1]
 
-        # Simulate user input in the options flow
-        mosque_uuid_label = mocked_mosques_data[0][
-            1
-        ]  # Assuming the user selects the first mosque
-        mosque_uuid = mocked_mosques_data[1][1]  # uuid of the first mosque
-
-        # TODO chage this if we remove the create_entry line 278
         result = await flow.async_step_init(
             user_input={CONF_CALC_METHOD: mosque_uuid_label}
         )
-        print(result)
+        # print(result)
         assert (
-            result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+            result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
         )  # Assert that an entry is created/updated
         # assert result["data"][CONF_UUID] == mosque_uuid
 
 
-@pytest.mark.usefixtures("test_folder_setup")
-@pytest.mark.asyncio
-async def test_options_flow_error_no_mosques_around(
-    hass: HomeAssistant, config_entry_setup, mock_mosques_test_data, test_folder_setup
-):
-    _, mocked_mosques_data = mock_mosques_test_data
-
-    """Test the options flow."""
-    with (
-        patch(
-            "homeassistant.components.mawaqit.config_flow.CURRENT_DIR",
-            new=test_folder_setup,
-        ),
-        patch(
-            "homeassistant.components.mawaqit.config_flow.read_all_mosques_NN_file",
-            return_value=mocked_mosques_data,
-        ),
-        patch(
-            "homeassistant.components.mawaqit.mawaqit_wrapper.get_mawaqit_token_from_env",
-            return_value="TOKEN",
-        ),
-        patch(
-            "homeassistant.components.mawaqit.mawaqit_wrapper.all_mosques_neighborhood",
-            side_effect=NoMosqueAround,
-        ),
-    ):
-        # Initialize the options flow
-        flow = config_flow.MawaqitPrayerOptionsFlowHandler(config_entry_setup)
-        flow.hass = hass  # Assign HomeAssistant instance
-
-        # Simulate user input in the options flow
-        mosque_uuid_label = mocked_mosques_data[0][
-            1
-        ]  # Assuming the user selects the first mosque
-        mosque_uuid = mocked_mosques_data[1][1]  # uuid of the first mosque
-
-        # Since we expect an exception, let's catch it to assert it happens
-        with pytest.raises(NoMosqueAround):
-            result = await flow.async_step_init(
-                user_input={CONF_CALC_METHOD: mosque_uuid_label}
-            )
-            # Same tests as in test_options_flow_valid_input :
-            # TODO chage this if we remove the create_entry line 278
-            result = await flow.async_step_init(
-                user_input={CONF_CALC_METHOD: mosque_uuid_label}
-            )
-            assert (
-                result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-            )  # Assert that an entry is created/updated
-            # assert result["data"][CONF_UUID] == mosque_uuid
-
-
 @pytest.mark.asyncio
 async def test_options_flow_no_input_reopens_form(
-    hass: HomeAssistant, config_entry_setup, mock_mosques_test_data
-):
-    # MawaqitPrayerOptionsFlowHandler.
+    hass: HomeAssistant,
+    config_entry_setup,
+    mock_mosques_test_data,
+    setup_test_environment,
+) -> None:
+    """Test the options flow reopens the form when no input is provided."""
+
     mock_mosques, mocked_mosques_data = mock_mosques_test_data
 
-    """Test the options flow."""
+    # Initialize the options flow
+    flow = config_flow.MawaqitPrayerOptionsFlowHandler(config_entry_setup)
+    flow.hass = hass  # Assign HomeAssistant instance
+
     with (
+        patch.object(flow, "store", new=setup_test_environment),
         patch(
             "homeassistant.components.mawaqit.mawaqit_wrapper.all_mosques_neighborhood",
             return_value={},
@@ -480,26 +762,22 @@ async def test_options_flow_no_input_reopens_form(
             return_value=mock_mosques[0],
         ),
     ):
-        # Initialize the options flow
-        flow = config_flow.MawaqitPrayerOptionsFlowHandler(config_entry_setup)
-        flow.hass = hass  # Assign HomeAssistant instance
-
         # Simulate the init step
         result = await flow.async_step_init(user_input=None)
         assert (
-            result["type"] == data_entry_flow.FlowResultType.FORM
+            result.get("type") == data_entry_flow.FlowResultType.FORM
         )  # Assert that a form is shown
-        assert result["step_id"] == "init"
+        assert result.get("step_id") == "init"
 
 
 @pytest.mark.asyncio
 async def test_options_flow_no_input_error_reopens_form(
     hass: HomeAssistant, config_entry_setup, mock_mosques_test_data
-):
+) -> None:
+    """Test the options flow reopens the form when no input is provided and an error occurs."""
     # MawaqitPrayerOptionsFlowHandler.
     _, mocked_mosques_data = mock_mosques_test_data
 
-    """Test the options flow."""
     with (
         patch(
             "homeassistant.components.mawaqit.mawaqit_wrapper.all_mosques_neighborhood",
@@ -522,69 +800,68 @@ async def test_options_flow_no_input_error_reopens_form(
         result = await flow.async_step_init(user_input=None)
         # Same tests as test_options_flow_no_input_reopens_form :
         assert (
-            result["type"] == data_entry_flow.FlowResultType.FORM
+            result.get("type") == data_entry_flow.FlowResultType.FORM
         )  # Assert that a form is shown
-        assert result["step_id"] == "init"
+        assert result.get("step_id") == "init"
+
+
+# ----- KEEP OR RESET FORM ----- #
 
 
 @pytest.mark.asyncio
-async def test_create_data_folder_does_not_exist(mock_data_folder):
-    mock_exists, mock_makedirs = mock_data_folder
-    mock_exists.return_value = False
-    config_flow.create_data_folder()
-    mock_makedirs.assert_called_once()
+async def test_async_step_keep_or_reset_no_input_reopens_form(
+    hass: HomeAssistant,
+) -> None:
+    """Test the async_step_keep_or_reset method when no user input is provided."""
+    flow = config_flow.MawaqitPrayerFlowHandler()
+    flow.hass = hass
+
+    result = await flow.async_step_keep_or_reset(user_input=None)
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("step_id") == "keep_or_reset"
 
 
-@pytest.mark.usefixtures("test_folder_setup")
-@pytest.mark.parametrize(
-    "file_exists, expected_result",
-    [
-        (True, True),  # The file exists, function should return True
-        (False, False),  # The file does not exist, function should return False
-    ],
-)
-def test_is_already_configured(file_exists, expected_result, test_folder_setup):
-    with (
-        patch(
-            "homeassistant.components.mawaqit.config_flow.CURRENT_DIR",
-            new=test_folder_setup,
-        ),
-        patch(
-            "homeassistant.components.mawaqit.config_flow.os.path.isfile",
-            return_value=file_exists,
-        ) as mock_isfile,
-    ):
-        result = config_flow.is_already_configured()
-        assert result == expected_result
-        mock_isfile.assert_called_once_with(
-            f"{test_folder_setup}/data/my_mosque_NN.txt"
-        )
+@pytest.mark.asyncio
+async def test_async_step_keep_or_reset_unknown_choice(hass: HomeAssistant) -> None:
+    """Test the async_step_keep_or_reset method when user chooses to reset the configuration."""
+    flow = config_flow.MawaqitPrayerFlowHandler()
+    flow.hass = hass
+
+    user_input = {"choice": "UNKNOWN_CHOICE"}
+    result = await flow.async_step_keep_or_reset(user_input=user_input)
+
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("step_id") == "keep_or_reset"
 
 
-@pytest.mark.usefixtures("test_folder_setup")
-@pytest.mark.parametrize(
-    "configured, expected_result",
-    [
-        (
-            True,
-            True,
-        ),  # is_already_configured returns True, is_another_instance should also return True
-        (
-            False,
-            False,
-        ),  # is_already_configured returns False, is_another_instance should return False
-    ],
-)
-def test_is_another_instance(configured, expected_result, test_folder_setup):
-    with (
-        patch(
-            "homeassistant.components.mawaqit.config_flow.CURRENT_DIR",
-            new=test_folder_setup,
-        ),
-        patch(
-            "homeassistant.components.mawaqit.config_flow.is_already_configured",
-            return_value=configured,
-        ),
-    ):
-        result = config_flow.is_another_instance()
-        assert result == expected_result
+@pytest.mark.asyncio
+async def test_async_step_keep_or_reset_keep_choice(hass: HomeAssistant) -> None:
+    """Test the async_step_keep_or_reset method when user chooses to keep the configuration."""
+    flow = config_flow.MawaqitPrayerFlowHandler()
+    flow.hass = hass
+
+    user_input = {"choice": "keep"}
+    result = await flow.async_step_keep_or_reset(user_input=user_input)
+
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "configuration_kept"
+
+
+@pytest.mark.asyncio
+async def test_async_step_keep_or_reset_reset_choice(hass: HomeAssistant) -> None:
+    """Test the async_step_keep_or_reset method when user chooses to reset the configuration."""
+    flow = config_flow.MawaqitPrayerFlowHandler()
+    flow.hass = hass
+
+    user_input = {"choice": "reset"}
+
+    with patch(
+        "homeassistant.components.mawaqit.utils.async_clear_data", return_value=None
+    ) as mock_clear_data:
+        result = await flow.async_step_keep_or_reset(user_input=user_input)
+
+        mock_clear_data.assert_called_once()
+
+        # Validate that the user form is returned to the user
+        assert result.get("type") == data_entry_flow.FlowResultType.FORM
+        assert result.get("step_id") == "user"
