@@ -1,6 +1,8 @@
-custom_components/mawaqit/data
-custom_components/mawaqit/test.py
-custom_components/mawaqit/strings.json
-custom_components/.DS_Store
-.DS_Store
-__pycache__/
+# OS files
+**/.DS_Store
+
+# Python files
+.mypy_cache/
+
+# Virtual environment
+.venv/

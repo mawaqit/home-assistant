@@ -278,6 +278,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=schema,
+            description_placeholders={"mawaqit_url": "https://mawaqit.net/"},
             errors=self._errors,
         )
 

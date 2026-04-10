@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "MAWAQIT",
-        "description": "Inscrivez-vous sur https://mawaqit.net/ puis connectez-vous ci-dessous. La mosqu\u00e9e la plus proche sera choisie mais vous pouvez la changer ult\u00e9rieurement dans les param\u00e8tres du plugin Mawaqit :",
+        "description": "Inscrivez-vous sur [mawaqit.net]({mawaqit_url}) puis connectez-vous ci-dessous. La mosqu\u00e9e la plus proche sera choisie mais vous pouvez la changer ult\u00e9rieurement dans les param\u00e8tres du plugin Mawaqit :",
         "data": {
           "username": "E-mail",
           "password": "Mot de passe",

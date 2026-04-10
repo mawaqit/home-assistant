@@ -7,7 +7,7 @@
     },
     "step": {
       "user": {
-        "description": "https://mawaqit.net/ adresine kaydolun ve aşağıya bağlanın. Evinizin en yakın camisi seçilecek ancak daha sonra eklenti parametrelerinde değiştirebilirsiniz.",
+        "description": "[mawaqit.net]({mawaqit_url}) adresine kaydolun ve aşağıya bağlanın. Evinizin en yakın camisi seçilecek ancak daha sonra eklenti parametrelerinde değiştirebilirsiniz.",
         "data": {
           "username": "E-posta",
           "password": "Şifre",

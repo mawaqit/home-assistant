@@ -7,7 +7,7 @@
     },
     "step": {
       "user": {
-        "description": "Registrieren Sie sich auf https://mawaqit.net/ und verbinden Sie sich unten. Die nächstgelegene Moschee zu Ihrem Zuhause wird ausgewählt, aber Sie können sie später in den Add-On-Parametern ändern.",
+        "description": "Registrieren Sie sich auf [mawaqit.net]({mawaqit_url}) und verbinden Sie sich unten. Die nächstgelegene Moschee zu Ihrem Zuhause wird ausgewählt, aber Sie können sie später in den Add-On-Parametern ändern.",
         "data": {
           "username": "E-Mail",
           "password": "Passwort",
