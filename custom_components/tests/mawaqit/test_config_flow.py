@@ -678,8 +678,6 @@ async def test_async_get_options_flow(mock_config_entry_setup) -> None:
 
     # Verify that the result is an instance of the expected options flow handler
     assert isinstance(options_flow, config_flow.MawaqitPrayerOptionsFlowHandler)
-    # check that the config entry is correctly passed to the handler
-    assert options_flow.config_entry == mock_config_entry_setup
 
 
 @pytest.mark.asyncio
@@ -692,9 +690,11 @@ async def test_options_flow_valid_input(
     """Test the options flow with valid input."""
     mock_mosques, mocked_mosques_data = mock_mosques_test_data
 
-    # Initialize the options flow
-    flow = config_flow.MawaqitPrayerOptionsFlowHandler(config_entry_setup)
-    flow.hass = hass  # Assign HomeAssistant instance
+    # Initialize the options flow using handler ID so the framework's
+    # read-only config_entry property resolves correctly.
+    flow = config_flow.MawaqitPrayerOptionsFlowHandler()
+    flow.hass = hass
+    flow.handler = config_entry_setup.entry_id
 
     with (
         patch.object(flow, "store", new=setup_test_environment),
@@ -719,17 +719,15 @@ async def test_options_flow_valid_input(
             return_value={},
         ),
     ):
-        # Simulate user input in the options flow , Assuming the user selects the first mosque
+        # Simulate user input in the options flow, assuming the user selects the first mosque
         mosque_uuid_label = mocked_mosques_data[0][1]
 
         result = await flow.async_step_init(
             user_input={CONF_CALC_METHOD: mosque_uuid_label}
         )
-        # print(result)
         assert (
             result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
         )  # Assert that an entry is created/updated
-        # assert result["data"][CONF_UUID] == mosque_uuid
 
 
 @pytest.mark.asyncio
@@ -743,9 +741,11 @@ async def test_options_flow_no_input_reopens_form(
 
     mock_mosques, mocked_mosques_data = mock_mosques_test_data
 
-    # Initialize the options flow
-    flow = config_flow.MawaqitPrayerOptionsFlowHandler(config_entry_setup)
-    flow.hass = hass  # Assign HomeAssistant instance
+    # Initialize the options flow using handler ID so the framework's
+    # read-only config_entry property resolves correctly.
+    flow = config_flow.MawaqitPrayerOptionsFlowHandler()
+    flow.hass = hass
+    flow.handler = config_entry_setup.entry_id
 
     with (
         patch.object(flow, "store", new=setup_test_environment),
@@ -792,9 +792,11 @@ async def test_options_flow_no_input_error_reopens_form(
             return_value={"uuid": "non_existent_uuid"},
         ),
     ):
-        # Initialize the options flow
-        flow = config_flow.MawaqitPrayerOptionsFlowHandler(config_entry_setup)
-        flow.hass = hass  # Assign HomeAssistant instance
+        # Initialize the options flow using handler ID so the framework's
+        # read-only config_entry property resolves correctly.
+        flow = config_flow.MawaqitPrayerOptionsFlowHandler()
+        flow.hass = hass
+        flow.handler = config_entry_setup.entry_id
 
         # Simulate the init step
         result = await flow.async_step_init(user_input=None)

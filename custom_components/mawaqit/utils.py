@@ -18,7 +18,9 @@ from .const import (
     MAWAQIT_API_KEY_TOKEN,
     MAWAQIT_MOSQ_LIST_DATA,
     MAWAQIT_MY_MOSQUE_NN,
+    MAWAQIT_PASSWORD,
     MAWAQIT_PRAY_TIME,
+    MAWAQIT_USERNAME,
 )
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -233,6 +235,21 @@ async def write_mawaqit_token(
     await write_one_element(store, MAWAQIT_API_KEY_TOKEN, mawaqit_token)
 
 
+async def write_mawaqit_credentials(
+    store: Store, username: str, password: str
+) -> None:
+    """Write the Mawaqit credentials to the store."""
+    await write_one_element(store, MAWAQIT_USERNAME, username)
+    await write_one_element(store, MAWAQIT_PASSWORD, password)
+
+
+async def read_mawaqit_credentials(store: Store) -> tuple[str | None, str | None]:
+    """Read the Mawaqit credentials from the store."""
+    username = await read_one_element(store, MAWAQIT_USERNAME)
+    password = await read_one_element(store, MAWAQIT_PASSWORD)
+    return username, password
+
+
 async def update_my_mosque_data_files(
     hass: HomeAssistant, dir, store, mosque_id=None, token=None
 ):
@@ -260,9 +277,22 @@ async def update_my_mosque_data_files(
             _LOGGER.error("Update Failed : Mawaqit API token not found !")
             return
 
-    dict_calendar = await mawaqit_wrapper.fetch_prayer_times(
-        mosque=mosque_id, token=token
+    username, password = await read_mawaqit_credentials(store)
+
+    _LOGGER.debug(
+        "Fetching prayer times for mosque %s (credentials=%s, token=%s)",
+        mosque_id,
+        "available" if (username and password) else "MISSING",
+        "available" if token else "MISSING",
     )
+
+    dict_calendar = await mawaqit_wrapper.fetch_prayer_times(
+        mosque=mosque_id, username=username, password=password, token=token
+    )
+
+    if dict_calendar is None:
+        _LOGGER.error("Failed to fetch prayer times for mosque %s", mosque_id)
+        return
 
     await write_pray_time(dict_calendar, store)
 

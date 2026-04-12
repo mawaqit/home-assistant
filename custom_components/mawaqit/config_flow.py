@@ -92,7 +92,12 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 username, password
             )
 
+            if mawaqit_token is None:
+                self._errors["base"] = CANNOT_CONNECT_TO_SERVER
+                return await self._show_config_form(user_input)
+
             await utils.write_mawaqit_token(self.hass, self.store, mawaqit_token)
+            await utils.write_mawaqit_credentials(self.store, username, password)
 
             return await self.async_step_search_method()
 
@@ -332,17 +337,15 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         config_entry: config_entries.ConfigEntry,
     ) -> config_entries.OptionsFlow:
         """Get the options flow for this handler."""
-        return MawaqitPrayerOptionsFlowHandler(config_entry)
+        return MawaqitPrayerOptionsFlowHandler()
 
 
 class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Mawaqit Prayer client options."""
 
-    def __init__(self, config_entry) -> None:
+    def __init__(self) -> None:
         """Initialize the options flow handler."""
-        self.config_entry = config_entry
         self.store: Store | None = None
-        self.config_entry = config_entry
 
     async def async_step_init(self, user_input=None) -> config_entries.ConfigFlowResult:
         """Manage options."""
