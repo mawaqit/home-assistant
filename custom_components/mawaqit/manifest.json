@@ -7,7 +7,7 @@
     "@Yeyvo"
   ],
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/mawaqit",
+  "documentation": "https://github.com/mawaqit/home-assistant",
   "issue_tracker": "https://github.com/mawaqit/home-assistant/issues",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
@@ -15,5 +15,6 @@
   "requirements": [
     "mawaqit==1.0.13"
   ],
-  "single_config_entry": true
+  "single_config_entry": true,
+  "version": "3.0.0"
 }
