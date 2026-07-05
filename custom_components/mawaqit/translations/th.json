@@ -1,0 +1,111 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "อนุญาตให้มีรายการ MAWAQIT เพียงรายการเดียว ใช้เมนู 3 จุดบนรายการที่มีอยู่เพื่อกำหนดค่าใหม่หรือลบ จากนั้นตั้งค่าใหม่อีกครั้ง",
+      "cannot_connect": "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ MAWAQIT โปรดตรวจสอบการเชื่อมต่ออินเทอร์เน็ตของคุณและลองอีกครั้ง",
+      "no_mosque": "ขออภัย ไม่พบมัสยิด MAWAQIT ในพื้นที่ของคุณ โปรดตรวจสอบพิกัดของคุณหรือลบการกำหนดค่ามัสยิดที่มีอยู่ออกและตั้งค่าใหม่",
+      "reauth_successful": "การยืนยันตัวตนอีกครั้งสำเร็จ",
+      "reconfigure_successful": "การกำหนดค่าใหม่สำเร็จ"
+    },
+    "error": {
+      "cannot_connect_to_server": "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ โปรดลองอีกครั้งในภายหลัง",
+      "no_mosque_found_keyword": "ไม่พบมัสยิดด้วยคำสำคัญนี้",
+      "wrong_credential": "ชื่อผู้ใช้หรือรหัสผ่านผิด โปรดลองอีกครั้ง"
+    },
+    "step": {
+      "keyword_search": {
+        "data": {
+          "keyword": "ค้นหา",
+          "uuid": "เลือกมัสยิด (หน้า {page})"
+        },
+        "data_description": {
+          "keyword": "ป้อนคำสำคัญเพื่อค้นหามัสยิดตามชื่อหรือสถานที่",
+          "uuid": "เลือกมัสยิดจากผลลัพธ์ หรือนำทางระหว่างหน้า"
+        },
+        "description": "ค้นหามัสยิดโดยป้อนคำสำคัญ:",
+        "title": "ค้นหามัสยิดของคุณ"
+      },
+      "mosques_coordinates": {
+        "data": {
+          "mosques": "มีมัสยิดหลายแห่งรอบตัวคุณ เลือกหนึ่งแห่ง:",
+          "uuid": "มัสยิด"
+        },
+        "data_description": {
+          "mosques": "มัสยิดใกล้กับตำแหน่ง Home Assistant ของคุณ",
+          "uuid": "เลือกมัสยิดที่ใกล้กับตำแหน่งของคุณมากที่สุด"
+        },
+        "title": "มัสยิดที่คุณชื่นชอบ"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "รหัสผ่าน",
+          "username": "อีเมล"
+        },
+        "data_description": {
+          "password": "รหัสผ่านบัญชี MAWAQIT ของคุณ",
+          "username": "ที่อยู่อีเมลบัญชี MAWAQIT ของคุณ"
+        },
+        "description": "การผสานรวม Mawaqit จำเป็นต้องยืนยันตัวตนบัญชีของคุณอีกครั้ง",
+        "title": "ยืนยันตัวตนอีกครั้ง"
+      },
+      "search_method": {
+        "data": {
+          "search_method_choice": "เลือกวิธีการค้นหา:"
+        },
+        "data_description": {
+          "search_method_choice": "เลือกวิธีค้นหามัสยิดของคุณ: โดยพิกัด (ใช้ตำแหน่ง Home Assistant ของคุณ) หรือโดยการค้นหาคำสำคัญ"
+        },
+        "title": "เลือกวิธีการค้นหามัสยิดของคุณ"
+      },
+      "user": {
+        "data": {
+          "password": "รหัสผ่าน",
+          "username": "อีเมล"
+        },
+        "data_description": {
+          "password": "รหัสผ่านบัญชี MAWAQIT ของคุณ",
+          "username": "ที่อยู่อีเมลบัญชี MAWAQIT ของคุณ"
+        },
+        "description": "ลงทะเบียนที่ [mawaqit.net]({mawaqit_url}) และเชื่อมต่อด้านล่าง",
+        "title": "เข้าสู่ระบบ MAWAQIT"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "iqama_asr": { "name": "อิกอมะฮ์อัสร" },
+      "iqama_dhuhr": { "name": "อิกอมะฮ์ซุฮร์" },
+      "iqama_fajr": { "name": "อิกอมะฮ์ฟัจญร์" },
+      "iqama_isha": { "name": "อิกอมะฮ์อิชา" },
+      "iqama_maghrib": { "name": "อิกอมะฮ์มัฆริบ" },
+      "mosque_info": { "name": "ข้อมูลมัสยิด" },
+      "next_salat_name": { "name": "ชื่อละหมาดถัดไป" },
+      "next_salat_time": { "name": "เวลาละหมาดถัดไป" },
+      "prayer_asr": { "name": "ละหมาดอัสร" },
+      "prayer_dhuhr": { "name": "ละหมาดซุฮร์" },
+      "prayer_fajr": { "name": "ละหมาดฟัจญร์" },
+      "prayer_isha": { "name": "ละหมาดอิชา" },
+      "prayer_jumua": { "name": "ละหมาดญุมุอะฮ์" },
+      "prayer_jumua_2": { "name": "ละหมาดญุมุอะฮ์ครั้งที่สอง" },
+      "prayer_jumua_3": { "name": "ละหมาดญุมุอะฮ์ครั้งที่สาม" },
+      "prayer_maghrib": { "name": "ละหมาดมัฆริบ" },
+      "prayer_shuruq": { "name": "ชุรูก" }
+    }
+  },
+  "exceptions": {
+    "auth_failed": { "message": "การยืนยันตัวตนกับ MAWAQIT ล้มเหลว โปรดยืนยันตัวตนบัญชีของคุณอีกครั้ง" },
+    "mawaqit_error": { "message": "ข้อผิดพลาดในการสื่อสารกับ MAWAQIT: {error}" },
+    "network_error": { "message": "ข้อผิดพลาดเครือข่ายขณะเชื่อมต่อกับ MAWAQIT: {error}" },
+    "no_mosque_data": { "message": "MAWAQIT ไม่ได้ส่งข้อมูลมัสยิดกลับมา" },
+    "no_prayer_times_data": { "message": "MAWAQIT ไม่ได้ส่งเวลาละหมาดกลับมา" }
+  },
+  "selector": {
+    "search_method_choice_translation_key": {
+      "options": {
+        "search_method_coordinates": "ค้นหามัสยิดที่ใกล้กับตำแหน่งของคุณมากที่สุด",
+        "search_method_keyword": "ค้นหามัสยิดด้วยคำสำคัญ"
+      }
+    }
+  },
+  "title": "เวลาละหมาด MAWAQIT"
+}

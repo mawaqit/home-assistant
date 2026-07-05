@@ -1,0 +1,111 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Ingizo moja tu la MAWAQIT linaruhusiwa. Tumia menyu ya nukta 3 kwenye ingizo lililopo ili Kusanidi upya au Kufuta, kisha usanidi tena.",
+      "cannot_connect": "Imeshindwa kuunganisha na seva ya MAWAQIT. Tafadhali angalia muunganisho wako wa intaneti na ujaribu tena.",
+      "no_mosque": "Samahani, hakuna misikiti ya MAWAQIT iliyopatikana katika eneo lako. Tafadhali angalia viwianishi vyako au ondoa usanidi uliopo wa msikiti na uweke mpya.",
+      "reauth_successful": "Uthibitishaji upya umefaulu",
+      "reconfigure_successful": "Usanidi upya umefaulu"
+    },
+    "error": {
+      "cannot_connect_to_server": "Haiwezi kuunganisha na seva, tafadhali jaribu tena baadaye.",
+      "no_mosque_found_keyword": "Hakuna msikiti uliopatikana kwa neno kuu hili.",
+      "wrong_credential": "Jina la mtumiaji au neno la siri si sahihi, tafadhali jaribu tena."
+    },
+    "step": {
+      "keyword_search": {
+        "data": {
+          "keyword": "Tafuta",
+          "uuid": "Chagua msikiti (ukurasa {page})"
+        },
+        "data_description": {
+          "keyword": "Ingiza neno kuu kutafuta msikiti kwa jina au eneo.",
+          "uuid": "Chagua msikiti kutoka kwenye matokeo, au abiri kati ya kurasa."
+        },
+        "description": "Tafuta msikiti kwa kuingiza neno kuu:",
+        "title": "Tafuta msikiti wako"
+      },
+      "mosques_coordinates": {
+        "data": {
+          "mosques": "Misikiti mingi inapatikana karibu nawe, chagua moja:",
+          "uuid": "Msikiti"
+        },
+        "data_description": {
+          "mosques": "Misikiti karibu na eneo lako la Home Assistant.",
+          "uuid": "Chagua msikiti ulio karibu zaidi na eneo lako."
+        },
+        "title": "Msikiti wako unaoupenda"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "Neno la siri",
+          "username": "Barua pepe"
+        },
+        "data_description": {
+          "password": "Neno la siri la akaunti yako ya MAWAQIT.",
+          "username": "Anwani ya barua pepe ya akaunti yako ya MAWAQIT."
+        },
+        "description": "Muunganisho wa Mawaqit unahitaji kuthibitisha upya akaunti yako",
+        "title": "Thibitisha upya"
+      },
+      "search_method": {
+        "data": {
+          "search_method_choice": "Chagua njia ya utafutaji:"
+        },
+        "data_description": {
+          "search_method_choice": "Chagua jinsi ya kupata msikiti wako: kwa viwianishi (inatumia eneo lako la Home Assistant) au kwa utafutaji wa neno kuu."
+        },
+        "title": "Chagua njia ya kupata msikiti wako"
+      },
+      "user": {
+        "data": {
+          "password": "Neno la siri",
+          "username": "Barua pepe"
+        },
+        "data_description": {
+          "password": "Neno la siri la akaunti yako ya MAWAQIT.",
+          "username": "Anwani ya barua pepe ya akaunti yako ya MAWAQIT."
+        },
+        "description": "Jisajili kwenye [mawaqit.net]({mawaqit_url}) na unganisha hapa chini",
+        "title": "Ingia kwenye MAWAQIT"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "iqama_asr": { "name": "Iqama ya Asr" },
+      "iqama_dhuhr": { "name": "Iqama ya Dhuhr" },
+      "iqama_fajr": { "name": "Iqama ya Fajr" },
+      "iqama_isha": { "name": "Iqama ya Isha" },
+      "iqama_maghrib": { "name": "Iqama ya Maghrib" },
+      "mosque_info": { "name": "Taarifa za msikiti" },
+      "next_salat_name": { "name": "Jina la Swala Inayofuata" },
+      "next_salat_time": { "name": "Muda wa Swala Inayofuata" },
+      "prayer_asr": { "name": "Swala ya Asr" },
+      "prayer_dhuhr": { "name": "Swala ya Dhuhr" },
+      "prayer_fajr": { "name": "Swala ya Fajr" },
+      "prayer_isha": { "name": "Swala ya Isha" },
+      "prayer_jumua": { "name": "Swala ya Jumua" },
+      "prayer_jumua_2": { "name": "Swala ya Pili ya Jumua" },
+      "prayer_jumua_3": { "name": "Swala ya Tatu ya Jumua" },
+      "prayer_maghrib": { "name": "Swala ya Maghrib" },
+      "prayer_shuruq": { "name": "Shuruq" }
+    }
+  },
+  "exceptions": {
+    "auth_failed": { "message": "Uthibitishaji na MAWAQIT umeshindwa. Tafadhali thibitisha upya akaunti yako." },
+    "mawaqit_error": { "message": "Hitilafu ya mawasiliano na MAWAQIT: {error}" },
+    "network_error": { "message": "Hitilafu ya mtandao wakati wa kuunganisha kwa MAWAQIT: {error}" },
+    "no_mosque_data": { "message": "Hakuna data ya msikiti iliyorudishwa na MAWAQIT." },
+    "no_prayer_times_data": { "message": "Hakuna nyakati za swala zilizorudishwa na MAWAQIT." }
+  },
+  "selector": {
+    "search_method_choice_translation_key": {
+      "options": {
+        "search_method_coordinates": "Tafuta misikiti iliyo karibu zaidi na eneo lako",
+        "search_method_keyword": "Tafuta msikiti kwa neno kuu"
+      }
+    }
+  },
+  "title": "Nyakati za swala MAWAQIT"
+}

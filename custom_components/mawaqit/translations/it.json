@@ -1,0 +1,111 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "È consentita una sola voce MAWAQIT. Usa il menu a 3 punti sulla voce esistente per Riconfigurarla o Eliminarla, poi configurala di nuovo.",
+      "cannot_connect": "Impossibile connettersi al server MAWAQIT. Controlla la tua connessione internet e riprova.",
+      "no_mosque": "Spiacenti, nessuna moschea MAWAQIT trovata nella tua zona. Controlla le tue coordinate o rimuovi la configurazione esistente e impostane una nuova.",
+      "reauth_successful": "La ri-autenticazione è avvenuta con successo",
+      "reconfigure_successful": "La riconfigurazione è avvenuta con successo"
+    },
+    "error": {
+      "cannot_connect_to_server": "Impossibile connettersi al server, riprova più tardi.",
+      "no_mosque_found_keyword": "Nessuna moschea trovata con questa parola chiave.",
+      "wrong_credential": "Login o password errati, riprova."
+    },
+    "step": {
+      "keyword_search": {
+        "data": {
+          "keyword": "Cerca",
+          "uuid": "Seleziona una moschea (pagina {page})"
+        },
+        "data_description": {
+          "keyword": "Inserisci una parola chiave per cercare una moschea per nome o posizione.",
+          "uuid": "Seleziona una moschea dai risultati o naviga tra le pagine."
+        },
+        "description": "Cerca una moschea inserendo una parola chiave:",
+        "title": "Cerca la tua moschea"
+      },
+      "mosques_coordinates": {
+        "data": {
+          "mosques": "Sono disponibili più moschee intorno a te, selezionane una:",
+          "uuid": "Moschea"
+        },
+        "data_description": {
+          "mosques": "Moschee vicino alla tua posizione di Home Assistant.",
+          "uuid": "Seleziona la moschea più vicina alla tua posizione."
+        },
+        "title": "La tua moschea preferita"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "Password",
+          "username": "Email"
+        },
+        "data_description": {
+          "password": "La password del tuo account MAWAQIT.",
+          "username": "L'indirizzo email del tuo account MAWAQIT."
+        },
+        "description": "L'integrazione Mawaqit deve ri-autenticare il tuo account",
+        "title": "Ri-autentica"
+      },
+      "search_method": {
+        "data": {
+          "search_method_choice": "Scegli il metodo di ricerca:"
+        },
+        "data_description": {
+          "search_method_choice": "Scegli come trovare la tua moschea: per coordinate (usa la tua posizione Home Assistant) o per ricerca parola chiave."
+        },
+        "title": "Scegli il metodo per trovare la tua moschea"
+      },
+      "user": {
+        "data": {
+          "password": "Password",
+          "username": "Email"
+        },
+        "data_description": {
+          "password": "La password del tuo account MAWAQIT.",
+          "username": "L'indirizzo email del tuo account MAWAQIT."
+        },
+        "description": "Registrati su [mawaqit.net]({mawaqit_url}) e connettiti qui sotto",
+        "title": "Accedi a MAWAQIT"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "iqama_asr": { "name": "Iqama dell'Asr" },
+      "iqama_dhuhr": { "name": "Iqama del Dhuhr" },
+      "iqama_fajr": { "name": "Iqama del Fajr" },
+      "iqama_isha": { "name": "Iqama dell'Isha" },
+      "iqama_maghrib": { "name": "Iqama del Maghrib" },
+      "mosque_info": { "name": "Informazioni moschea" },
+      "next_salat_name": { "name": "Prossima preghiera" },
+      "next_salat_time": { "name": "Prossimo orario di preghiera" },
+      "prayer_asr": { "name": "Preghiera dell'Asr" },
+      "prayer_dhuhr": { "name": "Preghiera del Dhuhr" },
+      "prayer_fajr": { "name": "Preghiera del Fajr" },
+      "prayer_isha": { "name": "Preghiera dell'Isha" },
+      "prayer_jumua": { "name": "Preghiera del Jumua" },
+      "prayer_jumua_2": { "name": "Seconda preghiera del Jumua" },
+      "prayer_jumua_3": { "name": "Terza preghiera del Jumua" },
+      "prayer_maghrib": { "name": "Preghiera del Maghrib" },
+      "prayer_shuruq": { "name": "Shuruq" }
+    }
+  },
+  "exceptions": {
+    "auth_failed": { "message": "Autenticazione con MAWAQIT fallita. Per favore, ri-autentica il tuo account." },
+    "mawaqit_error": { "message": "Errore di comunicazione con MAWAQIT: {error}" },
+    "network_error": { "message": "Errore di rete durante la connessione a MAWAQIT: {error}" },
+    "no_mosque_data": { "message": "Nessun dato della moschea restituito da MAWAQIT." },
+    "no_prayer_times_data": { "message": "Nessun orario di preghiera restituito da MAWAQIT." }
+  },
+  "selector": {
+    "search_method_choice_translation_key": {
+      "options": {
+        "search_method_coordinates": "Cerca le moschee più vicine alla tua posizione",
+        "search_method_keyword": "Cerca una moschea per parola chiave"
+      }
+    }
+  },
+  "title": "Orari di preghiera MAWAQIT"
+}

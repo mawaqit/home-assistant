@@ -1,0 +1,111 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "只允许一个 MAWAQIT 条目。请使用现有条目的三点菜单进行重新配置或删除，然后重新设置。",
+      "cannot_connect": "无法连接到 MAWAQIT 服务器。请检查您的互联网连接，然后重试。",
+      "no_mosque": "抱歉，在您所在的区域未找到 MAWAQIT 清真寺。请检查您的坐标，或移除现有的清真寺配置并设置一个新的。",
+      "reauth_successful": "重新认证成功",
+      "reconfigure_successful": "重新配置成功"
+    },
+    "error": {
+      "cannot_connect_to_server": "无法连接到服务器，请稍后重试。",
+      "no_mosque_found_keyword": "未找到包含此关键词的清真寺。",
+      "wrong_credential": "登录名或密码错误，请重试。"
+    },
+    "step": {
+      "keyword_search": {
+        "data": {
+          "keyword": "搜索",
+          "uuid": "选择清真寺（第 {page} 页）"
+        },
+        "data_description": {
+          "keyword": "输入关键词，按名称或位置搜索清真寺。",
+          "uuid": "从结果中选择一座清真寺，或在页面之间导航。"
+        },
+        "description": "输入关键词搜索清真寺：",
+        "title": "搜索您的清真寺"
+      },
+      "mosques_coordinates": {
+        "data": {
+          "mosques": "您附近有多个清真寺，请选择一个：",
+          "uuid": "清真寺"
+        },
+        "data_description": {
+          "mosques": "您 Home Assistant 位置附近的清真寺。",
+          "uuid": "选择离您位置最近的清真寺。"
+        },
+        "title": "您最喜欢的清真寺"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "密码",
+          "username": "电子邮件"
+        },
+        "data_description": {
+          "password": "您的 MAWAQIT 账户密码。",
+          "username": "您的 MAWAQIT 账户电子邮件地址。"
+        },
+        "description": "Mawaqit 集成需要重新验证您的账户",
+        "title": "重新认证"
+      },
+      "search_method": {
+        "data": {
+          "search_method_choice": "选择搜索方式："
+        },
+        "data_description": {
+          "search_method_choice": "选择查找清真寺的方式：按坐标（使用您的 Home Assistant 位置）或按关键词搜索。"
+        },
+        "title": "选择查找清真寺的方法"
+      },
+      "user": {
+        "data": {
+          "password": "密码",
+          "username": "电子邮件"
+        },
+        "data_description": {
+          "password": "您的 MAWAQIT 账户密码。",
+          "username": "您的 MAWAQIT 账户电子邮件地址。"
+        },
+        "description": "在 [mawaqit.net]({mawaqit_url}) 注册并在下方连接",
+        "title": "登录 MAWAQIT"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "iqama_asr": { "name": "晡礼入拜" },
+      "iqama_dhuhr": { "name": "晌礼入拜" },
+      "iqama_fajr": { "name": "晨礼入拜" },
+      "iqama_isha": { "name": "宵礼入拜" },
+      "iqama_maghrib": { "name": "昏礼入拜" },
+      "mosque_info": { "name": "清真寺信息" },
+      "next_salat_name": { "name": "下次礼拜名称" },
+      "next_salat_time": { "name": "下次礼拜时间" },
+      "prayer_asr": { "name": "晡礼" },
+      "prayer_dhuhr": { "name": "晌礼" },
+      "prayer_fajr": { "name": "晨礼" },
+      "prayer_isha": { "name": "宵礼" },
+      "prayer_jumua": { "name": "主麻拜" },
+      "prayer_jumua_2": { "name": "第二次主麻拜" },
+      "prayer_jumua_3": { "name": "第三次主麻拜" },
+      "prayer_maghrib": { "name": "昏礼" },
+      "prayer_shuruq": { "name": "日出" }
+    }
+  },
+  "exceptions": {
+    "auth_failed": { "message": "MAWAQIT 认证失败。请重新验证您的账户。" },
+    "mawaqit_error": { "message": "与 MAWAQIT 通信出错：{error}" },
+    "network_error": { "message": "连接到 MAWAQIT 时出现网络错误：{error}" },
+    "no_mosque_data": { "message": "MAWAQIT 未返回清真寺数据。" },
+    "no_prayer_times_data": { "message": "MAWAQIT 未返回礼拜时间数据。" }
+  },
+  "selector": {
+    "search_method_choice_translation_key": {
+      "options": {
+        "search_method_coordinates": "搜索离您位置最近的清真寺",
+        "search_method_keyword": "按关键词搜索清真寺"
+      }
+    }
+  },
+  "title": "MAWAQIT 礼拜时间"
+}

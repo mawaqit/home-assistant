@@ -1,0 +1,111 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "فقط یک ورودی MAWAQIT مجاز است. از منوی سه نقطه روی ورودی موجود برای تنظیم مجدد یا حذف استفاده کنید و سپس دوباره راه‌اندازی کنید.",
+      "cannot_connect": "اتصال به سرور MAWAQIT ناموفق بود. لطفاً اتصال اینترنت خود را بررسی کنید و دوباره تلاش کنید.",
+      "no_mosque": "متأسفیم، هیچ مسجد MAWAQIT در منطقه شما یافت نشد. لطفاً مختصات خود را بررسی کنید یا پیکربندی مسجد موجود را حذف کرده و یک مورد جدید راه‌اندازی کنید.",
+      "reauth_successful": "احراز هویت مجدد موفقیت‌آمیز بود",
+      "reconfigure_successful": "تنظیم مجدد موفقیت‌آمیز بود"
+    },
+    "error": {
+      "cannot_connect_to_server": "امکان اتصال به سرور وجود ندارد، لطفاً بعداً دوباره تلاش کنید.",
+      "no_mosque_found_keyword": "هیچ مسجدی با این کلمه کلیدی یافت نشد.",
+      "wrong_credential": "نام کاربری یا رمز عبور اشتباه است، لطفاً دوباره تلاش کنید."
+    },
+    "step": {
+      "keyword_search": {
+        "data": {
+          "keyword": "جستجو",
+          "uuid": "یک مسجد انتخاب کنید (صفحه {page})"
+        },
+        "data_description": {
+          "keyword": "یک کلمه کلیدی برای جستجوی مسجد بر اساس نام یا مکان وارد کنید.",
+          "uuid": "یک مسجد از نتایج انتخاب کنید، یا بین صفحات حرکت کنید."
+        },
+        "description": "با وارد کردن یک کلمه کلیدی مسجد را جستجو کنید:",
+        "title": "مسجد خود را جستجو کنید"
+      },
+      "mosques_coordinates": {
+        "data": {
+          "mosques": "چندین مسجد در اطراف شما در دسترس است، یکی را انتخاب کنید:",
+          "uuid": "مسجد"
+        },
+        "data_description": {
+          "mosques": "مساجد نزدیک به موقعیت Home Assistant شما.",
+          "uuid": "نزدیک‌ترین مسجد به موقعیت خود را انتخاب کنید."
+        },
+        "title": "مسجد مورد علاقه شما"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "رمز عبور",
+          "username": "ایمیل"
+        },
+        "data_description": {
+          "password": "رمز عبور حساب MAWAQIT شما.",
+          "username": "آدرس ایمیل حساب MAWAQIT شما."
+        },
+        "description": "یکپارچه‌سازی Mawaqit نیاز به احراز هویت مجدد حساب شما دارد",
+        "title": "احراز هویت مجدد"
+      },
+      "search_method": {
+        "data": {
+          "search_method_choice": "روش جستجو را انتخاب کنید:"
+        },
+        "data_description": {
+          "search_method_choice": "انتخاب کنید که چگونه مسجد خود را پیدا کنید: با مختصات (از موقعیت Home Assistant شما استفاده می‌کند) یا با جستجوی کلمه کلیدی."
+        },
+        "title": "روش پیدا کردن مسجد خود را انتخاب کنید"
+      },
+      "user": {
+        "data": {
+          "password": "رمز عبور",
+          "username": "ایمیل"
+        },
+        "data_description": {
+          "password": "رمز عبور حساب MAWAQIT شما.",
+          "username": "آدرس ایمیل حساب MAWAQIT شما."
+        },
+        "description": "در [mawaqit.net]({mawaqit_url}) ثبت‌نام کنید و در زیر وصل شوید",
+        "title": "ورود به MAWAQIT"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "iqama_asr": { "name": "اقامه عصر" },
+      "iqama_dhuhr": { "name": "اقامه ظهر" },
+      "iqama_fajr": { "name": "اقامه صبح" },
+      "iqama_isha": { "name": "اقامه عشاء" },
+      "iqama_maghrib": { "name": "اقامه مغرب" },
+      "mosque_info": { "name": "اطلاعات مسجد" },
+      "next_salat_name": { "name": "نام نماز بعدی" },
+      "next_salat_time": { "name": "زمان نماز بعدی" },
+      "prayer_asr": { "name": "نماز عصر" },
+      "prayer_dhuhr": { "name": "نماز ظهر" },
+      "prayer_fajr": { "name": "نماز صبح" },
+      "prayer_isha": { "name": "نماز عشاء" },
+      "prayer_jumua": { "name": "نماز جمعه" },
+      "prayer_jumua_2": { "name": "نماز جمعه دوم" },
+      "prayer_jumua_3": { "name": "نماز جمعه سوم" },
+      "prayer_maghrib": { "name": "نماز مغرب" },
+      "prayer_shuruq": { "name": "طلوع خورشید" }
+    }
+  },
+  "exceptions": {
+    "auth_failed": { "message": "احراز هویت با MAWAQIT ناموفق بود. لطفاً حساب خود را مجدداً احراز هویت کنید." },
+    "mawaqit_error": { "message": "خطا در ارتباط با MAWAQIT: {error}" },
+    "network_error": { "message": "خطای شبکه هنگام اتصال به MAWAQIT: {error}" },
+    "no_mosque_data": { "message": "هیچ داده مسجدی توسط MAWAQIT بازگردانده نشد." },
+    "no_prayer_times_data": { "message": "هیچ زمان نمازی توسط MAWAQIT بازگردانده نشد." }
+  },
+  "selector": {
+    "search_method_choice_translation_key": {
+      "options": {
+        "search_method_coordinates": "جستجوی نزدیک‌ترین مساجد به موقعیت شما",
+        "search_method_keyword": "جستجوی مسجد با کلمه کلیدی"
+      }
+    }
+  },
+  "title": "اوقات شرعی MAWAQIT"
+}

@@ -1,0 +1,111 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Yalnızca bir MAWAQIT girişine izin verilir. Mevcut girişteki 3-nokta menüsünü kullanarak Yeniden Yapılandırın veya Silin, ardından yeniden kurun.",
+      "cannot_connect": "MAWAQIT sunucusuna bağlanılamadı. Lütfen internet bağlantınızı kontrol edin ve tekrar deneyin.",
+      "no_mosque": "Üzgünüz, bölgenizde MAWAQIT camisi bulunamadı. Lütfen koordinatlarınızı kontrol edin veya mevcut cami yapılandırmasını kaldırıp yeni bir tane oluşturun.",
+      "reauth_successful": "Yeniden kimlik doğrulama başarılı",
+      "reconfigure_successful": "Yeniden yapılandırma başarılı"
+    },
+    "error": {
+      "cannot_connect_to_server": "Sunucuya bağlanılamıyor, lütfen daha sonra tekrar deneyin.",
+      "no_mosque_found_keyword": "Bu anahtar kelimeyle cami bulunamadı.",
+      "wrong_credential": "Yanlış kullanıcı adı veya şifre, lütfen tekrar deneyin."
+    },
+    "step": {
+      "keyword_search": {
+        "data": {
+          "keyword": "Ara",
+          "uuid": "Bir cami seçin (sayfa {page})"
+        },
+        "data_description": {
+          "keyword": "Bir camiyi adına veya konumuna göre aramak için bir anahtar kelime girin.",
+          "uuid": "Sonuçlardan bir cami seçin veya sayfalar arasında gezinin."
+        },
+        "description": "Bir anahtar kelime girerek cami arayın:",
+        "title": "Caminizi arayın"
+      },
+      "mosques_coordinates": {
+        "data": {
+          "mosques": "Çevrenizde birden fazla cami mevcut, birini seçin:",
+          "uuid": "Cami"
+        },
+        "data_description": {
+          "mosques": "Home Assistant konumunuzun yakınındaki camiler.",
+          "uuid": "Konumunuza en yakın camiyi seçin."
+        },
+        "title": "Favori caminiz"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "Şifre",
+          "username": "E-posta"
+        },
+        "data_description": {
+          "password": "MAWAQIT hesap şifreniz.",
+          "username": "MAWAQIT hesap e-posta adresiniz."
+        },
+        "description": "Mawaqit entegrasyonu hesabınızı yeniden doğrulamalıdır",
+        "title": "Yeniden kimlik doğrulama"
+      },
+      "search_method": {
+        "data": {
+          "search_method_choice": "Arama yöntemini seçin:"
+        },
+        "data_description": {
+          "search_method_choice": "Caminizi nasıl bulmak istediğinizi seçin: koordinatlarla (Home Assistant konumunuzu kullanır) veya anahtar kelime aramasıyla."
+        },
+        "title": "Caminizi bulma yöntemini seçin"
+      },
+      "user": {
+        "data": {
+          "password": "Şifre",
+          "username": "E-posta"
+        },
+        "data_description": {
+          "password": "MAWAQIT hesap şifreniz.",
+          "username": "MAWAQIT hesap e-posta adresiniz."
+        },
+        "description": "[mawaqit.net]({mawaqit_url}) adresine kaydolun ve aşağıdan bağlanın",
+        "title": "MAWAQIT'e giriş yapın"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "iqama_asr": { "name": "İkindi İkama" },
+      "iqama_dhuhr": { "name": "Öğle İkama" },
+      "iqama_fajr": { "name": "Sabah İkama" },
+      "iqama_isha": { "name": "Yatsı İkama" },
+      "iqama_maghrib": { "name": "Akşam İkama" },
+      "mosque_info": { "name": "Cami bilgisi" },
+      "next_salat_name": { "name": "Sonraki Namaz" },
+      "next_salat_time": { "name": "Sonraki Namaz Vakti" },
+      "prayer_asr": { "name": "İkindi Namazı" },
+      "prayer_dhuhr": { "name": "Öğle Namazı" },
+      "prayer_fajr": { "name": "Sabah Namazı" },
+      "prayer_isha": { "name": "Yatsı Namazı" },
+      "prayer_jumua": { "name": "Cuma Namazı" },
+      "prayer_jumua_2": { "name": "İkinci Cuma Namazı" },
+      "prayer_jumua_3": { "name": "Üçüncü Cuma Namazı" },
+      "prayer_maghrib": { "name": "Akşam Namazı" },
+      "prayer_shuruq": { "name": "Şuruk" }
+    }
+  },
+  "exceptions": {
+    "auth_failed": { "message": "MAWAQIT ile kimlik doğrulama başarısız oldu. Lütfen hesabınızı yeniden doğrulayın." },
+    "mawaqit_error": { "message": "MAWAQIT ile iletişim hatası: {error}" },
+    "network_error": { "message": "MAWAQIT'e bağlanırken ağ hatası: {error}" },
+    "no_mosque_data": { "message": "MAWAQIT'ten cami verisi döndürülmedi." },
+    "no_prayer_times_data": { "message": "MAWAQIT'ten namaz vakti verisi döndürülmedi." }
+  },
+  "selector": {
+    "search_method_choice_translation_key": {
+      "options": {
+        "search_method_coordinates": "Konumunuza en yakın camileri arayın",
+        "search_method_keyword": "Anahtar kelimeyle cami arayın"
+      }
+    }
+  },
+  "title": "MAWAQIT namaz vakitleri"
+}

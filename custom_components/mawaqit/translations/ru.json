@@ -1,0 +1,111 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Разрешена только одна запись MAWAQIT. Используйте меню с тремя точками на существующей записи, чтобы перенастроить или удалить её, затем настройте заново.",
+      "cannot_connect": "Не удалось подключиться к серверу MAWAQIT. Проверьте подключение к интернету и повторите попытку.",
+      "no_mosque": "Извините, мечети MAWAQIT в вашем районе не найдены. Проверьте координаты или удалите существующую конфигурацию мечети и создайте новую.",
+      "reauth_successful": "Повторная аутентификация прошла успешно",
+      "reconfigure_successful": "Перенастройка прошла успешно"
+    },
+    "error": {
+      "cannot_connect_to_server": "Не удается подключиться к серверу, повторите попытку позже.",
+      "no_mosque_found_keyword": "Мечеть с таким ключевым словом не найдена.",
+      "wrong_credential": "Неверный логин или пароль, повторите попытку."
+    },
+    "step": {
+      "keyword_search": {
+        "data": {
+          "keyword": "Поиск",
+          "uuid": "Выберите мечеть (страница {page})"
+        },
+        "data_description": {
+          "keyword": "Введите ключевое слово для поиска мечети по названию или местоположению.",
+          "uuid": "Выберите мечеть из результатов или переключайтесь между страницами."
+        },
+        "description": "Найдите мечеть, введя ключевое слово:",
+        "title": "Найти вашу мечеть"
+      },
+      "mosques_coordinates": {
+        "data": {
+          "mosques": "Рядом с вами доступно несколько мечетей, выберите одну:",
+          "uuid": "Мечеть"
+        },
+        "data_description": {
+          "mosques": "Мечети рядом с вашим местоположением Home Assistant.",
+          "uuid": "Выберите ближайшую к вашему местоположению мечеть."
+        },
+        "title": "Ваша любимая мечеть"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "Пароль",
+          "username": "Электронная почта"
+        },
+        "data_description": {
+          "password": "Пароль вашей учетной записи MAWAQIT.",
+          "username": "Адрес электронной почты вашей учетной записи MAWAQIT."
+        },
+        "description": "Интеграции Mawaqit требуется повторная аутентификация вашей учетной записи",
+        "title": "Повторная аутентификация"
+      },
+      "search_method": {
+        "data": {
+          "search_method_choice": "Выберите метод поиска:"
+        },
+        "data_description": {
+          "search_method_choice": "Выберите, как найти вашу мечеть: по координатам (использует ваше местоположение Home Assistant) или по ключевому слову."
+        },
+        "title": "Выберите способ поиска мечети"
+      },
+      "user": {
+        "data": {
+          "password": "Пароль",
+          "username": "Электронная почта"
+        },
+        "data_description": {
+          "password": "Пароль вашей учетной записи MAWAQIT.",
+          "username": "Адрес электронной почты вашей учетной записи MAWAQIT."
+        },
+        "description": "Зарегистрируйтесь на [mawaqit.net]({mawaqit_url}) и подключитесь ниже",
+        "title": "Войти в MAWAQIT"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "iqama_asr": { "name": "Икама Аср" },
+      "iqama_dhuhr": { "name": "Икама Зухр" },
+      "iqama_fajr": { "name": "Икама Фаджр" },
+      "iqama_isha": { "name": "Икама Иша" },
+      "iqama_maghrib": { "name": "Икама Магриб" },
+      "mosque_info": { "name": "Информация о мечети" },
+      "next_salat_name": { "name": "Название следующей молитвы" },
+      "next_salat_time": { "name": "Время следующей молитвы" },
+      "prayer_asr": { "name": "Молитва Аср" },
+      "prayer_dhuhr": { "name": "Молитва Зухр" },
+      "prayer_fajr": { "name": "Молитва Фаджр" },
+      "prayer_isha": { "name": "Молитва Иша" },
+      "prayer_jumua": { "name": "Молитва Джума" },
+      "prayer_jumua_2": { "name": "Вторая молитва Джума" },
+      "prayer_jumua_3": { "name": "Третья молитва Джума" },
+      "prayer_maghrib": { "name": "Молитва Магриб" },
+      "prayer_shuruq": { "name": "Шурук" }
+    }
+  },
+  "exceptions": {
+    "auth_failed": { "message": "Аутентификация с MAWAQIT не удалась. Пожалуйста, повторно аутентифицируйте свою учетную запись." },
+    "mawaqit_error": { "message": "Ошибка связи с MAWAQIT: {error}" },
+    "network_error": { "message": "Сетевая ошибка при подключении к MAWAQIT: {error}" },
+    "no_mosque_data": { "message": "MAWAQIT не вернул данные о мечети." },
+    "no_prayer_times_data": { "message": "MAWAQIT не вернул время молитв." }
+  },
+  "selector": {
+    "search_method_choice_translation_key": {
+      "options": {
+        "search_method_coordinates": "Найти ближайшие мечети к вашему местоположению",
+        "search_method_keyword": "Найти мечеть по ключевому слову"
+      }
+    }
+  },
+  "title": "MAWAQIT время молитв"
+}

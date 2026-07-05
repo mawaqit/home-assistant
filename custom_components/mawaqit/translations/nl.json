@@ -1,0 +1,111 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Slechts één MAWAQIT-invoer is toegestaan. Gebruik het 3-puntenmenu op de bestaande invoer om te Herconfigureren of Verwijderen, en stel het daarna opnieuw in.",
+      "cannot_connect": "Kan geen verbinding maken met de MAWAQIT-server. Controleer uw internetverbinding en probeer het opnieuw.",
+      "no_mosque": "Sorry, er zijn geen MAWAQIT-moskeeën gevonden in uw omgeving. Controleer uw coördinaten of verwijder de bestaande moskeeconfiguratie en stel een nieuwe in.",
+      "reauth_successful": "Herauthenticatie was succesvol",
+      "reconfigure_successful": "Herconfiguratie was succesvol"
+    },
+    "error": {
+      "cannot_connect_to_server": "Kan geen verbinding maken met de server, probeer het later opnieuw.",
+      "no_mosque_found_keyword": "Geen moskee gevonden met dit trefwoord.",
+      "wrong_credential": "Verkeerde gebruikersnaam of wachtwoord, probeer het opnieuw."
+    },
+    "step": {
+      "keyword_search": {
+        "data": {
+          "keyword": "Zoeken",
+          "uuid": "Selecteer een moskee (pagina {page})"
+        },
+        "data_description": {
+          "keyword": "Voer een trefwoord in om een moskee te zoeken op naam of locatie.",
+          "uuid": "Selecteer een moskee uit de resultaten, of navigeer tussen pagina's."
+        },
+        "description": "Zoek een moskee door een trefwoord in te voeren:",
+        "title": "Zoek uw moskee"
+      },
+      "mosques_coordinates": {
+        "data": {
+          "mosques": "Er zijn meerdere moskeeën beschikbaar in uw omgeving, selecteer er één:",
+          "uuid": "Moskee"
+        },
+        "data_description": {
+          "mosques": "Moskeeën nabij uw Home Assistant-locatie.",
+          "uuid": "Selecteer de moskee die het dichtst bij uw locatie is."
+        },
+        "title": "Uw favoriete moskee"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "Wachtwoord",
+          "username": "E-mail"
+        },
+        "data_description": {
+          "password": "Uw MAWAQIT-accountwachtwoord.",
+          "username": "Uw MAWAQIT-account-e-mailadres."
+        },
+        "description": "Mawaqit-integratie moet uw account opnieuw authenticeren",
+        "title": "Opnieuw authenticeren"
+      },
+      "search_method": {
+        "data": {
+          "search_method_choice": "Kies de zoekmethode:"
+        },
+        "data_description": {
+          "search_method_choice": "Kies hoe u uw moskee wilt vinden: op coördinaten (gebruikt uw Home Assistant-locatie) of via trefwoordzoekopdracht."
+        },
+        "title": "Kies de methode om uw moskee te vinden"
+      },
+      "user": {
+        "data": {
+          "password": "Wachtwoord",
+          "username": "E-mail"
+        },
+        "data_description": {
+          "password": "Uw MAWAQIT-accountwachtwoord.",
+          "username": "Uw MAWAQIT-account-e-mailadres."
+        },
+        "description": "Registreer op [mawaqit.net]({mawaqit_url}) en maak hieronder verbinding",
+        "title": "Inloggen bij MAWAQIT"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "iqama_asr": { "name": "Asr Iqama" },
+      "iqama_dhuhr": { "name": "Dhuhr Iqama" },
+      "iqama_fajr": { "name": "Fajr Iqama" },
+      "iqama_isha": { "name": "Isha Iqama" },
+      "iqama_maghrib": { "name": "Maghrib Iqama" },
+      "mosque_info": { "name": "Moskee-informatie" },
+      "next_salat_name": { "name": "Volgende gebedsnaam" },
+      "next_salat_time": { "name": "Volgende gebedstijd" },
+      "prayer_asr": { "name": "Asr-gebed" },
+      "prayer_dhuhr": { "name": "Dhuhr-gebed" },
+      "prayer_fajr": { "name": "Fajr-gebed" },
+      "prayer_isha": { "name": "Isha-gebed" },
+      "prayer_jumua": { "name": "Jumua-gebed" },
+      "prayer_jumua_2": { "name": "Tweede Jumua-gebed" },
+      "prayer_jumua_3": { "name": "Derde Jumua-gebed" },
+      "prayer_maghrib": { "name": "Maghrib-gebed" },
+      "prayer_shuruq": { "name": "Shuruq" }
+    }
+  },
+  "exceptions": {
+    "auth_failed": { "message": "Authenticatie met MAWAQIT mislukt. Authenticeer uw account opnieuw." },
+    "mawaqit_error": { "message": "Communicatiefout met MAWAQIT: {error}" },
+    "network_error": { "message": "Netwerkfout bij verbinding met MAWAQIT: {error}" },
+    "no_mosque_data": { "message": "Geen moskeegegevens geretourneerd door MAWAQIT." },
+    "no_prayer_times_data": { "message": "Geen gebedstijden geretourneerd door MAWAQIT." }
+  },
+  "selector": {
+    "search_method_choice_translation_key": {
+      "options": {
+        "search_method_coordinates": "Zoek naar dichtstbijzijnde moskeeën bij uw locatie",
+        "search_method_keyword": "Zoek een moskee op trefwoord"
+      }
+    }
+  },
+  "title": "MAWAQIT gebedstijden"
+}

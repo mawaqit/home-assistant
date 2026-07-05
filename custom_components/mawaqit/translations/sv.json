@@ -1,0 +1,111 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Endast en MAWAQIT-post är tillåten. Använd 3-punktersmenyn på den befintliga posten för att Omkonfigurera eller Ta bort, och konfigurera sedan igen.",
+      "cannot_connect": "Misslyckades med att ansluta till MAWAQIT-servern. Kontrollera din internetanslutning och försök igen.",
+      "no_mosque": "Tyvärr, inga MAWAQIT-moskéer hittades i ditt område. Kontrollera dina koordinater eller ta bort den befintliga moskékonfigurationen och konfigurera en ny.",
+      "reauth_successful": "Omautentisering lyckades",
+      "reconfigure_successful": "Omkonfiguration lyckades"
+    },
+    "error": {
+      "cannot_connect_to_server": "Kan inte ansluta till servern, försök igen senare.",
+      "no_mosque_found_keyword": "Ingen moské hittades med detta sökord.",
+      "wrong_credential": "Felaktigt användarnamn eller lösenord, försök igen."
+    },
+    "step": {
+      "keyword_search": {
+        "data": {
+          "keyword": "Sök",
+          "uuid": "Välj en moské (sida {page})"
+        },
+        "data_description": {
+          "keyword": "Ange ett sökord för att söka efter en moské efter namn eller plats.",
+          "uuid": "Välj en moské från resultaten eller navigera mellan sidor."
+        },
+        "description": "Sök efter en moské genom att ange ett sökord:",
+        "title": "Sök efter din moské"
+      },
+      "mosques_coordinates": {
+        "data": {
+          "mosques": "Flera moskéer finns tillgängliga runt dig, välj en:",
+          "uuid": "Moské"
+        },
+        "data_description": {
+          "mosques": "Moskéer nära din Home Assistant-plats.",
+          "uuid": "Välj den moské som är närmast din plats."
+        },
+        "title": "Din favoritmoské"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "Lösenord",
+          "username": "E-post"
+        },
+        "data_description": {
+          "password": "Ditt MAWAQIT-kontolösenord.",
+          "username": "Din MAWAQIT-kontos e-postadress."
+        },
+        "description": "Mawaqit-integrationen behöver omautentisera ditt konto",
+        "title": "Omautentisera"
+      },
+      "search_method": {
+        "data": {
+          "search_method_choice": "Välj sökmetod:"
+        },
+        "data_description": {
+          "search_method_choice": "Välj hur du vill hitta din moské: efter koordinater (använder din Home Assistant-plats) eller efter sökordssökning."
+        },
+        "title": "Välj metod för att hitta din moské"
+      },
+      "user": {
+        "data": {
+          "password": "Lösenord",
+          "username": "E-post"
+        },
+        "data_description": {
+          "password": "Ditt MAWAQIT-kontolösenord.",
+          "username": "Din MAWAQIT-kontos e-postadress."
+        },
+        "description": "Registrera dig på [mawaqit.net]({mawaqit_url}) och anslut nedan",
+        "title": "Logga in på MAWAQIT"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "iqama_asr": { "name": "Asr Iqama" },
+      "iqama_dhuhr": { "name": "Dhuhr Iqama" },
+      "iqama_fajr": { "name": "Fajr Iqama" },
+      "iqama_isha": { "name": "Isha Iqama" },
+      "iqama_maghrib": { "name": "Maghrib Iqama" },
+      "mosque_info": { "name": "Moskéinformation" },
+      "next_salat_name": { "name": "Nästa bön" },
+      "next_salat_time": { "name": "Nästa bönetid" },
+      "prayer_asr": { "name": "Asr-bön" },
+      "prayer_dhuhr": { "name": "Dhuhr-bön" },
+      "prayer_fajr": { "name": "Fajr-bön" },
+      "prayer_isha": { "name": "Isha-bön" },
+      "prayer_jumua": { "name": "Jumua-bön" },
+      "prayer_jumua_2": { "name": "Andra Jumua-bönen" },
+      "prayer_jumua_3": { "name": "Tredje Jumua-bönen" },
+      "prayer_maghrib": { "name": "Maghrib-bön" },
+      "prayer_shuruq": { "name": "Shuruq" }
+    }
+  },
+  "exceptions": {
+    "auth_failed": { "message": "Autentisering med MAWAQIT misslyckades. Vänligen omautentisera ditt konto." },
+    "mawaqit_error": { "message": "Kommunikationsfel med MAWAQIT: {error}" },
+    "network_error": { "message": "Nätverksfel vid anslutning till MAWAQIT: {error}" },
+    "no_mosque_data": { "message": "Inga moskédata returnerades av MAWAQIT." },
+    "no_prayer_times_data": { "message": "Inga bönetider returnerades av MAWAQIT." }
+  },
+  "selector": {
+    "search_method_choice_translation_key": {
+      "options": {
+        "search_method_coordinates": "Sök efter de närmaste moskéerna till din plats",
+        "search_method_keyword": "Sök efter en moské med sökord"
+      }
+    }
+  },
+  "title": "MAWAQIT bönetider"
+}

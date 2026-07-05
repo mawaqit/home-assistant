@@ -1,0 +1,111 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "MAWAQITエントリは1つだけ許可されています。既存のエントリの3ドットメニューから「再設定」または「削除」を行い、再度セットアップしてください。",
+      "cannot_connect": "MAWAQITサーバーに接続できませんでした。インターネット接続を確認して、もう一度お試しください。",
+      "no_mosque": "お住まいの地域にMAWAQITのモスクが見つかりませんでした。座標を確認するか、既存のモスク設定を削除して新しいものをセットアップしてください。",
+      "reauth_successful": "再認証に成功しました",
+      "reconfigure_successful": "再設定に成功しました"
+    },
+    "error": {
+      "cannot_connect_to_server": "サーバーに接続できません。後でもう一度お試しください。",
+      "no_mosque_found_keyword": "このキーワードに一致するモスクは見つかりませんでした。",
+      "wrong_credential": "ログイン名またはパスワードが間違っています。もう一度お試しください。"
+    },
+    "step": {
+      "keyword_search": {
+        "data": {
+          "keyword": "検索",
+          "uuid": "モスクを選択（ページ {page}）"
+        },
+        "data_description": {
+          "keyword": "キーワードを入力して、名前や場所でモスクを検索します。",
+          "uuid": "結果からモスクを選択するか、ページ間を移動します。"
+        },
+        "description": "キーワードを入力してモスクを検索：",
+        "title": "モスクを検索"
+      },
+      "mosques_coordinates": {
+        "data": {
+          "mosques": "お近くに複数のモスクがあります。1つ選択してください：",
+          "uuid": "モスク"
+        },
+        "data_description": {
+          "mosques": "Home Assistantのロケーション付近のモスク。",
+          "uuid": "あなたの場所に最も近いモスクを選択してください。"
+        },
+        "title": "お気に入りのモスク"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "パスワード",
+          "username": "メールアドレス"
+        },
+        "data_description": {
+          "password": "MAWAQITアカウントのパスワード。",
+          "username": "MAWAQITアカウントのメールアドレス。"
+        },
+        "description": "Mawaqitインテグレーションはアカウントの再認証が必要です",
+        "title": "再認証"
+      },
+      "search_method": {
+        "data": {
+          "search_method_choice": "検索方法を選択："
+        },
+        "data_description": {
+          "search_method_choice": "モスクの検索方法を選択：座標で検索（Home Assistantのロケーションを使用）またはキーワード検索。"
+        },
+        "title": "モスクの検索方法を選択"
+      },
+      "user": {
+        "data": {
+          "password": "パスワード",
+          "username": "メールアドレス"
+        },
+        "data_description": {
+          "password": "MAWAQITアカウントのパスワード。",
+          "username": "MAWAQITアカウントのメールアドレス。"
+        },
+        "description": "[mawaqit.net]({mawaqit_url})に登録して、以下から接続してください",
+        "title": "MAWAQITにログイン"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "iqama_asr": { "name": "アスル・イカーマ" },
+      "iqama_dhuhr": { "name": "ズフル・イカーマ" },
+      "iqama_fajr": { "name": "ファジュル・イカーマ" },
+      "iqama_isha": { "name": "イシャー・イカーマ" },
+      "iqama_maghrib": { "name": "マグリブ・イカーマ" },
+      "mosque_info": { "name": "モスク情報" },
+      "next_salat_name": { "name": "次の礼拝名" },
+      "next_salat_time": { "name": "次の礼拝時間" },
+      "prayer_asr": { "name": "アスルの祈り" },
+      "prayer_dhuhr": { "name": "ズフルの祈り" },
+      "prayer_fajr": { "name": "ファジュルの祈り" },
+      "prayer_isha": { "name": "イシャーの祈り" },
+      "prayer_jumua": { "name": "ジュムアの祈り" },
+      "prayer_jumua_2": { "name": "第2ジュムアの祈り" },
+      "prayer_jumua_3": { "name": "第3ジュムアの祈り" },
+      "prayer_maghrib": { "name": "マグリブの祈り" },
+      "prayer_shuruq": { "name": "シュルーク" }
+    }
+  },
+  "exceptions": {
+    "auth_failed": { "message": "MAWAQITとの認証に失敗しました。アカウントを再認証してください。" },
+    "mawaqit_error": { "message": "MAWAQITとの通信エラー：{error}" },
+    "network_error": { "message": "MAWAQITへの接続中のネットワークエラー：{error}" },
+    "no_mosque_data": { "message": "MAWAQITからモスクデータが返されませんでした。" },
+    "no_prayer_times_data": { "message": "MAWAQITから礼拝時間データが返されませんでした。" }
+  },
+  "selector": {
+    "search_method_choice_translation_key": {
+      "options": {
+        "search_method_coordinates": "現在地に最も近いモスクを検索",
+        "search_method_keyword": "キーワードでモスクを検索"
+      }
+    }
+  },
+  "title": "MAWAQIT 礼拝時間"
+}

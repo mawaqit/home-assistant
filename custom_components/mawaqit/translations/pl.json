@@ -1,0 +1,111 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Dozwolony jest tylko jeden wpis MAWAQIT. Użyj menu z 3 kropkami na istniejącym wpisie, aby go przekonfigurować lub usunąć, a następnie skonfiguruj ponownie.",
+      "cannot_connect": "Nie udało się połączyć z serwerem MAWAQIT. Sprawdź połączenie internetowe i spróbuj ponownie.",
+      "no_mosque": "Przepraszamy, nie znaleziono meczetów MAWAQIT w Twojej okolicy. Sprawdź swoje współrzędne lub usuń istniejącą konfigurację meczetu i skonfiguruj nową.",
+      "reauth_successful": "Ponowna autoryzacja powiodła się",
+      "reconfigure_successful": "Ponowna konfiguracja powiodła się"
+    },
+    "error": {
+      "cannot_connect_to_server": "Nie można połączyć się z serwerem, spróbuj ponownie później.",
+      "no_mosque_found_keyword": "Nie znaleziono meczetu z tym słowem kluczowym.",
+      "wrong_credential": "Nieprawidłowy login lub hasło, spróbuj ponownie."
+    },
+    "step": {
+      "keyword_search": {
+        "data": {
+          "keyword": "Szukaj",
+          "uuid": "Wybierz meczet (strona {page})"
+        },
+        "data_description": {
+          "keyword": "Wpisz słowo kluczowe, aby wyszukać meczet według nazwy lub lokalizacji.",
+          "uuid": "Wybierz meczet z wyników lub nawiguj między stronami."
+        },
+        "description": "Wyszukaj meczet, wpisując słowo kluczowe:",
+        "title": "Wyszukaj swój meczet"
+      },
+      "mosques_coordinates": {
+        "data": {
+          "mosques": "W Twojej okolicy dostępnych jest kilka meczetów, wybierz jeden:",
+          "uuid": "Meczet"
+        },
+        "data_description": {
+          "mosques": "Meczety w pobliżu Twojej lokalizacji Home Assistant.",
+          "uuid": "Wybierz meczet najbliższy Twojej lokalizacji."
+        },
+        "title": "Twój ulubiony meczet"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "Hasło",
+          "username": "E-mail"
+        },
+        "data_description": {
+          "password": "Hasło do Twojego konta MAWAQIT.",
+          "username": "Adres e-mail Twojego konta MAWAQIT."
+        },
+        "description": "Integracja Mawaqit wymaga ponownej autoryzacji Twojego konta",
+        "title": "Autoryzuj ponownie"
+      },
+      "search_method": {
+        "data": {
+          "search_method_choice": "Wybierz metodę wyszukiwania:"
+        },
+        "data_description": {
+          "search_method_choice": "Wybierz, jak znaleźć swój meczet: według współrzędnych (używa Twojej lokalizacji Home Assistant) lub według wyszukiwania słowa kluczowego."
+        },
+        "title": "Wybierz metodę wyszukiwania meczetu"
+      },
+      "user": {
+        "data": {
+          "password": "Hasło",
+          "username": "E-mail"
+        },
+        "data_description": {
+          "password": "Hasło do Twojego konta MAWAQIT.",
+          "username": "Adres e-mail Twojego konta MAWAQIT."
+        },
+        "description": "Zarejestruj się na [mawaqit.net]({mawaqit_url}) i połącz się poniżej",
+        "title": "Zaloguj się do MAWAQIT"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "iqama_asr": { "name": "Ikama Asr" },
+      "iqama_dhuhr": { "name": "Ikama Dhuhr" },
+      "iqama_fajr": { "name": "Ikama Fajr" },
+      "iqama_isha": { "name": "Ikama Isha" },
+      "iqama_maghrib": { "name": "Ikama Maghrib" },
+      "mosque_info": { "name": "Informacje o meczecie" },
+      "next_salat_name": { "name": "Następna nazwa modlitwy" },
+      "next_salat_time": { "name": "Następny czas modlitwy" },
+      "prayer_asr": { "name": "Modlitwa Asr" },
+      "prayer_dhuhr": { "name": "Modlitwa Dhuhr" },
+      "prayer_fajr": { "name": "Modlitwa Fajr" },
+      "prayer_isha": { "name": "Modlitwa Isha" },
+      "prayer_jumua": { "name": "Modlitwa Jumua" },
+      "prayer_jumua_2": { "name": "Druga modlitwa Jumua" },
+      "prayer_jumua_3": { "name": "Trzecia modlitwa Jumua" },
+      "prayer_maghrib": { "name": "Modlitwa Maghrib" },
+      "prayer_shuruq": { "name": "Shuruq" }
+    }
+  },
+  "exceptions": {
+    "auth_failed": { "message": "Autoryzacja z MAWAQIT nie powiodła się. Proszę ponownie autoryzować swoje konto." },
+    "mawaqit_error": { "message": "Błąd komunikacji z MAWAQIT: {error}" },
+    "network_error": { "message": "Błąd sieci podczas łączenia z MAWAQIT: {error}" },
+    "no_mosque_data": { "message": "MAWAQIT nie zwróciło danych meczetu." },
+    "no_prayer_times_data": { "message": "MAWAQIT nie zwróciło czasów modlitw." }
+  },
+  "selector": {
+    "search_method_choice_translation_key": {
+      "options": {
+        "search_method_coordinates": "Szukaj najbliższych meczetów w Twojej lokalizacji",
+        "search_method_keyword": "Szukaj meczetu według słowa kluczowego"
+      }
+    }
+  },
+  "title": "MAWAQIT czasy modlitw"
+}

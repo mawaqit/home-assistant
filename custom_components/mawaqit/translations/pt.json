@@ -1,0 +1,111 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Apenas uma entrada MAWAQIT é permitida. Use o menu de 3 pontos na entrada existente para Reconfigurar ou Excluir, depois configure novamente.",
+      "cannot_connect": "Falha ao conectar ao servidor MAWAQIT. Verifique sua conexão com a internet e tente novamente.",
+      "no_mosque": "Desculpe, nenhuma mesquita MAWAQIT foi encontrada na sua área. Verifique suas coordenadas ou remova a configuração existente e configure uma nova.",
+      "reauth_successful": "A reautenticação foi bem-sucedida",
+      "reconfigure_successful": "A reconfiguração foi bem-sucedida"
+    },
+    "error": {
+      "cannot_connect_to_server": "Não é possível conectar ao servidor, tente novamente mais tarde.",
+      "no_mosque_found_keyword": "Nenhuma mesquita encontrada com esta palavra-chave.",
+      "wrong_credential": "Login ou senha incorretos, tente novamente."
+    },
+    "step": {
+      "keyword_search": {
+        "data": {
+          "keyword": "Pesquisar",
+          "uuid": "Selecione uma mesquita (página {page})"
+        },
+        "data_description": {
+          "keyword": "Digite uma palavra-chave para pesquisar uma mesquita por nome ou localização.",
+          "uuid": "Selecione uma mesquita dos resultados ou navegue entre as páginas."
+        },
+        "description": "Pesquise uma mesquita digitando uma palavra-chave:",
+        "title": "Pesquisar sua mesquita"
+      },
+      "mosques_coordinates": {
+        "data": {
+          "mosques": "Várias mesquitas estão disponíveis ao seu redor, selecione uma:",
+          "uuid": "Mesquita"
+        },
+        "data_description": {
+          "mosques": "Mesquitas perto da sua localização do Home Assistant.",
+          "uuid": "Selecione a mesquita mais próxima da sua localização."
+        },
+        "title": "Sua mesquita favorita"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "Senha",
+          "username": "E-mail"
+        },
+        "data_description": {
+          "password": "A senha da sua conta MAWAQIT.",
+          "username": "O endereço de e-mail da sua conta MAWAQIT."
+        },
+        "description": "A integração Mawaqit precisa reautenticar sua conta",
+        "title": "Reautenticar"
+      },
+      "search_method": {
+        "data": {
+          "search_method_choice": "Escolha o método de pesquisa:"
+        },
+        "data_description": {
+          "search_method_choice": "Escolha como encontrar sua mesquita: por coordenadas (usa sua localização do Home Assistant) ou por pesquisa de palavra-chave."
+        },
+        "title": "Escolher o método para encontrar sua mesquita"
+      },
+      "user": {
+        "data": {
+          "password": "Senha",
+          "username": "E-mail"
+        },
+        "data_description": {
+          "password": "A senha da sua conta MAWAQIT.",
+          "username": "O endereço de e-mail da sua conta MAWAQIT."
+        },
+        "description": "Registre-se em [mawaqit.net]({mawaqit_url}) e conecte-se abaixo",
+        "title": "Entrar no MAWAQIT"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "iqama_asr": { "name": "Iqama do Asr" },
+      "iqama_dhuhr": { "name": "Iqama do Dhuhr" },
+      "iqama_fajr": { "name": "Iqama do Fajr" },
+      "iqama_isha": { "name": "Iqama do Isha" },
+      "iqama_maghrib": { "name": "Iqama do Maghrib" },
+      "mosque_info": { "name": "Informações da mesquita" },
+      "next_salat_name": { "name": "Próxima oração" },
+      "next_salat_time": { "name": "Próximo horário de oração" },
+      "prayer_asr": { "name": "Oração do Asr" },
+      "prayer_dhuhr": { "name": "Oração do Dhuhr" },
+      "prayer_fajr": { "name": "Oração do Fajr" },
+      "prayer_isha": { "name": "Oração do Isha" },
+      "prayer_jumua": { "name": "Oração da Jumua" },
+      "prayer_jumua_2": { "name": "Segunda oração da Jumua" },
+      "prayer_jumua_3": { "name": "Terceira oração da Jumua" },
+      "prayer_maghrib": { "name": "Oração do Maghrib" },
+      "prayer_shuruq": { "name": "Shuruq" }
+    }
+  },
+  "exceptions": {
+    "auth_failed": { "message": "A autenticação com MAWAQIT falhou. Por favor, reautentique sua conta." },
+    "mawaqit_error": { "message": "Erro de comunicação com MAWAQIT: {error}" },
+    "network_error": { "message": "Erro de rede ao conectar ao MAWAQIT: {error}" },
+    "no_mosque_data": { "message": "Nenhum dado de mesquita foi retornado pelo MAWAQIT." },
+    "no_prayer_times_data": { "message": "Nenhum horário de oração foi retornado pelo MAWAQIT." }
+  },
+  "selector": {
+    "search_method_choice_translation_key": {
+      "options": {
+        "search_method_coordinates": "Pesquisar as mesquitas mais próximas da sua localização",
+        "search_method_keyword": "Pesquisar uma mesquita por palavra-chave"
+      }
+    }
+  },
+  "title": "Horários de oração MAWAQIT"
+}

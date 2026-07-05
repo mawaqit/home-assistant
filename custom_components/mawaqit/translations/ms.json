@@ -1,0 +1,111 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Hanya satu entri MAWAQIT dibenarkan. Gunakan menu 3-titik pada entri sedia ada untuk Konfigurasi Semula atau Padam, kemudian sediakannya semula.",
+      "cannot_connect": "Gagal menyambung ke pelayan MAWAQIT. Sila periksa sambungan internet anda dan cuba lagi.",
+      "no_mosque": "Maaf, tiada masjid MAWAQIT ditemui di kawasan anda. Sila periksa koordinat anda atau alih keluar konfigurasi masjid sedia ada dan sediakan yang baharu.",
+      "reauth_successful": "Pengesahan semula berjaya",
+      "reconfigure_successful": "Konfigurasi semula berjaya"
+    },
+    "error": {
+      "cannot_connect_to_server": "Tidak boleh menyambung ke pelayan, sila cuba sebentar lagi.",
+      "no_mosque_found_keyword": "Tiada masjid ditemui dengan kata kunci ini.",
+      "wrong_credential": "Log masuk atau kata laluan salah, sila cuba lagi."
+    },
+    "step": {
+      "keyword_search": {
+        "data": {
+          "keyword": "Cari",
+          "uuid": "Pilih masjid (halaman {page})"
+        },
+        "data_description": {
+          "keyword": "Masukkan kata kunci untuk mencari masjid mengikut nama atau lokasi.",
+          "uuid": "Pilih masjid daripada hasil, atau navigasi antara halaman."
+        },
+        "description": "Cari masjid dengan memasukkan kata kunci:",
+        "title": "Cari masjid anda"
+      },
+      "mosques_coordinates": {
+        "data": {
+          "mosques": "Beberapa masjid tersedia di sekitar anda, pilih satu:",
+          "uuid": "Masjid"
+        },
+        "data_description": {
+          "mosques": "Masjid berhampiran lokasi Home Assistant anda.",
+          "uuid": "Pilih masjid yang paling hampir dengan lokasi anda."
+        },
+        "title": "Masjid kegemaran anda"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "Kata laluan",
+          "username": "E-mel"
+        },
+        "data_description": {
+          "password": "Kata laluan akaun MAWAQIT anda.",
+          "username": "Alamat e-mel akaun MAWAQIT anda."
+        },
+        "description": "Integrasi Mawaqit perlu mengesahkan semula akaun anda",
+        "title": "Pengesahan semula"
+      },
+      "search_method": {
+        "data": {
+          "search_method_choice": "Pilih kaedah carian:"
+        },
+        "data_description": {
+          "search_method_choice": "Pilih cara mencari masjid anda: mengikut koordinat (menggunakan lokasi Home Assistant anda) atau carian kata kunci."
+        },
+        "title": "Pilih kaedah untuk mencari masjid anda"
+      },
+      "user": {
+        "data": {
+          "password": "Kata laluan",
+          "username": "E-mel"
+        },
+        "data_description": {
+          "password": "Kata laluan akaun MAWAQIT anda.",
+          "username": "Alamat e-mel akaun MAWAQIT anda."
+        },
+        "description": "Daftar di [mawaqit.net]({mawaqit_url}) dan sambung di bawah",
+        "title": "Log masuk ke MAWAQIT"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "iqama_asr": { "name": "Iqama Asar" },
+      "iqama_dhuhr": { "name": "Iqama Zuhur" },
+      "iqama_fajr": { "name": "Iqama Subuh" },
+      "iqama_isha": { "name": "Iqama Isyak" },
+      "iqama_maghrib": { "name": "Iqama Maghrib" },
+      "mosque_info": { "name": "Maklumat masjid" },
+      "next_salat_name": { "name": "Nama Solat Seterusnya" },
+      "next_salat_time": { "name": "Waktu Solat Seterusnya" },
+      "prayer_asr": { "name": "Solat Asar" },
+      "prayer_dhuhr": { "name": "Solat Zuhur" },
+      "prayer_fajr": { "name": "Solat Subuh" },
+      "prayer_isha": { "name": "Solat Isyak" },
+      "prayer_jumua": { "name": "Solat Jumaat" },
+      "prayer_jumua_2": { "name": "Solat Jumaat Kedua" },
+      "prayer_jumua_3": { "name": "Solat Jumaat Ketiga" },
+      "prayer_maghrib": { "name": "Solat Maghrib" },
+      "prayer_shuruq": { "name": "Syuruk" }
+    }
+  },
+  "exceptions": {
+    "auth_failed": { "message": "Pengesahan dengan MAWAQIT gagal. Sila sahkan semula akaun anda." },
+    "mawaqit_error": { "message": "Ralat komunikasi dengan MAWAQIT: {error}" },
+    "network_error": { "message": "Ralat rangkaian semasa menyambung ke MAWAQIT: {error}" },
+    "no_mosque_data": { "message": "Tiada data masjid dikembalikan oleh MAWAQIT." },
+    "no_prayer_times_data": { "message": "Tiada waktu solat dikembalikan oleh MAWAQIT." }
+  },
+  "selector": {
+    "search_method_choice_translation_key": {
+      "options": {
+        "search_method_coordinates": "Cari masjid terdekat dengan lokasi anda",
+        "search_method_keyword": "Cari masjid mengikut kata kunci"
+      }
+    }
+  },
+  "title": "Waktu solat MAWAQIT"
+}
