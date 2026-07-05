@@ -1,18 +1,12 @@
 {
   "domain": "mawaqit",
   "name": "MAWAQIT",
-  "codeowners": [
-    "@MAWAQIT",
-    "@moha-tah",
-    "@Yeyvo"
-  ],
+  "codeowners": ["@MAWAQIT", "@moha-tah", "@Yeyvo"],
   "config_flow": true,
-  "documentation": "https://github.com/mawaqit/home-assistant",
+  "documentation": "https://www.home-assistant.io/integrations/mawaqit",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "issue_tracker": "https://github.com/mawaqit/home-assistant/issues",
-  "requirements": [
-    "mawaqit==1.0.0"
-  ],
-  "version": "3.0.0"
+  "quality_scale": "platinum",
+  "requirements": ["mawaqit==1.0.13"],
+  "single_config_entry": true
 }

@@ -1,203 +1,350 @@
-"""Platform to retrieve Mawaqit prayer times information for Home Assistant."""
+"""Module provides sensor entities for the Mawaqit integration in Home Assistant.
 
+It includes the following sensor entities:
+- Mosque information sensor
+- Prayer time sensors
+- Iqama prayer time sensors
+- Next prayer sensors
+
+The sensors are set up using the `async_setup_entry` function, which initializes the necessary coordinators and adds the entities to the platform.
+
+Classes:
+    MyMosqueSensor: Represents a mosque sensor.
+    MawaqitPrayerTimeSensor: Represents a prayer time sensor.
+    NextPrayerSensor: Represents the next prayer time and name sensor.
+
+Functions:
+        async_setup_entry: Sets up the Mawaqit sensor platform.
+"""
+
+from collections.abc import Callable
+from dataclasses import dataclass
+from datetime import datetime
 import logging
-from typing import Any
+from typing import override
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.storage import Store
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.dt as dt_util
 
-from . import utils
-from .const import (
-    DATA_UPDATED,
-    DOMAIN,
-    MAWAQIT_STORAGE_KEY,
-    MAWAQIT_STORAGE_VERSION,
-    PRAYER_TIMES_ICON,
-    SENSOR_TYPES,
-)
+from . import MawaqitConfigEntry, utils
+from .const import PRAYER_NAMES
+from .coordinator import MosqueCoordinator, PrayerTimeCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 1
+
+MOSQUE_SENSOR_DESCRIPTION = SensorEntityDescription(
+    key="mosque_info",
+    translation_key="mosque_info",
+)
+
+
+@dataclass(frozen=True, kw_only=True)
+class MawaqitPrayerTimeSensorEntityDescription(SensorEntityDescription):
+    """Describes Mawaqit prayer time sensor entity."""
+
+    get_value: Callable[[dict], datetime | None]
+
+
+PRAYER_TIME_SENSOR_DESCRIPTIONS = [
+    MawaqitPrayerTimeSensorEntityDescription(
+        key="Fajr",
+        translation_key="prayer_fajr",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        get_value=lambda data: utils.get_regular_prayer_time(data, "Fajr"),
+    ),
+    MawaqitPrayerTimeSensorEntityDescription(
+        key="shuruq",
+        translation_key="prayer_shuruq",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        get_value=utils.get_shuruq_time,
+    ),
+    MawaqitPrayerTimeSensorEntityDescription(
+        key="Dhuhr",
+        translation_key="prayer_dhuhr",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        get_value=lambda data: utils.get_regular_prayer_time(data, "Dhuhr"),
+    ),
+    MawaqitPrayerTimeSensorEntityDescription(
+        key="Asr",
+        translation_key="prayer_asr",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        get_value=lambda data: utils.get_regular_prayer_time(data, "Asr"),
+    ),
+    MawaqitPrayerTimeSensorEntityDescription(
+        key="Maghrib",
+        translation_key="prayer_maghrib",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        get_value=lambda data: utils.get_regular_prayer_time(data, "Maghrib"),
+    ),
+    MawaqitPrayerTimeSensorEntityDescription(
+        key="Isha",
+        translation_key="prayer_isha",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        get_value=lambda data: utils.get_regular_prayer_time(data, "Isha"),
+    ),
+]
+
+JUMUA_PRAYER_TIME_SENSOR_DESCRIPTIONS = [
+    MawaqitPrayerTimeSensorEntityDescription(
+        key="Jumua",
+        translation_key="prayer_jumua",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        get_value=lambda data: utils.get_jumua_time(data, "jumua"),
+    ),
+    MawaqitPrayerTimeSensorEntityDescription(
+        key="Jumua 2",
+        translation_key="prayer_jumua_2",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        get_value=lambda data: utils.get_jumua_time(data, "jumua2"),
+    ),
+    MawaqitPrayerTimeSensorEntityDescription(
+        key="Jumua 3",
+        translation_key="prayer_jumua_3",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        get_value=lambda data: utils.get_jumua_time(data, "jumua3"),
+    ),
+]
+
+IQAMA_PRAYER_TIME_SENSOR_DESCRIPTIONS = [
+    MawaqitPrayerTimeSensorEntityDescription(
+        key="Fajr_Iqama",
+        translation_key="iqama_fajr",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        get_value=lambda data: utils.get_iqama_time(data, "Fajr"),
+    ),
+    MawaqitPrayerTimeSensorEntityDescription(
+        key="Dhuhr_Iqama",
+        translation_key="iqama_dhuhr",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        get_value=lambda data: utils.get_iqama_time(data, "Dhuhr"),
+    ),
+    MawaqitPrayerTimeSensorEntityDescription(
+        key="Asr_Iqama",
+        translation_key="iqama_asr",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        get_value=lambda data: utils.get_iqama_time(data, "Asr"),
+    ),
+    MawaqitPrayerTimeSensorEntityDescription(
+        key="Maghrib_Iqama",
+        translation_key="iqama_maghrib",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        get_value=lambda data: utils.get_iqama_time(data, "Maghrib"),
+    ),
+    MawaqitPrayerTimeSensorEntityDescription(
+        key="Isha_Iqama",
+        translation_key="iqama_isha",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        get_value=lambda data: utils.get_iqama_time(data, "Isha"),
+    ),
+]
+
+NEXT_SALAT_SENSOR_DESCRIPTION = [
+    SensorEntityDescription(
+        key="next_salat_name",
+        translation_key="next_salat_name",
+    ),
+    SensorEntityDescription(
+        key="next_salat_time",
+        translation_key="next_salat_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+]
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: MawaqitConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Mawaqit prayer times sensor platform."""
+    """Set up the Mawaqit sensor platform."""
+    mosque_coordinator = config_entry.runtime_data.mosque_coordinator
+    prayer_time_coordinator = config_entry.runtime_data.prayer_time_coordinator
 
-    client = hass.data[DOMAIN]
-    if not client:
-        _LOGGER.error("Error retrieving client object")
+    prayer_data = prayer_time_coordinator.data
 
-    entities = []
-    for sensor_type in SENSOR_TYPES:
-        if sensor_type in [
-            "Fajr",
-            "Shurouq",
-            "Dhuhr",
-            "Asr",
-            "Maghrib",
-            "Isha",
-            "Jumua",
-            "Jumua 2",  # "Aid" and "Aid 2",
-            "Fajr Iqama",
-            "Shurouq Iqama",
-            "Dhuhr Iqama",
-            "Asr Iqama",
-            "Maghrib Iqama",
-            "Isha Iqama",
-            "Next Salat Name",
-            "Next Salat Time",
-            "Next Salat Preparation",
-        ]:
-            sensor = MawaqitPrayerTimeSensor(sensor_type, client)
-            entities.append(sensor)
-    async_add_entities(entities, True)
+    entities: list[SensorEntity] = []
 
-    name = "My Mosque"
-    sensor1 = [MyMosqueSensor(name, hass)]
-    async_add_entities(sensor1, True)
+    # Mosque Sensor
+    entities.append(MyMosqueSensor(mosque_coordinator))
 
+    # Prayer Time Sensors
+    entities.extend(
+        [
+            MawaqitPrayerTimeSensor(prayer_time_coordinator, desc)
+            for desc in PRAYER_TIME_SENSOR_DESCRIPTIONS
+        ]
+    )
 
-class MawaqitPrayerTimeSensor(SensorEntity):
-    """Representation of an Mawaqit prayer time sensor."""
+    # Register Jumua Prayer Time Sensors
+    entities.extend(
+        [
+            MawaqitPrayerTimeSensor(prayer_time_coordinator, desc)
+            for desc in JUMUA_PRAYER_TIME_SENSOR_DESCRIPTIONS
+            if prayer_data and desc.get_value(prayer_data) is not None
+        ]
+    )
 
-    def __init__(self, sensor_type, client) -> None:
-        """Initialize the Mawaqit prayer time sensor."""
-        self.sensor_type = sensor_type
-        self.client = client
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return f"{self.sensor_type} {SENSOR_TYPES[self.sensor_type]}"
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique id of the entity."""
-        return self.sensor_type
-
-    @property
-    def icon(self) -> str:
-        """Icon to display in the front end."""
-        return PRAYER_TIMES_ICON
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor.  .astimezone(dt_util.UTC)."""
-        if self.sensor_type in [
-            "Fajr",
-            "Shurouq",
-            "Dhuhr",
-            "Asr",
-            "Maghrib",
-            "Isha",
-            "Jumua",
-            "Jumua 2",  # "Aid", "Aid 2",
-            "Fajr Iqama",
-            "Shurouq Iqama",
-            "Dhuhr Iqama",
-            "Asr Iqama",
-            "Maghrib Iqama",
-            "Isha Iqama",
-            "Next Salat Time",
-            "Next Salat Preparation",
-        ]:
-            time = self.client.prayer_times_info.get(self.sensor_type)
-            _LOGGER.debug("[;] before %s Time: %s", self.sensor_type, time)
-            if time is not None:
-                _LOGGER.debug(
-                    "[;] %s Time: %s", self.sensor_type, time.astimezone(dt_util.UTC)
-                )
-                return time.astimezone(dt_util.UTC)
-
-            return None
-
-        return self.client.prayer_times_info.get(self.sensor_type)
-
-    @property
-    def should_poll(self) -> bool:
-        """Disable polling."""
-        return False
-
-    @property
-    def device_class(self) -> SensorDeviceClass | None:
-        """Return the device class."""
-        if self.sensor_type in [
-            "Fajr",
-            "Shurouq",
-            "Dhuhr",
-            "Asr",
-            "Maghrib",
-            "Isha",
-            "Jumua",
-            "Jumua 2",  # "Aid", "Aid 2",
-            "Fajr Iqama",
-            "Shurouq Iqama",
-            "Dhuhr Iqama",
-            "Asr Iqama",
-            "Maghrib Iqama",
-            "Isha Iqama",
-            "Next Salat Time",
-            "Next Salat Preparation",
-        ]:
-            return SensorDeviceClass.TIMESTAMP
-        return None
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        self.async_on_remove(
-            async_dispatcher_connect(self.hass, DATA_UPDATED, self.async_write_ha_state)
+    # Register Iqama Prayer Time Sensors
+    if (
+        prayer_data
+        and prayer_data.get("iqamaEnabled")
+        and prayer_data.get("iqamaCalendar")
+    ):
+        entities.extend(
+            [
+                MawaqitPrayerTimeSensor(prayer_time_coordinator, desc)
+                for desc in IQAMA_PRAYER_TIME_SENSOR_DESCRIPTIONS
+            ]
         )
 
+    # Register Next Prayer Sensors
+    entities.extend(
+        [
+            NextPrayerSensor(prayer_time_coordinator, desc)
+            for desc in NEXT_SALAT_SENSOR_DESCRIPTION
+        ]
+    )
 
-class MyMosqueSensor(SensorEntity):
+    # Register the Sensors
+    async_add_entities(new_entities=entities)
+
+    _LOGGER.info("Mawaqit sensors successfully initialized")
+
+
+class MyMosqueSensor(SensorEntity, CoordinatorEntity[MosqueCoordinator]):
     """Representation of a mosque sensor."""
 
-    def __init__(self, name, hass: HomeAssistant) -> None:
+    _attr_has_entity_name = True
+
+    def __init__(self, coordinator: MosqueCoordinator) -> None:
         """Initialize the mosque sensor."""
-        self.hass = hass
-        self._attributes: dict[str, Any] = {}
-        self._name = name
-        self._state = None
-        latitude = self.hass.config.latitude
-        longitude = self.hass.config.longitude
-        self._latitude = latitude
-        self._longitude = longitude
-        self.store: Store = Store(
-            self.hass, MAWAQIT_STORAGE_VERSION, MAWAQIT_STORAGE_KEY
-        )
-
-    async def async_update(self) -> None:
-        """Get the latest data from the Mawaqit API."""
-        data_my_mosque_NN = await utils.read_my_mosque_NN_file(self.store)
-
-        for k, v in data_my_mosque_NN.items():
-            if str(k) != "uuid" and str(k) != "id" and str(k) != "slug":
-                self._attributes[k] = str(v)
+        super().__init__(coordinator)
+        self.entity_description = MOSQUE_SENSOR_DESCRIPTION
+        self._attr_unique_id = self.entity_description.key.lower()
 
     @property
-    def name(self) -> str | None:
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
+    @override
     def native_value(self) -> str | None:
-        """Return the state of the sensor."""
-        return self._attributes["name"]
+        """Return the current mosque name as the sensor state."""
+        if not self.coordinator.data:
+            return None
+        return self.coordinator.data.get("name")
 
     @property
-    def icon(self) -> str | None:
-        """Return the icon of the sensor."""
-        return "mdi:mosque"
+    @override
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self.coordinator.data is not None
+
+
+class MawaqitPrayerTimeSensor(SensorEntity, CoordinatorEntity[PrayerTimeCoordinator]):
+    """Representation of a prayer time sensor."""
+
+    _attr_has_entity_name = True
+
+    entity_description: MawaqitPrayerTimeSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: PrayerTimeCoordinator,
+        sensor_description: MawaqitPrayerTimeSensorEntityDescription,
+    ) -> None:
+        """Initialize the prayer time sensor."""
+        super().__init__(coordinator)
+        self.entity_description = sensor_description
+        self._attr_unique_id = self.entity_description.key.lower()
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return attributes for the sensor."""
-        return self._attributes
+    @override
+    def native_value(self) -> datetime | None:
+        """Return the prayer time using the get_value function."""
+        prayer_data = self.coordinator.data
+
+        if not prayer_data:
+            return None
+
+        try:
+            return self.entity_description.get_value(prayer_data)
+        except (KeyError, ValueError, TypeError) as e:
+            _LOGGER.error(
+                "Error retrieving prayer time for %s: %s",
+                self.entity_description.key,
+                e,
+            )
+            return None
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self.coordinator.data is not None
+
+
+class NextPrayerSensor(SensorEntity, CoordinatorEntity[PrayerTimeCoordinator]):
+    """Sensor for the next prayer time and name."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self, coordinator: PrayerTimeCoordinator, description: SensorEntityDescription
+    ) -> None:
+        """Initialize the sensor with a specific description."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._attr_unique_id = f"next_prayer_{self.entity_description.key.lower()}"
+        self._next_prayer_index: int | None = None
+        self._next_prayer_time: datetime | None = None
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        # coordinator.data is already populated by async_config_entry_first_refresh
+        # before entities are created. async_add_listener only schedules a future
+        # refresh without calling the callback immediately, so we seed the initial
+        # state here to avoid an "unknown" state on first render.
+        self._handle_coordinator_update()
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        self._next_prayer_index, self._next_prayer_time = self._get_next_prayer_info()
+        self.async_write_ha_state()
+
+    @property
+    @override
+    def native_value(self) -> str | datetime | None:
+        """Return the appropriate value based on the sensor type."""
+        if self._next_prayer_index is None or self._next_prayer_time is None:
+            return None
+        if self.entity_description.key == "next_salat_name":
+            return PRAYER_NAMES[self._next_prayer_index]
+        if self.entity_description.key == "next_salat_time":
+            return self._next_prayer_time
+        return None
+
+    def _get_next_prayer_info(self) -> tuple[int | None, datetime | None]:
+        """Extract the next prayer info from the coordinator data."""
+        if not self.coordinator.data:
+            return None, None
+        prayer_calendar = self.coordinator.data.get("calendar")
+        timezone = self.coordinator.data.get("timezone")
+        if not prayer_calendar or not timezone:
+            return None, None
+        current_time = dt_util.now()
+        return utils.find_next_prayer(current_time, prayer_calendar, timezone)
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self.coordinator.data is not None
