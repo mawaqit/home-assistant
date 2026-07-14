@@ -9,7 +9,7 @@ import shutil
 from typing import Any
 
 from dateutil import parser as date_parser
-from mawaqit.consts import BadCredentialsException
+from mawaqit.consts import BadCredentialsException, NotAuthenticatedException
 from requests.exceptions import ConnectionError as ConnError
 import voluptuous as vol
 
@@ -36,9 +36,11 @@ from .const import (
     DOMAIN,
     MAWAQIT_ALL_MOSQUES_NN,
     MAWAQIT_MY_MOSQUE_NN,
+    MAWAQIT_PASSWORD,
     MAWAQIT_PRAY_TIME,
     MAWAQIT_STORAGE_KEY,
     MAWAQIT_STORAGE_VERSION,
+    MAWAQIT_USERNAME,
     UPDATE_TIME,
 )
 
@@ -139,6 +141,8 @@ async def async_remove_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     await utils.cleare_storage_entry(store, MAWAQIT_MY_MOSQUE_NN)
     await utils.cleare_storage_entry(store, MAWAQIT_ALL_MOSQUES_NN)
     await utils.cleare_storage_entry(store, MAWAQIT_PRAY_TIME)
+    await utils.cleare_storage_entry(store, MAWAQIT_USERNAME)
+    await utils.cleare_storage_entry(store, MAWAQIT_PASSWORD)
     # after adding MAWAQIT_MOSQ_LIST_DATA to storage we need to clear it here
 
     _LOGGER.debug("Finished clearing data folder")
@@ -189,7 +193,9 @@ class MawaqitPrayerClient:
 
         data_pray_time = await utils.read_pray_time(self.store)
 
-        # data_pray_time = content
+        if data_pray_time is None:
+            raise ConnError("Prayer time data not available in storage")
+
         calendar = data_pray_time["calendar"]
 
         # Then, we get the prayer times of the day into this file
@@ -300,8 +306,8 @@ class MawaqitPrayerClient:
             elif ":" in iqama:
                 iqama_times.append(iqama)
             else:
-                # if there's a bug, we just append the prayer time for now.
-                iqama.append(prayer)
+                # if the format is unexpected, fall back to the prayer time.
+                iqama_times.append(prayer.strftime("%H:%M"))
 
         iqama_names = [
             "Fajr Iqama",
@@ -390,7 +396,7 @@ class MawaqitPrayerClient:
             # should we use self.hass.async_add_executor_job to wrap get_new_prayer_times?
             prayer_times = await self.get_new_prayer_times()
             self.available = True
-        except (BadCredentialsException, ConnError):
+        except (BadCredentialsException, NotAuthenticatedException, ConnError):
             self.available = False
             _LOGGER.debug("Error retrieving prayer times")
             async_call_later(self.hass, 60, self.async_update)
@@ -467,7 +473,7 @@ class MawaqitPrayerClient:
         try:
             await self.get_new_prayer_times()
             # should we use self.hass.async_add_executor_job to wrap get_new_prayer_times?
-        except (BadCredentialsException, ConnError) as err:
+        except (BadCredentialsException, NotAuthenticatedException, ConnError) as err:
             raise ConfigEntryNotReady from err
 
         await self.async_update()
