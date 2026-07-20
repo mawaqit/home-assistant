@@ -55,7 +55,7 @@ In the `automations.yaml` file, you have an example of code to create automation
 ```yaml
 homeassistant:
 sensor:
-  platform: time_date
+  trigger: time_date
   display_options:
     - 'time'
     - 'date_time'
@@ -66,36 +66,36 @@ sensor:
 ```yaml
 - id: 'fajr_wakeup'
   alias: Turn on bedroom light and Alexa routine, 20 min before Fajr Athan
-  trigger:
-  - platform: template
+  triggers:
+  - trigger: template
     value_template: >
-      {% set before = (as_timestamp(states("sensor.fajr_adhan")) - 20 * 60) | timestamp_custom("%H:%M", True) %} 
+      {% set before = (as_timestamp(states("sensor.fajr_adhan")) - 20 * 60) | timestamp_custom("%H:%M", True) %}
       {% set time = states("sensor.time") %}
       {{ time == before }}
-  action:
+  actions:
   # turn on the light of the bedroom
-  - service: switch.turn_on
+  - action: switch.turn_on
     entity_id: switch.sonoff_1000814ec9 # the entity id of the sonoff switch, can be an other entity
   # play a routine on Alexa
-  - service: media_player.play_media
+  - action: media_player.play_media
     entity_id: media_player.zehhaf_s_echo_dot # the entity id of your alexa device
     data:
       media_content_id: bonjour # the routine name configured on Alexa mobile app, it can be a sequence of actions, like flash info, weather ...etc
       media_content_type: routine
   initial_state: true
-  mode: single      
+  mode: single
 
 # Play adhan on a connected speaker
 - id: 'isha_adhan'
   alias: Isha adhan
-  trigger:
-    platform: template
+  triggers:
+    trigger: template
     value_template: >
-      {% set isha_time = as_timestamp(states("sensor.isha_adhan")) | timestamp_custom("%H:%M", True) %} 
+      {% set isha_time = as_timestamp(states("sensor.isha_adhan")) | timestamp_custom("%H:%M", True) %}
       {% set time = states("sensor.time")  %}
       {{ time == isha_time }}
-  action:
-    - service: mqtt.publish
+  actions:
+    - action: mqtt.publish
       data_template:
         topic: 'commande/play/mini'
         payload: 'http://192.168.10.101/mp3/adhan.mp3' # an http url to mp3 file
