@@ -37,19 +37,19 @@
   "entity": {
     "sensor": {
       "iqama_asr": {
-        "name": "Iqama Asr"
+        "name": "Iqama de l'Asr"
       },
       "iqama_dhuhr": {
-        "name": "Iqama Dhuhr"
+        "name": "Iqama du Dhohr"
       },
       "iqama_fajr": {
-        "name": "Iqama Fajr"
+        "name": "Iqama du Fajr"
       },
       "iqama_isha": {
-        "name": "Iqama Isha"
+        "name": "Iqama de l'Isha"
       },
       "iqama_maghrib": {
-        "name": "Iqama Maghrib"
+        "name": "Iqama du Maghrib"
       },
       "next_salat_name": {
         "name": "Nom de la prochaine prière"
@@ -58,31 +58,31 @@
         "name": "Heure de la prochaine prière"
       },
       "prayer_asr": {
-        "name": "Prière Asr"
+        "name": "Adhaan de l'Asr"
       },
       "prayer_dhuhr": {
-        "name": "Prière Dhuhr"
+        "name": "Adhaan du Dhohr"
       },
       "prayer_fajr": {
-        "name": "Prière Fajr"
+        "name": "Adhaan du Fajr"
       },
       "prayer_isha": {
-        "name": "Prière Isha"
+        "name": "Adhaan de l'Isha"
       },
       "prayer_jumua": {
-        "name": "Prière Jumua"
+        "name": "Prière du Jumua"
       },
       "prayer_jumua_2": {
-        "name": "Deuxième prière Jumua"
+        "name": "Deuxième prière du Jumua"
       },
       "prayer_jumua_3": {
-        "name": "Troisième prière Jumua"
+        "name": "Troisième prière du Jumua"
       },
       "prayer_maghrib": {
-        "name": "Prière Maghrib"
+        "name": "Adhaan du Maghrib"
       },
       "prayer_shuruq": {
-        "name": "Shuruq"
+        "name": "Chourouk"
       }
     }
   },
