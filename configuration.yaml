@@ -18,7 +18,7 @@ input_datetime:
     name: next salat time
     has_date: true
     has_time: true
-  next_prep_salat_time: # 10 minutes before prayer call, cf. the blueprints to change it
+  next_prep_salat_time: # 10 minutes before prayer call
     name: next prep salat time
     has_date: true
     has_time: true

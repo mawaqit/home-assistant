@@ -103,8 +103,6 @@ Prayer sensors are timestamps, so they can be used directly in a `time` trigger,
   mode: single
 ```
 
-The [blueprint](blueprints/automation/mawaqit/Blueprint-Mawaqit_Time_Notification.yaml) sends a notification and plays the athan at each prayer.
-
 ## Français
 
 Ce composant permet d'intégrer les données de votre mosquée Mawaqit dans Home Assistant. Pour ce faire, Un compte Mawaqit **https://mawaqit.net** est nécessaire.
