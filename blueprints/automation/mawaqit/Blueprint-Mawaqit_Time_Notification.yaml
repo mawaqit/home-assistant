@@ -5,6 +5,16 @@ blueprint:
     install 'Mawaqit Prayer Times' integration before you use this blueprint.
   domain: automation
   input:
+    Next_Salat_Name:
+      name: Next prayer sensor
+      description:
+        The MAWAQIT "Next Salat Name" sensor. Its entity ID depends on the
+        language of Home Assistant when the integration was added.
+      selector:
+        entity:
+          filter:
+            integration: mawaqit
+            domain: sensor
     Mobile_to_Notify:
       name: Mobile 1 Device to notify
       description:
@@ -52,7 +62,7 @@ blueprint:
 # so the previous state is the prayer that just started.
 trigger:
   - platform: state
-    entity_id: sensor.next_salat_name
+    entity_id: !input "Next_Salat_Name"
     id: salat
 
 condition: []
