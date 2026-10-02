@@ -1,20 +1,26 @@
-# this is the lovelace card code used to show the times and the my_mosque sensor
+# Lovelace card showing today's prayer times
 entities:
-  - entity: sensor.my_mosque
-    name: Ma Mosquée
-  - entity: sensor.fajr_mawaqit
+  - entity: sensor.next_salat_name
+    name: Prochaine prière
+  - entity: sensor.next_salat_time
+    format: time
+    name: À
+  - entity: sensor.fajr_prayer
     format: time
     name: Fajr
-  - entity: sensor.dhuhr_mawaqit
+  - entity: sensor.shuruq
+    format: time
+    name: Shuruq
+  - entity: sensor.dhuhr_prayer
     format: time
     name: Dhuhr
-  - entity: sensor.asr_mawaqit
+  - entity: sensor.asr_prayer
     format: time
     name: Asr
-  - entity: sensor.maghrib_mawaqit
+  - entity: sensor.maghrib_prayer
     format: time
     name: Maghrib
-  - entity: sensor.isha_mawaqit
+  - entity: sensor.isha_prayer
     format: time
     name: Isha
 header:

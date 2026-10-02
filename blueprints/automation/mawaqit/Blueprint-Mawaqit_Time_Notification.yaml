@@ -48,33 +48,21 @@ blueprint:
             - SPOTIFY
   source_url: https://gist.github.com/shadynafie/1bc4e28717fe0955a828e8d092f7e4bf
 
+# next_salat_name switches to the following prayer when a prayer time is reached,
+# so the previous state is the prayer that just started.
 trigger:
-  - platform: time
-    at: sensor.next_salat_time
+  - platform: state
+    entity_id: sensor.next_salat_name
     id: salat
-  - platform: time
-    id: prep
-    at: sensor.next_salat_preparation_time
 
 condition: []
 action:
   - choose:
       - conditions:
           - condition: trigger
-            id: prep
-        sequence:
-          - service: input_number.set_value
-            target:
-              entity_id: input_number.chapitre_index
-            data:
-              value: "{{ range(100,114) | random | int }}"
-
-      - conditions:
-          - condition: trigger
             id: salat
-          - condition: state
-            entity_id: "sensor.next_salat_name"
-            state: "Shurouq"
+          - condition: template
+            value_template: "{{ trigger.from_state.state == 'shuruq' }}"
         sequence:
           - type: notify
             domain: mobile_app
@@ -89,9 +77,8 @@ action:
       - conditions:
           - condition: trigger
             id: salat
-          - condition: state
-            entity_id: "sensor.next_salat_name"
-            state: "Fajr"
+          - condition: template
+            value_template: "{{ trigger.from_state.state == 'fajr' }}"
         sequence:
           - type: notify
             domain: mobile_app
@@ -113,9 +100,8 @@ action:
       - conditions:
           - condition: trigger
             id: salat
-          - condition: state
-            entity_id: "sensor.next_salat_name"
-            state: "Dhuhr"
+          - condition: template
+            value_template: "{{ trigger.from_state.state == 'dhuhr' }}"
         sequence:
           - type: notify
             domain: mobile_app
@@ -137,9 +123,8 @@ action:
       - conditions:
           - condition: trigger
             id: salat
-          - condition: state
-            entity_id: "sensor.next_salat_name"
-            state: "Asr"
+          - condition: template
+            value_template: "{{ trigger.from_state.state == 'asr' }}"
         sequence:
           - type: notify
             domain: mobile_app
@@ -161,9 +146,8 @@ action:
       - conditions:
           - condition: trigger
             id: salat
-          - condition: state
-            entity_id: "sensor.next_salat_name"
-            state: "Maghrib"
+          - condition: template
+            value_template: "{{ trigger.from_state.state == 'maghrib' }}"
         sequence:
           - type: notify
             domain: mobile_app
@@ -184,9 +168,8 @@ action:
       - conditions:
           - condition: trigger
             id: salat
-          - condition: state
-            entity_id: "sensor.next_salat_name"
-            state: "Isha"
+          - condition: template
+            value_template: "{{ trigger.from_state.state == 'isha' }}"
         sequence:
           - type: notify
             domain: mobile_app
