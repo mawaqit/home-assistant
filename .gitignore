@@ -6,3 +6,7 @@
 
 # Virtual environment
 .venv/
+
+# Test artifacts
+.coverage
+.pytest_cache/
