@@ -1,77 +1,107 @@
 {
   "config": {
     "abort": {
-      "no_mosque": "Entschuldigung, es gibt keine MAWAQIT Moschee in Ihrer Nachbarschaft.",
-      "one_instance_allowed": "Ein einzelner MAWAQIT-Eintrag ist notwendig. Wenn Sie Ihre Moschee neu konfigurieren möchten, können Sie neben dem bestehenden Eintrag auf \"Konfigurieren\" klicken.",
-      "configuration_kept": "Sie haben sich entschieden, die bestehende Konfiguration beizubehalten."
+      "cannot_connect": "Verbindung zum MAWAQIT-Server fehlgeschlagen. Bitte überprüfe deine Internetverbindung und versuche es erneut.",
+      "no_mosque": "In der Nähe deines Home-Assistant-Standorts wurden keine MAWAQIT-Moscheen gefunden. Bitte stelle sicher, dass dein Standort in der Nähe einer Moschee liegt. Die Suche per Stichwort wird noch nicht unterstützt, ist aber für eine zukünftige Version geplant."
+    },
+    "error": {
+      "cannot_connect_to_server": "Verbindung zum Server nicht möglich, bitte versuche es später erneut.",
+      "wrong_credential": "Falscher Benutzername oder falsches Passwort, bitte versuche es erneut."
     },
     "step": {
-      "user": {
-        "description": "Registrieren Sie sich auf [mawaqit.net]({mawaqit_url}) und verbinden Sie sich unten. Die nächstgelegene Moschee zu Ihrem Zuhause wird ausgewählt, aber Sie können sie später in den Add-On-Parametern ändern.",
-        "data": {
-          "username": "E-Mail",
-          "password": "Passwort",
-          "server": "Server"
-        },
-        "title": "MAWAQIT Gebetszeiten einrichten"
-      },
-      "keep_or_reset": {
-        "title": "Eine weitere Instanz von MAWAQIT ist bereits konfiguriert",
-        "data": {
-          "choice": "Sie können wählen, ob Sie die vorhandene Konfiguration beibehalten oder zurücksetzen möchten:",
-          "keep": "Die vorhandene Konfiguration beibehalten",
-          "reset": "Zurücksetzen, um eine neue Moschee zu konfigurieren"
-        }
-      },
-      "keyword_search": {
-        "title": "Suchen Sie Ihre Moschee",
-        "description": "Suchen Sie eine Moschee, indem Sie ein Stichwort eingeben:",
-        "data": {
-          "Keyword": "Suchen"
-        }
-      },
-      "search_method": {
-        "title": "Wählen Sie die Methode zum Finden Ihrer Moschee",
-        "data": {
-          "search_method_choice": "wählen Sie die Suchmethode:"
-        }
-      },
       "mosques_coordinates": {
         "data": {
-          "mosques": "Mehrere Moscheen sind in Ihrer Nähe verfügbar, wählen Sie eine aus:",
+          "mosques": "Mehrere Moscheen sind in deiner Nähe verfügbar, wähle eine aus:",
           "uuid": "Moschee"
         },
-        "title": "Ihre Lieblingsmoschee"
-      }
-    }
-  },
-  "error": {
-    "cannot_connect_to_server": "Verbindung zum Server nicht möglich, bitte später erneut versuchen.",
-    "wrong_credential": "Falscher Benutzername oder Passwort, bitte erneut versuchen.",
-    "no_mosque_found_keyword": "Keine Moschee mit diesem Schlüsselwort gefunden."
-  },
-  "options": {
-    "step": {
-      "init": {
+        "data_description": {
+          "mosques": "Moscheen in der Nähe deines Home-Assistant-Standorts.",
+          "uuid": "Wähle die Moschee, die deinem Standort am nächsten liegt."
+        },
+        "title": "Deine bevorzugte Moschee"
+      },
+      "user": {
         "data": {
-          "calculation_method": "Ändern Sie Ihre Lieblingsmoschee"
-        }
+          "password": "Passwort",
+          "username": "E-Mail"
+        },
+        "data_description": {
+          "password": "Das Passwort deines MAWAQIT-Kontos.",
+          "username": "Die E-Mail-Adresse deines MAWAQIT-Kontos."
+        },
+        "description": "Registriere dich auf [mawaqit.net]({mawaqit_url}) und melde dich unten an",
+        "title": "Bei MAWAQIT anmelden"
       }
     }
   },
-  "selector": {
-    "search_method_choice_translation_key": {
-      "options": {
-        "search_method_coordinates": "Suchen Sie nach den nächstgelegenen Moscheen zu Ihrem Standort",
-        "search_method_keyword": "Suche nach einer Moschee per Stichwort"
+  "entity": {
+    "sensor": {
+      "iqama_asr": {
+        "name": "Asr Iqama"
+      },
+      "iqama_dhuhr": {
+        "name": "Dhuhr Iqama"
+      },
+      "iqama_fajr": {
+        "name": "Fajr Iqama"
+      },
+      "iqama_isha": {
+        "name": "Isha Iqama"
+      },
+      "iqama_maghrib": {
+        "name": "Maghrib Iqama"
+      },
+      "next_salat_name": {
+        "name": "Name des nächsten Gebets"
+      },
+      "next_salat_time": {
+        "name": "Zeit des nächsten Gebets"
+      },
+      "prayer_asr": {
+        "name": "Asr-Gebet"
+      },
+      "prayer_dhuhr": {
+        "name": "Dhuhr-Gebet"
+      },
+      "prayer_fajr": {
+        "name": "Fajr-Gebet"
+      },
+      "prayer_isha": {
+        "name": "Isha-Gebet"
+      },
+      "prayer_jumua": {
+        "name": "Jumua-Gebet"
+      },
+      "prayer_jumua_2": {
+        "name": "Zweites Jumua-Gebet"
+      },
+      "prayer_jumua_3": {
+        "name": "Drittes Jumua-Gebet"
+      },
+      "prayer_maghrib": {
+        "name": "Maghrib-Gebet"
+      },
+      "prayer_shuruq": {
+        "name": "Shuruq"
       }
+    }
+  },
+  "exceptions": {
+    "auth_failed": {
+      "message": "Die Authentifizierung bei MAWAQIT ist fehlgeschlagen. Bitte authentifiziere dein Konto erneut."
     },
-    "choice_translation_key": {
-      "options": {
-        "keep": "Die vorhandene Konfiguration beibehalten",
-        "reset": "Zurücksetzen, um eine neue Moschee zu konfigurieren"
-      }
+    "mawaqit_error": {
+      "message": "Fehler bei der Kommunikation mit MAWAQIT: {error}"
+    },
+    "network_error": {
+      "message": "Netzwerkfehler bei der Verbindung mit MAWAQIT: {error}"
+    },
+    "no_mosque_data": {
+      "message": "MAWAQIT hat keine Moscheedaten zurückgegeben."
+    },
+    "no_prayer_times_data": {
+      "message": "MAWAQIT hat keine Gebetszeiten zurückgegeben."
     }
   },
-  "title": "MAWAQIT"
+  "title": "MAWAQIT Gebetszeiten"
 }
