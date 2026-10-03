@@ -3,18 +3,15 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp.client_exceptions import ClientConnectorError
-from homeassistant import data_entry_flow
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_UUID
-from homeassistant.core import HomeAssistant
 from mawaqit.exceptions import BadCredentialsException, MawaqitException, NoMosqueAround
 import pytest
 
 from custom_components.mawaqit import config_flow
-from custom_components.mawaqit.const import (
-    CANNOT_CONNECT_TO_SERVER,
-    WRONG_CREDENTIAL,
-)
+from custom_components.mawaqit.const import CANNOT_CONNECT_TO_SERVER, WRONG_CREDENTIAL
 from custom_components.mawaqit.types import MawaqitMosqueData
+from homeassistant import data_entry_flow
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_UUID
+from homeassistant.core import HomeAssistant
 
 from .conftest import MOCK_TOKEN
 

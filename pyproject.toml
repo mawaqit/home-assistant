@@ -3,3 +3,208 @@ asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 pythonpath = ["."]
 testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["custom_components.mawaqit"]
+
+[tool.coverage.report]
+fail_under = 100
+show_missing = true
+skip_covered = true
+# Older coverage releases (HA 2025.3) do not exclude it by default.
+exclude_also = ["if TYPE_CHECKING:"]
+
+[tool.mypy]
+# Same settings as Home Assistant core for strictly typed integrations.
+show_error_codes = true
+follow_imports = "normal"
+local_partial_types = true
+strict_equality = true
+strict_bytes = true
+no_implicit_optional = true
+warn_incomplete_stub = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+enable_error_code = ["deprecated", "explicit-override", "ignore-without-code", "redundant-self", "truthy-iterable"]
+disable_error_code = ["annotation-unchecked", "import-not-found", "import-untyped"]
+check_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_subclassing_any = true
+disallow_untyped_calls = true
+disallow_untyped_decorators = true
+disallow_untyped_defs = true
+warn_return_any = true
+warn_unreachable = true
+files = ["custom_components/mawaqit"]
+# custom_components has no __init__.py: without this, "mawaqit" would resolve to the integration, not the library.
+explicit_package_bases = true
+mypy_path = "."
+
+# Copy of Home Assistant core's ruff settings, minus the bans that do not apply
+# to a custom integration (voluptuous, __future__ annotations, see AGENTS.md).
+[tool.ruff]
+required-version = ">=0.16.9"
+target-version = "py313"
+
+[tool.ruff.lint]
+select = [
+  "A001",   # Variable {name} is shadowing a Python builtin
+  "ASYNC",  # flake8-async
+  "B",      # flake8-bugbear
+  "BLE",
+  "C",      # complexity
+  "COM818", # Trailing comma on bare tuple prohibited
+  "D",      # docstrings
+  "DTZ003", # Use datetime.now(tz=) instead of datetime.utcnow()
+  "DTZ004", # Use datetime.fromtimestamp(ts, tz=) instead of datetime.utcfromtimestamp(ts)
+  "DTZ011", # Use datetime.now(tz=).date() instead of date.today()
+  "E",      # pycodestyle
+  "F",      # pyflakes/autoflake
+  "F541",   # f-string without any placeholders
+  "FLY",    # flynt
+  "FURB",   # refurb
+  "G",      # flake8-logging-format
+  "I",      # isort
+  "INP",    # flake8-no-pep420
+  "ISC",    # flake8-implicit-str-concat
+  "ICN001", # import concentions; {name} should be imported as {asname}
+  "ICN002", # import conventions; {name} should not be imported as {asname}
+  "LOG",    # flake8-logging
+  "N804",   # First argument of a class method should be named cls
+  "N805",   # First argument of a method should be named self
+  "N806",   # Variable {name} in function should be snake_case
+  "N815",   # Variable {name} in class scope should not be mixedCase
+  "PERF",   # Perflint
+  "PGH",    # pygrep-hooks
+  "PIE",    # flake8-pie
+  "PL",     # pylint
+  "PT",     # flake8-pytest-style
+  "PTH",    # flake8-pathlib
+  "PYI",    # flake8-pyi
+  "RET",    # flake8-return
+  "RSE",    # flake8-raise
+  "RUF",    # Ruff-specific rules (see `ignore` for exclusions)
+  "S107",   # Possible hardcoded password assigned to function default
+  "S102",   # Use of exec detected
+  "S103",   # bad-file-permissions
+  "S108",   # hardcoded-temp-file
+  "S301",   # suspicious-pickle-usage
+  "S306",   # suspicious-mktemp-usage
+  "S307",   # suspicious-eval-usage
+  "S601",   # paramiko-call
+  "S602",   # subprocess-popen-with-shell-equals-true
+  "S604",   # call-with-shell-equals-true
+  "S608",   # hardcoded-sql-expression
+  "S609",   # unix-command-wildcard-injection
+  "SIM",    # flake8-simplify
+  "SLF",    # flake8-self
+  "SLOT",   # flake8-slots
+  "T100",   # Trace found: {name} used
+  "T20",    # flake8-print
+  "TC",     # flake8-type-checking
+  "TID",    # Tidy imports
+  "TRY",    # tryceratops
+  "UP",     # pyupgrade
+  "UP031",  # Use format specifiers instead of percent format
+  "UP032",  # Use f-string instead of `format` call
+  "W",      # pycodestyle
+]
+
+ignore = [
+  "ASYNC109", # Async function definition with a `timeout` parameter Use `asyncio.timeout` instead
+  "ASYNC110", # Use `asyncio.Event` instead of awaiting `asyncio.sleep` in a `while` loop
+  "ASYNC240", # Use an async function for entering the file system
+  "B008",     # Do not perform function call in argument defaults
+  "B019",     # Use of functools.lru_cache or functools.cache on methods can lead to memory leaks
+  "D202",     # No blank lines allowed after function docstring
+  "D203",     # 1 blank line required before class docstring
+  "D213",     # Multi-line docstring summary should start at the second line
+  "D406",     # Section name should end with a newline
+  "D407",     # Section name underlining
+  "D417",     # Missing argument descriptions in docstring
+  "E501",     # line too long
+
+  "PLC1901", # {existing} can be simplified to {replacement} as an empty string is falsey
+  "PLR0911", # Too many return statements ({returns} > {max_returns})
+  "PLR0912", # Too many branches ({branches} > {max_branches})
+  "PLR0913", # Too many arguments to function call ({c_args} > {max_args})
+  "PLR0915", # Too many statements ({statements} > {max_statements})
+  "PLR0917", # Too many positional arguments defined for a function ({p_args} > {max_args})
+  "PLR2004", # Magic value used in comparison, consider replacing {value} with a constant variable
+  "PLW0108", # Unnecessary lambda wrapping a function call
+  "PLW1641", # __eq__ without __hash__
+  "PLW2901", # Outer {outer_kind} variable {name} overwritten by inner {inner_kind} target
+  "PT011",   # pytest.raises({exception}) is too broad
+  "PT018",   # Assertion should be broken down into multiple parts
+  "RUF001",  # String contains ambiguous unicode character.
+  "RUF012",  # Mutable class attributes should be annotated with typing.ClassVar
+  "RUF015",  # Prefer next(...) over single element slice
+  "RUF043",  # Pattern passed to match= contains metacharacters but is neither escaped nor raw
+  "SIM102",  # Use a single if statement instead of nested if statements
+  "SIM103",  # Return the condition {condition} directly
+  "SIM108",  # Use ternary operator {contents} instead of if-else-block
+  "SIM115",  # Use context handler for opening files
+
+  # Moving imports into type-checking blocks can mess with pytest.patch()
+  "TC001", # Move application import {} into a type-checking block
+  "TC002", # Move third-party import {} into a type-checking block
+  "TC003", # Move standard library import {} into a type-checking block
+  "TC006", # Add quotes to type expression in typing.cast()
+
+  "TRY003", # Avoid specifying long messages outside the exception class
+  "TRY400", # Use `logging.exception` instead of `logging.error`
+
+  "UP047", # Non PEP 696 generic function
+  "UP049", # Avoid private type parameter names
+
+  # May conflict with the formatter, https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
+  "W191",
+  "E111",
+  "E114",
+  "E117",
+  "D206",
+  "D300",
+  "Q",
+  "COM812",
+  "COM819",
+
+  "PLE0605",
+  "FURB116",
+  "ISC004",
+  "LOG004",
+]
+
+[tool.ruff.lint.flake8-import-conventions.extend-aliases]
+"homeassistant.helpers.config_validation" = "cv"
+"homeassistant.helpers.device_registry" = "dr"
+"homeassistant.helpers.entity_registry" = "er"
+"homeassistant.helpers.issue_registry" = "ir"
+"homeassistant.util.dt" = "dt_util"
+
+[tool.ruff.lint.flake8-pytest-style]
+fixture-parentheses = false
+mark-parentheses = false
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"async_timeout".msg = "use asyncio.timeout instead"
+"pytz".msg = "use zoneinfo instead"
+
+[tool.ruff.lint.isort]
+force-sort-within-sections = true
+# Same import grouping as core, so synced files stay identical.
+known-first-party = ["homeassistant", "custom_components"]
+known-third-party = ["mawaqit"]
+combine-as-imports = true
+split-on-trailing-comma = false
+
+[tool.ruff.lint.per-file-ignores]
+"script/*" = ["T20"]
+# Same exceptions as core's tests/ruff.toml.
+"tests/**" = ["PTH", "B904", "N806", "N815", "RUF018", "DTZ011", "S107", "SLF001"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 25
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+property-decorators = ["propcache.api.cached_property"]

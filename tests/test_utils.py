@@ -5,10 +5,10 @@ from unittest.mock import MagicMock, patch
 from zoneinfo import ZoneInfo
 
 from freezegun import freeze_time
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_UUID
 import pytest
 
 from custom_components.mawaqit import utils
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_UUID
 
 # Shared calendar helpers from conftest — avoids re-defining month_data inline.
 from .conftest import (

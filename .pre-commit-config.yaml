@@ -1,0 +1,59 @@
+# Run with prek (https://prek.j178.dev), a drop-in replacement for pre-commit.
+# Hooks and versions mirror Home Assistant core's .pre-commit-config.yaml.
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.9
+    hooks:
+      - id: ruff-check
+        args:
+          - --fix
+      - id: ruff-format
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.3
+    hooks:
+      - id: codespell
+        args:
+          - --ignore-words-list=hass,annonce,branche,composant,composants,exemples,fonction,mot
+          - --quiet-level=2
+        exclude_types: [json]
+  - repo: https://github.com/zizmorcore/zizmor-pre-commit
+    rev: v1.30.1
+    hooks:
+      - id: zizmor
+        args:
+          - --pedantic
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-json
+      - id: no-commit-to-branch
+        args:
+          - --branch=main
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.38.0
+    hooks:
+      - id: yamllint
+  - repo: https://github.com/rbubley/mirrors-prettier
+    rev: v3.6.2
+    hooks:
+      - id: prettier
+        additional_dependencies:
+          - prettier@3.6.2
+          - prettier-plugin-sort-json@4.2.0
+  # Local hooks need the virtual environment from script/setup.
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy
+        entry: mypy
+        language: system
+        require_serial: true
+        pass_filenames: false
+        types_or: [python, pyi]
+        files: ^custom_components/.+\.py$
+      - id: translations
+        name: translations
+        entry: python3 -m script.translations
+        language: system
+        pass_filenames: false
+        files: ^custom_components/mawaqit/(strings\.json|translations/.+\.json)$

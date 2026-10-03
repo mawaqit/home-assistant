@@ -2,11 +2,12 @@
 
 from datetime import timedelta
 
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
 from mawaqit.exceptions import BadCredentialsException, MawaqitException
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
 
 # All shared data and setup are provided by conftest:
 #   - mock_mosque_data, mock_prayer_data  ->  standard data dicts

@@ -105,6 +105,10 @@ Prayer sensors are timestamps, so they can be used directly in a `time` trigger,
   mode: single
 ```
 
+## Contributing
+
+Contributions are welcome, see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Français
 
 Ce composant permet d'intégrer les données de votre mosquée Mawaqit dans Home Assistant. Pour ce faire, Un compte Mawaqit **https://mawaqit.net** est nécessaire.

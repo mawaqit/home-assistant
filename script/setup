@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Creates .venv with the development dependencies and installs the git hooks.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+uv venv --python 3.14 .venv
+uv pip install --python .venv -r requirements_dev.txt
+.venv/bin/prek install
