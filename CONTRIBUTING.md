@@ -13,7 +13,7 @@ pytest --cov
 prek run --all-files
 ```
 
-`script/setup` installs git hooks: the checks run on every commit and fix most issues themselves (formatting, import order, `translations/en.json`).
+`script/setup` installs git hooks: the checks run on every commit and fix most issues themselves (formatting, import order).
 
 To try your changes in Home Assistant, copy `custom_components/mawaqit` into the `custom_components` folder of a test configuration and restart Home Assistant.
 
@@ -45,7 +45,3 @@ Dependabot opens weekly pull requests for Python dependencies and GitHub Actions
 ## Releases
 
 Releases are made from `main` by the Release workflow, see [RELEASING.md](RELEASING.md). HACS offers each published GitHub release to users, and pre-releases only to users who enabled beta versions.
-
-## Home Assistant core
-
-The same integration is being added to Home Assistant core. Changes that are not specific to HACS should also be proposed there. [AGENTS.md](AGENTS.md) lists the intentional differences between the two.

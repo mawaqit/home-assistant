@@ -7,7 +7,7 @@ updates:
     cooldown:
       default-days: 7
     ignore:
-      # Bumped by hand with manifest.json, like in the core integration.
+      # Must be bumped together with manifest.json.
       - dependency-name: mawaqit
     groups:
       python:

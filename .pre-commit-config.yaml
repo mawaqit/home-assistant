@@ -1,5 +1,4 @@
 # Run with prek (https://prek.j178.dev), a drop-in replacement for pre-commit.
-# Hooks and versions mirror Home Assistant core's .pre-commit-config.yaml.
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.16.9
@@ -40,7 +39,7 @@ repos:
         additional_dependencies:
           - prettier@3.6.2
           - prettier-plugin-sort-json@4.2.0
-  # Local hooks need the virtual environment from script/setup.
+  # Needs the virtual environment from script/setup.
   - repo: local
     hooks:
       - id: mypy
@@ -51,9 +50,3 @@ repos:
         pass_filenames: false
         types_or: [python, pyi]
         files: ^custom_components/.+\.py$
-      - id: translations
-        name: translations
-        entry: python3 -m script.translations
-        language: system
-        pass_filenames: false
-        files: ^custom_components/mawaqit/(strings\.json|translations/.+\.json)$

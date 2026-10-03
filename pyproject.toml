@@ -15,7 +15,7 @@ skip_covered = true
 exclude_also = ["if TYPE_CHECKING:"]
 
 [tool.mypy]
-# Same settings as Home Assistant core for strictly typed integrations.
+# Strict typing, with Home Assistant's settings.
 show_error_codes = true
 follow_imports = "normal"
 local_partial_types = true
@@ -40,8 +40,7 @@ files = ["custom_components/mawaqit"]
 explicit_package_bases = true
 mypy_path = "."
 
-# Copy of Home Assistant core's ruff settings, minus the bans that do not apply
-# to a custom integration (voluptuous, __future__ annotations, see AGENTS.md).
+# Home Assistant's ruff settings.
 [tool.ruff]
 required-version = ">=0.16.9"
 target-version = "py313"
@@ -191,15 +190,12 @@ mark-parentheses = false
 
 [tool.ruff.lint.isort]
 force-sort-within-sections = true
-# Same import grouping as core, so synced files stay identical.
 known-first-party = ["homeassistant", "custom_components"]
 known-third-party = ["mawaqit"]
 combine-as-imports = true
 split-on-trailing-comma = false
 
 [tool.ruff.lint.per-file-ignores]
-"script/*" = ["T20"]
-# Same exceptions as core's tests/ruff.toml.
 "tests/**" = ["PTH", "B904", "N806", "N815", "RUF018", "DTZ011", "S107", "SLF001"]
 
 [tool.ruff.lint.mccabe]
