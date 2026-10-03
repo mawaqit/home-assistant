@@ -6,7 +6,6 @@
     },
     "error": {
       "cannot_connect_to_server": "Verbindung zum Server nicht möglich, bitte versuche es später erneut.",
-      "no_more_mosques": "Für dieses Stichwort gibt es keine weiteren Moscheen.",
       "no_mosque_around": "In der Nähe deines Home-Assistant-Standorts wurden keine MAWAQIT-Moscheen gefunden. Suche deine Moschee stattdessen per Stichwort.",
       "no_mosque_found": "Keine Moschee mit diesem Stichwort gefunden.",
       "wrong_credential": "Falscher Benutzername oder falsches Passwort, bitte versuche es erneut."

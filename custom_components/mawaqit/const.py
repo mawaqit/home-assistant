@@ -17,7 +17,6 @@ PREVIOUS_PAGE = "previous_page"
 # Error messages
 
 CANNOT_CONNECT_TO_SERVER = "cannot_connect_to_server"
-NO_MORE_MOSQUES = "no_more_mosques"
 NO_MOSQUE_AROUND = "no_mosque_around"
 NO_MOSQUE_FOUND = "no_mosque_found"
 WRONG_CREDENTIAL = "wrong_credential"

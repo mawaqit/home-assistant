@@ -20,7 +20,6 @@ from custom_components.mawaqit.const import (
     MOSQUES_PER_PAGE,
     NEW_SEARCH,
     NEXT_PAGE,
-    NO_MORE_MOSQUES,
     NO_MOSQUE_AROUND,
     NO_MOSQUE_FOUND,
     PREVIOUS_PAGE,
@@ -75,6 +74,11 @@ def _keyword_mosques(count: int, first: int = 0) -> list[dict]:
         }
         for index in range(first, first + count)
     ]
+
+
+def _uuids(mosques: list[dict]) -> list[str]:
+    """Return the uuids of raw mosques."""
+    return [mosque["uuid"] for mosque in mosques]
 
 
 def _options(result: data_entry_flow.FlowResult) -> list[str]:
@@ -432,73 +436,94 @@ async def test_keyword_search_blank_keyword(
 async def test_keyword_results_pagination(
     hass: HomeAssistant, mock_client: MagicMock
 ) -> None:
-    """Test the next and previous pages of the keyword results."""
+    """Test the next page is prefetched and visited pages are not fetched again."""
     page_1 = _keyword_mosques(MOSQUES_PER_PAGE)
     page_2 = _keyword_mosques(3, first=MOSQUES_PER_PAGE)
-    mock_client.fetch_mosques_by_keyword.side_effect = [page_1, page_2, page_1]
+    mock_client.fetch_mosques_by_keyword.side_effect = [page_1, page_2]
 
     result = await _search_keyword(hass, mock_client)
-    assert _options(result) == [mosque["uuid"] for mosque in page_1] + [
-        NEXT_PAGE,
-        NEW_SEARCH,
-    ]
+    assert result.get("errors") == {}
+    assert _options(result) == [*_uuids(page_1), NEXT_PAGE, NEW_SEARCH]
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_UUID: NEXT_PAGE}
     )
-    assert result.get("errors") == {}
     assert result.get("description_placeholders") == {"keyword": "Paris", "page": "2"}
-    assert _options(result) == [mosque["uuid"] for mosque in page_2] + [
-        PREVIOUS_PAGE,
-        NEW_SEARCH,
-    ]
+    assert _options(result) == [*_uuids(page_2), PREVIOUS_PAGE, NEW_SEARCH]
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_UUID: PREVIOUS_PAGE}
     )
     assert result.get("description_placeholders") == {"keyword": "Paris", "page": "1"}
-    assert _options(result) == [mosque["uuid"] for mosque in page_1] + [
-        NEXT_PAGE,
-        NEW_SEARCH,
-    ]
+    assert _options(result) == [*_uuids(page_1), NEXT_PAGE, NEW_SEARCH]
     assert [
         call.args for call in mock_client.fetch_mosques_by_keyword.await_args_list
-    ] == [
-        ("Paris", 1, MOSQUES_PER_PAGE),
-        ("Paris", 2, MOSQUES_PER_PAGE),
-        ("Paris", 1, MOSQUES_PER_PAGE),
-    ]
+    ] == [("Paris", 1, MOSQUES_PER_PAGE), ("Paris", 2, MOSQUES_PER_PAGE)]
 
 
 async def test_keyword_results_full_last_page(
     hass: HomeAssistant, mock_client: MagicMock
 ) -> None:
-    """Test an empty next page keeps the current one and hides the next page."""
+    """Test the next page is not offered when it has no mosques."""
     page_1 = _keyword_mosques(MOSQUES_PER_PAGE)
     mock_client.fetch_mosques_by_keyword.side_effect = [page_1, NoMosqueFound]
+
+    result = await _search_keyword(hass, mock_client)
+
+    assert result.get("errors") == {}
+    assert _options(result) == [*_uuids(page_1), NEW_SEARCH]
+    assert mock_client.fetch_mosques_by_keyword.await_count == 2
+
+
+async def test_keyword_results_prefetch_error(
+    hass: HomeAssistant, mock_client: MagicMock
+) -> None:
+    """Test a failed prefetch hides the next page until the page is shown again."""
+    page_1 = _keyword_mosques(MOSQUES_PER_PAGE)
+    page_2 = _keyword_mosques(MOSQUES_PER_PAGE, first=MOSQUES_PER_PAGE)
+    page_3 = _keyword_mosques(1, first=2 * MOSQUES_PER_PAGE)
+    mock_client.fetch_mosques_by_keyword.side_effect = [
+        page_1,
+        page_2,
+        ConnectionError,
+        page_3,
+    ]
 
     result = await _search_keyword(hass, mock_client)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_UUID: NEXT_PAGE}
     )
+    assert result.get("errors") == {"base": CANNOT_CONNECT_TO_SERVER}
+    assert _options(result) == [*_uuids(page_2), PREVIOUS_PAGE, NEW_SEARCH]
 
-    assert result.get("step_id") == "keyword_results"
-    assert result.get("errors") == {"base": NO_MORE_MOSQUES}
-    assert result.get("description_placeholders") == {"keyword": "Paris", "page": "1"}
-    assert _options(result) == [mosque["uuid"] for mosque in page_1] + [NEW_SEARCH]
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_UUID: PREVIOUS_PAGE}
+    )
+    assert result.get("errors") == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_UUID: NEXT_PAGE}
+    )
+    assert result.get("errors") == {}
+    assert _options(result) == [*_uuids(page_2), PREVIOUS_PAGE, NEXT_PAGE, NEW_SEARCH]
+    mock_client.fetch_mosques_by_keyword.assert_awaited_with(
+        "Paris", 3, MOSQUES_PER_PAGE
+    )
 
 
 async def test_keyword_results_new_search(
     hass: HomeAssistant, mock_client: MagicMock
 ) -> None:
-    """Test a new search shows the first page of the new keyword, with all pages."""
+    """Test a new search starts from the first page of the new keyword."""
     page_1 = _keyword_mosques(MOSQUES_PER_PAGE)
-    mock_client.fetch_mosques_by_keyword.side_effect = [page_1, NoMosqueFound, page_1]
+    mock_client.fetch_mosques_by_keyword.side_effect = [
+        page_1,
+        NoMosqueFound,
+        page_1,
+        _keyword_mosques(1, first=MOSQUES_PER_PAGE),
+    ]
 
     result = await _search_keyword(hass, mock_client)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_UUID: NEXT_PAGE}
-    )
     assert NEXT_PAGE not in _options(result)
 
     result = await hass.config_entries.flow.async_configure(
@@ -516,28 +541,8 @@ async def test_keyword_results_new_search(
     assert result.get("description_placeholders") == {"keyword": "Lyon", "page": "1"}
     assert NEXT_PAGE in _options(result)
     mock_client.fetch_mosques_by_keyword.assert_awaited_with(
-        "Lyon", 1, MOSQUES_PER_PAGE
+        "Lyon", 2, MOSQUES_PER_PAGE
     )
-
-
-async def test_keyword_results_page_error(
-    hass: HomeAssistant, mock_client: MagicMock
-) -> None:
-    """Test a failed page change keeps the current page and its navigation."""
-    page_1 = _keyword_mosques(MOSQUES_PER_PAGE)
-    mock_client.fetch_mosques_by_keyword.side_effect = [page_1, ConnectionError]
-
-    result = await _search_keyword(hass, mock_client)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_UUID: NEXT_PAGE}
-    )
-
-    assert result.get("errors") == {"base": CANNOT_CONNECT_TO_SERVER}
-    assert result.get("description_placeholders") == {"keyword": "Paris", "page": "1"}
-    assert _options(result) == [mosque["uuid"] for mosque in page_1] + [
-        NEXT_PAGE,
-        NEW_SEARCH,
-    ]
 
 
 # ---------------------------------------------------------------------------

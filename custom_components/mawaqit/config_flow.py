@@ -28,7 +28,6 @@ from .const import (
     MOSQUES_PER_PAGE,
     NEW_SEARCH,
     NEXT_PAGE,
-    NO_MORE_MOSQUES,
     NO_MOSQUE_AROUND,
     NO_MOSQUE_FOUND,
     PREVIOUS_PAGE,
@@ -73,7 +72,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.mosques: dict[str, MawaqitMosqueData] = {}
         self.keyword = ""
         self.page = 1
-        self.last_page: int | None = None
+        self.pages: dict[int, list[MawaqitMosqueData]] = {}
 
     @override
     async def async_step_user(
@@ -218,9 +217,15 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             keyword = user_input[CONF_KEYWORD].strip()
             if not keyword:
                 errors["base"] = NO_MOSQUE_FOUND
-            elif not (errors := await self._async_search_keyword(keyword, 1)):
-                self.last_page = None
-                return await self.async_step_keyword_results()
+            else:
+                self.keyword = keyword
+                self.pages = {}
+                errors = await self._async_load_page(1)
+                if not errors and not self.pages[1]:
+                    errors["base"] = NO_MOSQUE_FOUND
+                if not errors:
+                    self.page = 1
+                    return await self.async_step_keyword_results()
 
         return self._show_keyword_search_form(errors, user_input)
 
@@ -232,18 +237,21 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             choice = user_input[CONF_UUID]
+            # Both pages are cached: they are only offered once loaded.
             if choice == NEXT_PAGE:
-                errors = await self._async_search_keyword(self.keyword, self.page + 1)
-                # A full page can be the last one: the API does not return a total.
-                if errors.get("base") == NO_MOSQUE_FOUND:
-                    self.last_page = self.page
-                    errors = {"base": NO_MORE_MOSQUES}
+                self.page += 1
             elif choice == PREVIOUS_PAGE:
-                errors = await self._async_search_keyword(self.keyword, self.page - 1)
+                self.page -= 1
             elif choice == NEW_SEARCH:
                 return self._show_keyword_search_form({}, {CONF_KEYWORD: self.keyword})
             else:
                 return self._create_mosque_entry(choice)
+
+        self.mosques = {mosque.uuid: mosque for mosque in self.pages[self.page]}
+        # The API returns no total: prefetch the next page to offer it only when
+        # it has mosques.
+        if len(self.mosques) == MOSQUES_PER_PAGE:
+            errors = await self._async_load_page(self.page + 1)
 
         options = [
             selector.SelectOptionDict(value=mosque.uuid, label=mosque.display_name)
@@ -253,7 +261,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             options.append(
                 selector.SelectOptionDict(value=PREVIOUS_PAGE, label=PREVIOUS_PAGE)
             )
-        if len(self.mosques) == MOSQUES_PER_PAGE and self.page != self.last_page:
+        if self.pages.get(self.page + 1):
             options.append(selector.SelectOptionDict(value=NEXT_PAGE, label=NEXT_PAGE))
         options.append(selector.SelectOptionDict(value=NEW_SEARCH, label=NEW_SEARCH))
 
@@ -275,14 +283,16 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={"keyword": self.keyword, "page": str(self.page)},
         )
 
-    async def _async_search_keyword(self, keyword: str, page: int) -> dict[str, str]:
-        """Load a page of the keyword results and return the form errors."""
+    async def _async_load_page(self, page: int) -> dict[str, str]:
+        """Cache a page of the keyword results and return the form errors."""
+        if page in self.pages:
+            return {}
         try:
             mosques = await mawaqit_wrapper.fetch_mosques_by_keyword(
-                self.client, keyword, page
+                self.client, self.keyword, page
             )
         except NoMosqueFound:
-            return {"base": NO_MOSQUE_FOUND}
+            mosques = []
         except (
             ClientConnectorError,
             ConnectionError,
@@ -290,9 +300,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             MawaqitException,
         ):
             return {"base": CANNOT_CONNECT_TO_SERVER}
-        self.mosques = {mosque.uuid: mosque for mosque in mosques}
-        self.keyword = keyword
-        self.page = page
+        self.pages[page] = mosques
         return {}
 
     def _show_keyword_search_form(

@@ -6,7 +6,6 @@
     },
     "error": {
       "cannot_connect_to_server": "Kan geen verbinding maken met de server, probeer het later opnieuw.",
-      "no_more_mosques": "Er zijn geen andere moskeeën voor dit trefwoord.",
       "no_mosque_around": "Er zijn geen MAWAQIT-moskeeën gevonden in de buurt van je Home Assistant-locatie. Zoek je moskee in plaats daarvan op trefwoord.",
       "no_mosque_found": "Geen moskee gevonden met dit trefwoord.",
       "wrong_credential": "Onjuiste gebruikersnaam of wachtwoord, probeer het opnieuw."

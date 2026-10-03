@@ -6,7 +6,6 @@
     },
     "error": {
       "cannot_connect_to_server": "Cannot connect to the server, please retry later.",
-      "no_more_mosques": "There are no more mosques for this keyword.",
       "no_mosque_around": "No MAWAQIT mosques were found near your Home Assistant location. Search for your mosque by keyword instead.",
       "no_mosque_found": "No mosque found with this keyword.",
       "wrong_credential": "Wrong login or password, please retry."

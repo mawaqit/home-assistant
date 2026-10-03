@@ -6,7 +6,6 @@
     },
     "error": {
       "cannot_connect_to_server": "Sunucuya bağlanılamıyor, lütfen daha sonra tekrar deneyin.",
-      "no_more_mosques": "Bu anahtar kelime için başka cami yok.",
       "no_mosque_around": "Home Assistant konumunuzun yakınında MAWAQIT camisi bulunamadı. Bunun yerine caminizi anahtar kelimeyle arayın.",
       "no_mosque_found": "Bu anahtar kelimeyle cami bulunamadı.",
       "wrong_credential": "Hatalı kullanıcı adı veya şifre, lütfen tekrar deneyin."
