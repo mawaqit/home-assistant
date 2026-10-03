@@ -241,7 +241,7 @@ async def test_search_around_location_creates_entry(
         )
 
     assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result.get("title") == "MAWAQIT - Mosque1-label (1.74 km)"
+    assert result.get("title") == "Mosque1-label"
     assert result["result"].unique_id == "aaaaa-bbbbb-cccccc-0000"
     mock_client_class.assert_called_once()
     mock_client.get_api_token.assert_awaited_once()
@@ -384,7 +384,7 @@ async def test_keyword_search_creates_entry(
     )
 
     assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result.get("title") == "MAWAQIT - Mosque1-label - City1"
+    assert result.get("title") == "Mosque1-label"
     assert result["result"].unique_id == "mosque-1"
     assert result.get("data") == {
         CONF_API_KEY: MOCK_TOKEN,
@@ -734,7 +734,7 @@ async def test_reconfigure_changes_mosque_and_keeps_entities(
 
     assert result.get("type") == data_entry_flow.FlowResultType.ABORT
     assert result.get("reason") == "reconfigure_successful"
-    assert mock_config_entry.title == "MAWAQIT - Mosque2-label (20.00 km)"
+    assert mock_config_entry.title == "Mosque2-label"
     assert mock_config_entry.data[CONF_UUID] == NEW_MOSQUE_UUID
     assert mock_config_entry.unique_id == NEW_MOSQUE_UUID
     assert mock_config_entry.data[CONF_API_KEY] == MOCK_TOKEN
@@ -782,7 +782,7 @@ async def test_reconfigure_with_keyword_search(
     await hass.async_block_till_done()
 
     assert result.get("reason") == "reconfigure_successful"
-    assert mock_config_entry.title == "MAWAQIT - Mosque0-label - City0"
+    assert mock_config_entry.title == "Mosque0-label"
     assert mock_config_entry.data[CONF_UUID] == "mosque-0"
     assert mock_config_entry.unique_id == "mosque-0"
 
@@ -971,7 +971,7 @@ async def test_add_mosque_reuses_login_of_logged_in_mosque(
 ) -> None:
     """Test the login of a mosque waiting for a new login is not reused."""
     rejected = make_config_entry(token="rejected-token")
-    working = make_config_entry(NEW_MOSQUE_UUID, "MAWAQIT - Mosque2", token=OTHER_TOKEN)
+    working = make_config_entry(NEW_MOSQUE_UUID, "Mosque2", token=OTHER_TOKEN)
     rejected.add_to_hass(hass)
     working.add_to_hass(hass)
     with _patch_setup_entry():
@@ -1028,7 +1028,7 @@ async def test_add_mosque_already_configured_by_keyword(
     hass: HomeAssistant, mock_client: MagicMock
 ) -> None:
     """Test a mosque found by keyword cannot be added twice."""
-    entry = make_config_entry("mosque-1", "MAWAQIT - Mosque1-label - City1")
+    entry = make_config_entry("mosque-1", "Mosque1-label")
     entry.add_to_hass(hass)
     mock_client.fetch_mosques_by_keyword.return_value = _keyword_mosques(2)
 
@@ -1083,7 +1083,7 @@ async def test_reconfigure_to_mosque_of_other_entry_aborts(
 ) -> None:
     """Test reconfiguring to a mosque already set up changes neither entry."""
     entry = make_config_entry()
-    other = make_config_entry(NEW_MOSQUE_UUID, "MAWAQIT - Mosque2", **other_kwargs)
+    other = make_config_entry(NEW_MOSQUE_UUID, "Mosque2", **other_kwargs)
     entry.add_to_hass(hass)
     other.add_to_hass(hass)
     device, fajr = _add_mosque_device(hass, entry, MOCK_UUID)
@@ -1105,7 +1105,7 @@ async def test_reconfigure_to_mosque_of_other_entry_aborts(
 
     assert result.get("type") == data_entry_flow.FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
-    assert entry.title == "MAWAQIT - Test Mosque"
+    assert entry.title == "Test Mosque"
     assert entry.data[CONF_UUID] == MOCK_UUID
     assert entry.unique_id == MOCK_UUID
     assert other.data[CONF_UUID] == NEW_MOSQUE_UUID
@@ -1133,7 +1133,7 @@ async def test_reconfigure_leaves_other_mosques_untouched(
 ) -> None:
     """Test reconfiguring a mosque moves only its own device and entities."""
     entry = make_config_entry()
-    other = make_config_entry(NEW_MOSQUE_UUID, "MAWAQIT - Mosque2")
+    other = make_config_entry(NEW_MOSQUE_UUID, "Mosque2")
     entry.add_to_hass(hass)
     other.add_to_hass(hass)
     device, fajr = _add_mosque_device(hass, entry, MOCK_UUID)
@@ -1178,12 +1178,10 @@ async def test_reauth_logs_in_mosques_sharing_the_login(
 ) -> None:
     """Test logging in again for one mosque logs in the others with its token."""
     entry = make_config_entry()
-    same_login = make_config_entry(NEW_MOSQUE_UUID, "MAWAQIT - Mosque2")
-    other_login = make_config_entry(
-        THIRD_MOSQUE_UUID, "MAWAQIT - Mosque3", token=OTHER_TOKEN
-    )
+    same_login = make_config_entry(NEW_MOSQUE_UUID, "Mosque2")
+    other_login = make_config_entry(THIRD_MOSQUE_UUID, "Mosque3", token=OTHER_TOKEN)
     disabled = make_config_entry(
-        "mosque-disabled", "MAWAQIT - Disabled", disabled_by=ConfigEntryDisabler.USER
+        "mosque-disabled", "Disabled", disabled_by=ConfigEntryDisabler.USER
     )
     for mosque_entry in (entry, same_login, other_login, disabled):
         mosque_entry.add_to_hass(hass)

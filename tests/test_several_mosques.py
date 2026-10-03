@@ -71,7 +71,7 @@ async def test_two_mosques_side_by_side(
 ) -> None:
     """Test each mosque has its own client, device, entities and data."""
     entry = make_config_entry()
-    other = make_config_entry(OTHER_UUID, "MAWAQIT - Other Mosque", OTHER_TOKEN)
+    other = make_config_entry(OTHER_UUID, "Other Mosque", OTHER_TOKEN)
     entry.add_to_hass(hass)
     other.add_to_hass(hass)
 
@@ -135,7 +135,7 @@ async def test_mosques_with_the_same_name(
 ) -> None:
     """Test two mosques with the same name get distinct entity IDs."""
     entry = make_config_entry()
-    other = make_config_entry(OTHER_UUID, "MAWAQIT - Test Mosque")
+    other = make_config_entry(OTHER_UUID, "Test Mosque")
     entry.add_to_hass(hass)
     other.add_to_hass(hass)
 
@@ -163,7 +163,7 @@ async def test_unload_and_remove_one_mosque(
 ) -> None:
     """Test unloading or deleting a mosque leaves the other one working."""
     entry = make_config_entry()
-    other = make_config_entry(OTHER_UUID, "MAWAQIT - Other Mosque")
+    other = make_config_entry(OTHER_UUID, "Other Mosque")
     entry.add_to_hass(hass)
     other.add_to_hass(hass)
     await _set_up(
@@ -203,7 +203,7 @@ async def test_one_mosque_with_a_rejected_login(
 ) -> None:
     """Test a rejected login asks to log in again for that mosque only."""
     entry = make_config_entry()
-    other = make_config_entry(OTHER_UUID, "MAWAQIT - Other Mosque", OTHER_TOKEN)
+    other = make_config_entry(OTHER_UUID, "Other Mosque", OTHER_TOKEN)
     entry.add_to_hass(hass)
     other.add_to_hass(hass)
 
@@ -229,7 +229,7 @@ async def test_one_mosque_with_a_rejected_login(
 async def test_refresh_of_one_mosque(hass: HomeAssistant) -> None:
     """Test refreshing a mosque updates its sensors only."""
     entry = make_config_entry()
-    other = make_config_entry(OTHER_UUID, "MAWAQIT - Other Mosque")
+    other = make_config_entry(OTHER_UUID, "Other Mosque")
     entry.add_to_hass(hass)
     other.add_to_hass(hass)
     client = _client(build_prayer_data())

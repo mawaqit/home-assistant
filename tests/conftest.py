@@ -144,7 +144,7 @@ def auto_enable_custom_integrations(enable_custom_integrations: None) -> None:
 
 def make_config_entry(
     mosque_uuid: str = MOCK_UUID,
-    title: str = "MAWAQIT - Test Mosque",
+    title: str = "Test Mosque",
     token: str = MOCK_TOKEN,
     **kwargs: Any,
 ) -> MockConfigEntry:

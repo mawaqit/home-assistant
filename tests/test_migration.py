@@ -7,7 +7,7 @@ import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.mawaqit.const import DOMAIN
-from custom_components.mawaqit.migration import LEGACY_STORAGE_KEY
+from custom_components.mawaqit.migration import LEGACY_STORAGE_KEY, migrate_title
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
@@ -85,6 +85,7 @@ async def test_migrate_legacy_entities(
     assert entry.state is ConfigEntryState.LOADED
     assert entry.minor_version == 3
     assert entry.unique_id == MOCK_UUID
+    assert entry.title == "Test Mosque"
     assert entry.options == {}
     [device] = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
     for object_id, suffix in (
@@ -153,10 +154,36 @@ async def test_migrate_legacy_storage(
     assert LEGACY_STORAGE_KEY not in hass_storage
 
 
+@pytest.mark.parametrize(
+    ("title", "expected"),
+    [
+        ("MAWAQIT - GRANDE MOSQUÉE DE PARIS (1.59 km)", "GRANDE MOSQUÉE DE PARIS"),
+        ("MAWAQIT - Mosque (12.00 km)", "Mosque"),
+        ("MAWAQIT - Mosque - 1 rue de Paris", "Mosque - 1 rue de Paris"),
+        ("MAWAQIT - Mosque", "Mosque"),
+        ("MAWAQIT - Mosque (Paris)", "Mosque (Paris)"),
+        ("My mosque", "My mosque"),
+        ("MAWAQIT", "MAWAQIT"),
+    ],
+    ids=[
+        "location",
+        "location_long",
+        "keyword",
+        "no_suffix",
+        "parentheses",
+        "renamed",
+        "prefix_only",
+    ],
+)
+def test_migrate_title(title: str, expected: str) -> None:
+    """Test only the prefix and distance added by older versions are removed."""
+    assert migrate_title(title) == expected
+
+
 @pytest.mark.parametrize("unique_id", [None, "mawaqit_unique"])
 async def test_migrate_unique_id(hass: HomeAssistant, unique_id: str | None) -> None:
-    """Test entries of the first version 4 releases get the mosque as unique_id."""
-    entry = make_config_entry(minor_version=2)
+    """Test entries of the first version 4 releases get the mosque as unique_id and title."""
+    entry = make_config_entry(minor_version=2, title="MAWAQIT - Test Mosque (1.74 km)")
     entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(entry, unique_id=unique_id)
 
@@ -167,11 +194,12 @@ async def test_migrate_unique_id(hass: HomeAssistant, unique_id: str | None) -> 
     assert entry.state is ConfigEntryState.LOADED
     assert entry.minor_version == 3
     assert entry.unique_id == MOCK_UUID
+    assert entry.title == "Test Mosque"
 
 
 async def test_no_migration_for_current_entries(hass: HomeAssistant) -> None:
     """Test entries created by this version are not migrated again."""
-    entry = make_config_entry(unique_id="kept")
+    entry = make_config_entry(unique_id="kept", title="MAWAQIT - Kept (1.00 km)")
     entry.add_to_hass(hass)
 
     with patch("custom_components.mawaqit.async_migrate_legacy_entry") as mock_migrate:
@@ -181,3 +209,4 @@ async def test_no_migration_for_current_entries(hass: HomeAssistant) -> None:
     assert entry.state is ConfigEntryState.LOADED
     assert entry.minor_version == 3
     assert entry.unique_id == "kept"
+    assert entry.title == "MAWAQIT - Kept (1.00 km)"

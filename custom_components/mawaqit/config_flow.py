@@ -385,7 +385,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> config_entries.ConfigFlowResult:
         """Create the config entry for the chosen mosque, or update it."""
         title, data_entry = utils.save_mosque(
-            self.mosques[mosque_uuid].display_name,
+            self.mosques[mosque_uuid].label,
             mosque_uuid,
             self.client.token,
             self.hass.config.latitude,

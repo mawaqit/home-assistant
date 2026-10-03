@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .coordinator import PrayerTimeCoordinator
-from .migration import async_migrate_legacy_entry
+from .migration import async_migrate_legacy_entry, migrate_title
 from .types import MawaqitConfigEntry, MawaqitData
 
 PLATFORMS = [Platform.CALENDAR, Platform.SENSOR]
@@ -54,6 +54,9 @@ async def async_migrate_entry(
     if config_entry.version == 1 and config_entry.minor_version < 3:
         # After the legacy migration, which can change the mosque.
         hass.config_entries.async_update_entry(
-            config_entry, unique_id=config_entry.data[CONF_UUID], minor_version=3
+            config_entry,
+            title=migrate_title(config_entry.title),
+            unique_id=config_entry.data[CONF_UUID],
+            minor_version=3,
         )
     return True

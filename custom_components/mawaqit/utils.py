@@ -15,7 +15,7 @@ _TIME_ABSOLUTE_RE = re.compile(r"^\d{2}:\d{2}$")  # Matches HH:MM format
 
 
 def save_mosque(
-    mosque_display_name: str,
+    mosque_name: str,
     mosque_id: str,
     mawaqit_token: str | None = None,
     lat: float | None = None,
@@ -24,7 +24,7 @@ def save_mosque(
     """Create a data entry to simplify the process of saving mosque data.
 
     Args:
-        mosque_display_name (str): The display name of the mosque.
+        mosque_name (str): The name of the mosque, used as the entry title.
         mosque_id (str): The unique ID of the mosque.
         mawaqit_token (str, optional): Token for Mawaqit API authentication.
         lat (float, optional): Latitude of the mosque.
@@ -39,7 +39,6 @@ def save_mosque(
         _LOGGER.error("Token should not be None !")
         raise ValueError("Token should not be None !")
 
-    title = "MAWAQIT" + " - " + mosque_display_name
     data_entry: dict[str, str | float] = {
         CONF_API_KEY: mawaqit_token,
         CONF_UUID: mosque_id,
@@ -48,7 +47,7 @@ def save_mosque(
         data_entry[CONF_LATITUDE] = lat
         data_entry[CONF_LONGITUDE] = longi
 
-    return title, data_entry
+    return mosque_name, data_entry
 
 
 def drop_imsak_column(
