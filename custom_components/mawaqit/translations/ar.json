@@ -77,6 +77,11 @@
     }
   },
   "entity": {
+    "calendar": {
+      "prayer_times": {
+        "name": "مواقيت الصلاة"
+      }
+    },
     "sensor": {
       "iqama_asr": {
         "name": "إقامة العصر"

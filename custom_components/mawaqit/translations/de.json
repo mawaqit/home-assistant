@@ -77,6 +77,11 @@
     }
   },
   "entity": {
+    "calendar": {
+      "prayer_times": {
+        "name": "Gebetszeiten"
+      }
+    },
     "sensor": {
       "iqama_asr": {
         "name": "Asr Iqama"
