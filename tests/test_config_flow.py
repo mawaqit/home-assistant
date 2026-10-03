@@ -766,3 +766,38 @@ async def test_reconfigure_with_keyword_search(
     assert result.get("reason") == "reconfigure_successful"
     assert mock_config_entry.title == "MAWAQIT - Mosque0-label - City0"
     assert mock_config_entry.data[CONF_UUID] == "mosque-0"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_same_mosque_keeps_entities(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    mock_mosques_search_api_raw: list[dict],
+) -> None:
+    """Test choosing the current mosque again leaves the entities untouched."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, minor_version=2)
+    mock_client.all_mosques_neighborhood.return_value = mock_mosques_search_api_raw
+    ent_reg = er.async_get(hass)
+    fajr = ent_reg.async_get_or_create(
+        "sensor", DOMAIN, f"{MOCK_UUID}_prayer_fajr", config_entry=mock_config_entry
+    )
+
+    with patch(
+        "custom_components.mawaqit.config_flow.AsyncMawaqitClient",
+        return_value=mock_client,
+    ):
+        result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "mosques_coordinates"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_UUID: MOCK_UUID}
+    )
+    await hass.async_block_till_done()
+
+    assert result.get("reason") == "reconfigure_successful"
+    entity = ent_reg.async_get(fajr.entity_id)
+    assert entity is not None
+    assert entity.unique_id == f"{MOCK_UUID}_prayer_fajr"

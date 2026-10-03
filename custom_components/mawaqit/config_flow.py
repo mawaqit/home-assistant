@@ -63,6 +63,9 @@ def _async_move_entities(
     hass: HomeAssistant, entry_id: str, old_uuid: str, new_uuid: str
 ) -> None:
     """Move the entities to the unique_ids of the new mosque, keeping their IDs."""
+    if old_uuid == new_uuid:
+        # Otherwise each entity would be removed as its own stale duplicate.
+        return
     ent_reg = er.async_get(hass)
     for entity in er.async_entries_for_config_entry(ent_reg, entry_id):
         if not entity.unique_id.startswith(f"{old_uuid}_"):
