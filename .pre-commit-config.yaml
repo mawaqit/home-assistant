@@ -12,9 +12,10 @@ repos:
     hooks:
       - id: codespell
         args:
-          - --ignore-words-list=hass,annonce,appareil,branche,composant,composants,exemples,fonction,mot
+          - --ignore-words-list=hass,appareil,branche,composant,composants,exemples,fonction,mot
           - --quiet-level=2
         exclude_types: [json]
+        exclude: ^README\.(de|fr|nl)\.md$
   - repo: https://github.com/zizmorcore/zizmor-pre-commit
     rev: v1.30.1
     hooks:
