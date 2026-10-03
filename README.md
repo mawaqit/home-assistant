@@ -109,6 +109,10 @@ Prayer sensors are timestamps, so they can be used directly in a `time` trigger,
   mode: single
 ```
 
+## Reporting a bug
+
+Open an [issue](https://github.com/mawaqit/home-assistant/issues/new?template=bug_report.yml) and attach the diagnostics file: go to _Settings > Devices & Services > MAWAQIT_, open the ⋮ menu of the entry and select **Download diagnostics**. The file contains the prayer times received from MAWAQIT for your mosque. Your MAWAQIT token, your home location and everything identifying your mosque are removed from it.
+
 ## Contributing
 
 Contributions are welcome, see [CONTRIBUTING.md](CONTRIBUTING.md).

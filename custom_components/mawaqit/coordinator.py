@@ -10,7 +10,10 @@ from mawaqit.exceptions import BadCredentialsException, MawaqitException
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    TimestampDataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from . import utils
 from .const import DOMAIN
@@ -19,7 +22,7 @@ from .types import MawaqitConfigEntry
 _LOGGER = logging.getLogger(__name__)
 
 
-class PrayerTimeCoordinator(DataUpdateCoordinator[dict]):
+class PrayerTimeCoordinator(TimestampDataUpdateCoordinator[dict]):
     """Coordinator to fetch prayer times from the Mawaqit API.
 
     The API is called twice a day to fetch the full prayer calendar. Listeners
