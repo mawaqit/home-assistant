@@ -12,12 +12,18 @@ from pytest_homeassistant_custom_component.common import (
 )
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+
+from .conftest import build_prayer_data
 
 # All shared data and setup are provided by conftest:
 #   - mock_mosque_data, mock_prayer_data  ->  standard data dicts
 #   - setup_mawaqit_integration           ->  async callable, see conftest docstring
 
+
+FAJR = "sensor.test_mosque_fajr_prayer"
+CALENDAR = "calendar.test_mosque_prayer_times"
 
 # --- PrayerTimeCoordinator ---
 
@@ -117,3 +123,92 @@ async def test_prayer_time_coordinator_empty_data(
     """Test prayer time coordinator with None prayer data causes setup retry."""
     await setup_mawaqit_integration(mosque_data=mock_mosque_data, prayer_data=None)
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    "prayer_side_effect",
+    [ConnectionError, TimeoutError, MawaqitException],
+)
+async def test_prayer_time_coordinator_failure_keeps_entities_available(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    setup_mawaqit_integration,
+    freezer: FrozenDateTimeFactory,
+    prayer_side_effect: type[Exception],
+) -> None:
+    """Test a failed refresh keeps the last times and retries every 15 minutes."""
+    freezer.move_to("2025-04-10 12:00:00+02:00")
+    await setup_mawaqit_integration()
+    coordinator = mock_config_entry.runtime_data.prayer_time_coordinator
+    fetch_prayer_times = coordinator.client.fetch_prayer_times
+    fetch_prayer_times.side_effect = prayer_side_effect
+
+    freezer.tick(timedelta(hours=12))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert fetch_prayer_times.call_count == 2
+    assert not coordinator.last_update_success
+    assert coordinator.update_interval == timedelta(minutes=15)
+    assert hass.states.get(FAJR).state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
+    assert hass.states.get(CALENDAR).state != STATE_UNAVAILABLE
+
+    fetch_prayer_times.side_effect = None
+    freezer.tick(timedelta(minutes=15))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert fetch_prayer_times.call_count == 3
+    assert coordinator.last_update_success
+    assert coordinator.update_interval == timedelta(hours=12)
+
+
+async def test_prayer_time_coordinator_failure_keeps_changing_days(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    setup_mawaqit_integration,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the sensors move to the next days with the last times while MAWAQIT is down."""
+    prayer_data = build_prayer_data()
+    prayer_data["calendar"][3]["11"][0] = "05:28"
+    prayer_data["calendar"][3]["12"][0] = "05:26"
+    freezer.move_to("2025-04-10 11:00:00+02:00")
+    await setup_mawaqit_integration(prayer_data=prayer_data)
+    coordinator = mock_config_entry.runtime_data.prayer_time_coordinator
+    fetch_prayer_times = coordinator.client.fetch_prayer_times
+    fetch_prayer_times.side_effect = ConnectionError
+
+    async def move_to(time: str) -> str:
+        freezer.move_to(time)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        return hass.states.get(FAJR).state
+
+    assert await move_to("2025-04-10 23:00:00+02:00") == "2025-04-10T03:30:00+00:00"
+    assert not coordinator.last_update_success
+    assert await move_to("2025-04-11 00:30:00+02:00") == "2025-04-11T03:28:00+00:00"
+    await move_to("2025-04-11 06:00:00+02:00")
+    assert await move_to("2025-04-12 00:30:00+02:00") == "2025-04-12T03:26:00+00:00"
+    assert not coordinator.last_update_success
+    assert fetch_prayer_times.call_count > 2
+
+
+async def test_prayer_time_coordinator_auth_error_after_setup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    setup_mawaqit_integration,
+) -> None:
+    """Test a token rejected after setup starts a reauth flow and keeps the times."""
+    await setup_mawaqit_integration()
+    coordinator = mock_config_entry.runtime_data.prayer_time_coordinator
+    coordinator.client.fetch_prayer_times.side_effect = BadCredentialsException
+
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert coordinator.update_interval == timedelta(hours=12)
+    assert hass.states.get(FAJR).state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)

@@ -188,7 +188,7 @@ mode: queued
 
 ## Data updates
 
-- The integration fetches the prayer times of the whole year from MAWAQIT when it starts, then every 12 hours. Changes made by your mosque appear within 12 hours, or right away if you reload the integration: **Settings** > **Devices & services** > **MAWAQIT**, ⋮ menu of the entry, **Reload**.
+- The integration fetches the prayer times of the whole year from MAWAQIT when it starts, then every 12 hours. Changes made by your mosque appear within 12 hours, or right away if you reload the integration: **Settings** > **Devices & services** > **MAWAQIT**, ⋮ menu of the entry, **Reload**. If an update fails, the sensors keep the times already fetched and the integration tries again every 15 minutes.
 - The prayer, iqama and Jumu'a sensors move to the next day at the middle of the night, not at midnight: after Isha, they still show the times of the day that is ending.
 - The times of the night move to the next night at Fajr.
 - **Next Salat Name** and **Next Salat Time** change at the time of each prayer.
@@ -202,7 +202,6 @@ Times are published by the mosque in its own time zone, and Home Assistant shows
 - The calendar only shows the current and the next month: MAWAQIT gives the times of each day of the year, without the year.
 - If MAWAQIT has an invalid time, only that time is skipped: its sensor and its calendar event are unknown, as well as what is computed from it, such as the times of the night for an invalid Maghrib or Fajr. A warning is written in the logs.
 - For mosques that display Sabah and Imsak, Sabah is used as Fajr, like in the MAWAQIT app. Imsak is not available.
-- The integration needs internet access. If MAWAQIT cannot be reached, the sensors become unavailable until the next successful update ([#142](https://github.com/mawaqit/home-assistant/issues/142)).
 
 ## Troubleshooting
 
@@ -230,7 +229,7 @@ If all the times are shifted by the same amount, for example one hour, check the
 
 ### The sensors are unavailable or unknown
 
-Open **Settings** > **System** > **Logs** and search for `mawaqit`. Unavailable sensors usually mean that MAWAQIT could not be reached: they come back with the next successful update, or when you reload the integration.
+Open **Settings** > **System** > **Logs** and search for `mawaqit`. Unavailable sensors usually mean that MAWAQIT could not be reached when the integration started: they come back once it can be reached, or when you reload the integration.
 
 ### Debug logs
 

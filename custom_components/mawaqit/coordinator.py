@@ -21,12 +21,16 @@ from .types import MawaqitConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
+UPDATE_INTERVAL = timedelta(hours=12)
+RETRY_INTERVAL = timedelta(minutes=15)
+
 
 class PrayerTimeCoordinator(TimestampDataUpdateCoordinator[dict]):
     """Coordinator to fetch prayer times from the Mawaqit API.
 
-    The API is called twice a day to fetch the full prayer calendar. Listeners
-    are also updated at the middle of the night, when prayer times move to the next day,
+    The API is called twice a day to fetch the full prayer calendar, and every
+    15 minutes after a failure until it succeeds again. Listeners are also
+    updated at the middle of the night, when prayer times move to the next day,
     and at Fajr, when night times move to the next night.
     """
 
@@ -46,7 +50,7 @@ class PrayerTimeCoordinator(TimestampDataUpdateCoordinator[dict]):
             config_entry=config_entry,
             name="Prayer Times",
             update_method=self._async_update_data,
-            update_interval=timedelta(hours=12),
+            update_interval=UPDATE_INTERVAL,
         )
 
     @callback
@@ -86,7 +90,17 @@ class PrayerTimeCoordinator(TimestampDataUpdateCoordinator[dict]):
 
     @override
     async def _async_update_data(self) -> dict:
-        """Fetch prayer times from API and notify sensors."""
+        """Fetch prayer times, and retry sooner after a failure."""
+        try:
+            prayer_times = await self._async_fetch_prayer_times()
+        except UpdateFailed:
+            self.update_interval = RETRY_INTERVAL
+            raise
+        self.update_interval = UPDATE_INTERVAL
+        return prayer_times
+
+    async def _async_fetch_prayer_times(self) -> dict:
+        """Fetch prayer times from the API."""
         prayer_times: dict | None
         try:
             prayer_times = await self.client.fetch_prayer_times()
