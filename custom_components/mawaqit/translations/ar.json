@@ -2,7 +2,8 @@
   "config": {
     "abort": {
       "cannot_connect": "تعذّر الاتصال بخادم MAWAQIT. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.",
-      "reauth_successful": "تمت إعادة المصادقة بنجاح."
+      "reauth_successful": "تمت إعادة المصادقة بنجاح.",
+      "reconfigure_successful": "تم تغيير المسجد بنجاح."
     },
     "error": {
       "cannot_connect_to_server": "لا يمكن الاتصال بالخادم، يرجى المحاولة لاحقًا.",

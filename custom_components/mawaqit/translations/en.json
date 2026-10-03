@@ -2,7 +2,8 @@
   "config": {
     "abort": {
       "cannot_connect": "Failed to connect to the MAWAQIT server. Please check your internet connection and try again.",
-      "reauth_successful": "Re-authentication was successful."
+      "reauth_successful": "Re-authentication was successful.",
+      "reconfigure_successful": "The mosque was changed successfully."
     },
     "error": {
       "cannot_connect_to_server": "Cannot connect to the server, please retry later.",

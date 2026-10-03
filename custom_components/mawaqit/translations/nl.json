@@ -2,7 +2,8 @@
   "config": {
     "abort": {
       "cannot_connect": "Kan geen verbinding maken met de MAWAQIT-server. Controleer je internetverbinding en probeer het opnieuw.",
-      "reauth_successful": "Opnieuw authenticeren is gelukt."
+      "reauth_successful": "Opnieuw authenticeren is gelukt.",
+      "reconfigure_successful": "De moskee is gewijzigd."
     },
     "error": {
       "cannot_connect_to_server": "Kan geen verbinding maken met de server, probeer het later opnieuw.",
