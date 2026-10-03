@@ -11,6 +11,7 @@
   },
   "config": {
     "abort": {
+      "already_configured": "Diese Moschee ist bereits eingerichtet.",
       "cannot_connect": "Verbindung zum MAWAQIT-Server fehlgeschlagen. Bitte überprüfe deine Internetverbindung und versuche es erneut.",
       "reauth_successful": "Die erneute Authentifizierung war erfolgreich.",
       "reconfigure_successful": "Die Moschee wurde erfolgreich geändert."

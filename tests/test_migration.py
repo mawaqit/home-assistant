@@ -3,6 +3,7 @@
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.mawaqit.const import DOMAIN
@@ -24,6 +25,7 @@ from .conftest import (
     MOCK_TOKEN,
     MOCK_UUID,
     build_prayer_data,
+    make_config_entry,
 )
 
 
@@ -46,7 +48,7 @@ def _legacy_entry(data: dict[str, Any] | None = None) -> MockConfigEntry:
 
 
 async def _setup(hass: HomeAssistant, entry: MockConfigEntry) -> None:
-    entry.add_to_hass(hass)
+    """Set up an entry already added to hass."""
     with patch("custom_components.mawaqit.AsyncMawaqitClient") as mock_client_class:
         mock_client_class.return_value.fetch_prayer_times = AsyncMock(
             return_value=build_prayer_data()
@@ -81,7 +83,8 @@ async def test_migrate_legacy_entities(
     await _setup(hass, entry)
 
     assert entry.state is ConfigEntryState.LOADED
-    assert entry.minor_version == 2
+    assert entry.minor_version == 3
+    assert entry.unique_id == MOCK_UUID
     assert entry.options == {}
     [device] = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
     for object_id, suffix in (
@@ -138,28 +141,43 @@ async def test_migrate_legacy_storage(
     }
     # Early releases saved the mosque name instead of its uuid.
     entry = _legacy_entry({CONF_API_KEY: MOCK_TOKEN, CONF_UUID: "Test Mosque"})
+    entry.add_to_hass(hass)
 
     await _setup(hass, entry)
 
     assert entry.state is ConfigEntryState.LOADED
     assert entry.data[CONF_UUID] == MOCK_UUID
+    # From the uuid, not the mosque name saved in the entry.
+    assert entry.unique_id == MOCK_UUID
     assert entry.data[CONF_API_KEY] == "legacy-token"
     assert LEGACY_STORAGE_KEY not in hass_storage
 
 
-async def test_no_migration_for_current_entries(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test entries created by this version are not migrated again."""
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        version=1,
-        minor_version=2,
-        data=dict(mock_config_entry.data),
-    )
+@pytest.mark.parametrize("unique_id", [None, "mawaqit_unique"])
+async def test_migrate_unique_id(hass: HomeAssistant, unique_id: str | None) -> None:
+    """Test entries of the first version 4 releases get the mosque as unique_id."""
+    entry = make_config_entry(minor_version=2)
+    entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(entry, unique_id=unique_id)
 
     with patch("custom_components.mawaqit.async_migrate_legacy_entry") as mock_migrate:
-        await _setup(hass, mock_config_entry)
+        await _setup(hass, entry)
 
     mock_migrate.assert_not_called()
-    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.minor_version == 3
+    assert entry.unique_id == MOCK_UUID
+
+
+async def test_no_migration_for_current_entries(hass: HomeAssistant) -> None:
+    """Test entries created by this version are not migrated again."""
+    entry = make_config_entry(unique_id="kept")
+    entry.add_to_hass(hass)
+
+    with patch("custom_components.mawaqit.async_migrate_legacy_entry") as mock_migrate:
+        await _setup(hass, entry)
+
+    mock_migrate.assert_not_called()
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.minor_version == 3
+    assert entry.unique_id == "kept"

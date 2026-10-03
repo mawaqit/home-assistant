@@ -62,13 +62,17 @@ Ne téléchargez pas le dépôt lui-même : la branche `main` contient des chang
 
 Votre mot de passe MAWAQIT n'est pas enregistré : Home Assistant garde à la place un jeton fourni par MAWAQIT.
 
+### Suivre plusieurs mosquées
+
+Pour suivre aussi une autre mosquée, par exemple celle près de votre travail, ajoutez de nouveau l'intégration comme décrit ci-dessus et choisissez cette mosquée. Si une autre mosquée est déjà configurée et fonctionne, sa connexion est réutilisée : elle ne vous est pas redemandée. Chaque mosquée a son propre appareil et ses propres entités, dont les identifiants commencent par le nom de la mosquée. Une même mosquée ne peut pas être configurée deux fois.
+
 ### Changer de mosquée
 
-Une seule mosquée peut être configurée. Pour en suivre une autre, allez dans **Paramètres** > **Appareils et services** > **MAWAQIT**, ouvrez le menu ⋮ de l'entrée et choisissez **Reconfigurer**. Vos entités gardent leurs identifiants, donc vos automatisations et tableaux de bord continuent de fonctionner.
+Pour suivre une autre mosquée à la place d'une mosquée déjà configurée, allez dans **Paramètres** > **Appareils et services** > **MAWAQIT**, ouvrez le menu ⋮ de son entrée et choisissez **Reconfigurer**. Ses entités gardent leurs identifiants, donc vos automatisations et tableaux de bord continuent de fonctionner.
 
 ### Se reconnecter
 
-Si MAWAQIT n'accepte plus votre connexion, par exemple après un changement de mot de passe, Home Assistant vous demande de vous reconnecter : dans **Paramètres** > **Appareils et services**, choisissez **Reconfigurer** sur la carte MAWAQIT et entrez votre adresse e-mail et votre nouveau mot de passe. Vos entités et leurs réglages sont conservés.
+Si MAWAQIT n'accepte plus votre connexion, par exemple après un changement de mot de passe, Home Assistant vous demande de vous reconnecter : dans **Paramètres** > **Appareils et services**, choisissez **Reconfigurer** sur la carte MAWAQIT et entrez votre adresse e-mail et votre nouveau mot de passe. Vos entités et leurs réglages sont conservés. Les autres mosquées configurées avec la même connexion sont reconnectées en même temps.
 
 ## Entités
 
@@ -198,7 +202,6 @@ Les horaires sont publiés par la mosquée dans son fuseau horaire, et Home Assi
 
 ## Limitations connues
 
-- Une seule mosquée par instance Home Assistant ([#143](https://github.com/mawaqit/home-assistant/issues/143)).
 - Le calendrier ne montre que le mois en cours et le mois suivant : MAWAQIT donne les horaires de chaque jour de l'année, sans l'année.
 - Si MAWAQIT a un horaire invalide, seul cet horaire est ignoré : son sensor et son événement du calendrier sont inconnus, ainsi que ce qui en est calculé, comme les moments de la nuit pour un Maghrib ou un Fajr invalide. Un avertissement est écrit dans les journaux.
 - Pour les mosquées qui affichent Sabah et Imsak, Sabah est utilisé comme Fajr, comme dans l'application MAWAQIT. L'Imsak n'est pas disponible.
@@ -257,7 +260,7 @@ Mettez à jour avec HACS, puis redémarrez Home Assistant. Votre configuration e
 
 ## Suppression
 
-1. Allez dans **Paramètres** > **Appareils et services** > **MAWAQIT**, ouvrez le menu ⋮ de l'entrée et choisissez **Supprimer**. Ses entités sont supprimées.
+1. Allez dans **Paramètres** > **Appareils et services** > **MAWAQIT**, ouvrez le menu ⋮ de l'entrée et choisissez **Supprimer**. Ses entités sont supprimées. Recommencez pour chaque mosquée.
 2. Pour supprimer les fichiers, ouvrez **HACS**, puis **MAWAQIT**, et choisissez **Supprimer** dans son menu ⋮. Pour une installation manuelle, supprimez le dossier `custom_components/mawaqit`.
 3. Redémarrez Home Assistant.
 

@@ -62,13 +62,17 @@ Lade nicht das Repository selbst herunter: Der Branch `main` enthält unveröffe
 
 Dein MAWAQIT-Passwort wird nicht gespeichert: Home Assistant speichert stattdessen ein Token von MAWAQIT.
 
+### Mehreren Moscheen folgen
+
+Um zusätzlich einer anderen Moschee zu folgen, zum Beispiel der in der Nähe deiner Arbeit, füge die Integration wie oben beschrieben erneut hinzu und wähle diese Moschee. Ist bereits eine andere Moschee eingerichtet und funktioniert, wird ihre Anmeldung wiederverwendet: Du wirst nicht erneut danach gefragt. Jede Moschee hat ihr eigenes Gerät und ihre eigenen Entitäten, deren Entitäts-IDs mit dem Namen der Moschee beginnen. Dieselbe Moschee kann nicht zweimal eingerichtet werden.
+
 ### Die Moschee wechseln
 
-Es kann nur eine Moschee eingerichtet werden. Um einer anderen zu folgen, gehe zu **Einstellungen** > **Geräte & Dienste** > **MAWAQIT**, öffne das Menü ⋮ des Eintrags und wähle **Neu konfigurieren**. Deine Entitäten behalten ihre Entitäts-IDs, sodass deine Automationen und Dashboards weiter funktionieren.
+Um statt einer bereits eingerichteten Moschee einer anderen zu folgen, gehe zu **Einstellungen** > **Geräte & Dienste** > **MAWAQIT**, öffne das Menü ⋮ ihres Eintrags und wähle **Neu konfigurieren**. Ihre Entitäten behalten ihre Entitäts-IDs, sodass deine Automationen und Dashboards weiter funktionieren.
 
 ### Erneut anmelden
 
-Wenn MAWAQIT deine Anmeldung nicht mehr akzeptiert, zum Beispiel nach einer Passwortänderung, bittet dich Home Assistant, dich erneut anzumelden: Wähle unter **Einstellungen** > **Geräte & Dienste** **Neu konfigurieren** auf der MAWAQIT-Karte und gib deine E-Mail-Adresse und dein neues Passwort ein. Deine Entitäten und ihre Einstellungen bleiben erhalten.
+Wenn MAWAQIT deine Anmeldung nicht mehr akzeptiert, zum Beispiel nach einer Passwortänderung, bittet dich Home Assistant, dich erneut anzumelden: Wähle unter **Einstellungen** > **Geräte & Dienste** **Neu konfigurieren** auf der MAWAQIT-Karte und gib deine E-Mail-Adresse und dein neues Passwort ein. Deine Entitäten und ihre Einstellungen bleiben erhalten. Die anderen Moscheen mit derselben Anmeldung werden gleichzeitig erneut angemeldet.
 
 ## Entitäten
 
@@ -198,7 +202,6 @@ Die Zeiten werden von der Moschee in ihrer Zeitzone veröffentlicht, und Home As
 
 ## Bekannte Einschränkungen
 
-- Nur eine Moschee pro Home Assistant-Instanz ([#143](https://github.com/mawaqit/home-assistant/issues/143)).
 - Der Kalender zeigt nur den aktuellen und den nächsten Monat: MAWAQIT liefert die Zeiten jedes Tages des Jahres, ohne das Jahr.
 - Hat MAWAQIT eine ungültige Zeit, wird nur diese Zeit übersprungen: Ihr Sensor und ihr Kalenderereignis sind unbekannt, ebenso was daraus berechnet wird, etwa die Zeiten der Nacht bei einem ungültigen Maghrib oder Fajr. Eine Warnung wird ins Protokoll geschrieben.
 - Bei Moscheen, die Sabah und Imsak anzeigen, wird Sabah als Fajr verwendet, wie in der MAWAQIT-App. Imsak ist nicht verfügbar.
@@ -257,7 +260,7 @@ Aktualisiere mit HACS und starte Home Assistant dann neu. Deine Konfiguration wi
 
 ## Entfernen
 
-1. Gehe zu **Einstellungen** > **Geräte & Dienste** > **MAWAQIT**, öffne das Menü ⋮ des Eintrags und wähle **Löschen**. Seine Entitäten werden entfernt.
+1. Gehe zu **Einstellungen** > **Geräte & Dienste** > **MAWAQIT**, öffne das Menü ⋮ des Eintrags und wähle **Löschen**. Seine Entitäten werden entfernt. Wiederhole das für jede Moschee.
 2. Um die Dateien zu entfernen, öffne **HACS**, dann **MAWAQIT**, und wähle **Entfernen** in seinem Menü ⋮. Lösche bei einer manuellen Installation den Ordner `custom_components/mawaqit`.
 3. Starte Home Assistant neu.
 

@@ -85,9 +85,9 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for MAWAQIT."""
 
     VERSION = 1
-    # Bumped for the legacy custom integration migration; keep VERSION at 1 so
-    # entries stay loadable by the core integration.
-    MINOR_VERSION = 2
+    # Bumped by the migrations in __init__.py; keep VERSION at 1 so entries stay
+    # loadable by the core integration.
+    MINOR_VERSION = 3
 
     client: AsyncMawaqitClient
 
@@ -105,6 +105,11 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors: dict[str, str] = {}
+
+        # Another mosque is set up: keep its login instead of asking for it again.
+        if user_input is None and (token := self._async_reusable_token()):
+            self.client = self._client_with_token(token)
+            return await self.async_step_search_method()
 
         if user_input is not None:
             client = AsyncMawaqitClient(
@@ -146,9 +151,20 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 session=async_get_clientsession(self.hass),
             )
             if not (errors := await self._async_login(client)):
+                entry = self._get_reauth_entry()
+                # The other mosques logged in with the rejected token too. Since
+                # Home Assistant 2025.5, their reload aborts their reauth flows.
+                for other in self._async_current_entries(include_ignore=False):
+                    if (
+                        other.entry_id != entry.entry_id
+                        and other.data[CONF_API_KEY] == entry.data[CONF_API_KEY]
+                    ):
+                        self.hass.config_entries.async_update_entry(
+                            other, data={**other.data, CONF_API_KEY: client.token}
+                        )
+                        self.hass.config_entries.async_schedule_reload(other.entry_id)
                 return self.async_update_reload_and_abort(
-                    self._get_reauth_entry(),
-                    data_updates={CONF_API_KEY: client.token},
+                    entry, data_updates={CONF_API_KEY: client.token}
                 )
 
         return self.async_show_form(
@@ -163,13 +179,30 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Change the mosque, keeping the login and the entities."""
-        self.client = AsyncMawaqitClient(
-            latitude=self.hass.config.latitude,
-            longitude=self.hass.config.longitude,
-            token=self._get_reconfigure_entry().data[CONF_API_KEY],
-            session=async_get_clientsession(self.hass),
+        self.client = self._client_with_token(
+            self._get_reconfigure_entry().data[CONF_API_KEY]
         )
         return await self.async_step_search_method()
+
+    @callback
+    def _async_reusable_token(self) -> str | None:
+        """Return the token of a mosque set up and logged in, if any."""
+        for entry in self._async_current_entries():
+            if entry.state is config_entries.ConfigEntryState.LOADED and not any(
+                entry.async_get_active_flows(self.hass, {config_entries.SOURCE_REAUTH})
+            ):
+                token: str = entry.data[CONF_API_KEY]
+                return token
+        return None
+
+    def _client_with_token(self, token: str) -> AsyncMawaqitClient:
+        """Return a client searching around Home Assistant with a known token."""
+        return AsyncMawaqitClient(
+            latitude=self.hass.config.latitude,
+            longitude=self.hass.config.longitude,
+            token=token,
+            session=async_get_clientsession(self.hass),
+        )
 
     async def _async_login(self, client: AsyncMawaqitClient) -> dict[str, str]:
         """Log in to MAWAQIT and return the form errors, empty on success."""
@@ -205,7 +238,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            return self._create_mosque_entry(user_input[CONF_UUID])
+            return await self._async_create_mosque_entry(user_input[CONF_UUID])
 
         # Always fetched: self.mosques may hold keyword results by now.
         try:
@@ -279,7 +312,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             elif choice == NEW_SEARCH:
                 return self._show_keyword_search_form({}, {CONF_KEYWORD: self.keyword})
             else:
-                return self._create_mosque_entry(choice)
+                return await self._async_create_mosque_entry(choice)
 
         self.mosques = {mosque.uuid: mosque for mosque in self.pages[self.page]}
         # The API returns no total: prefetch the next page to offer it only when
@@ -347,7 +380,9 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    def _create_mosque_entry(self, mosque_uuid: str) -> config_entries.ConfigFlowResult:
+    async def _async_create_mosque_entry(
+        self, mosque_uuid: str
+    ) -> config_entries.ConfigFlowResult:
         """Create the config entry for the chosen mosque, or update it."""
         title, data_entry = utils.save_mosque(
             self.mosques[mosque_uuid].display_name,
@@ -356,13 +391,21 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.hass.config.latitude,
             self.hass.config.longitude,
         )
+        # Matched on the data, not the unique_id: entries never set up, such as
+        # disabled ones, are not migrated and have no unique_id.
         if self.source == config_entries.SOURCE_RECONFIGURE:
             entry = self._get_reconfigure_entry()
+            if mosque_uuid != entry.data[CONF_UUID]:
+                # Before the move, which would take the device and entities of
+                # the entry of that mosque.
+                self._async_abort_entries_match({CONF_UUID: mosque_uuid})
             # Before the reload, so the sensors find their entities.
             _async_move_to_mosque(
                 self.hass, entry.entry_id, entry.data[CONF_UUID], mosque_uuid
             )
             return self.async_update_reload_and_abort(
-                entry, title=title, data_updates=data_entry
+                entry, unique_id=mosque_uuid, title=title, data_updates=data_entry
             )
+        self._async_abort_entries_match({CONF_UUID: mosque_uuid})
+        await self.async_set_unique_id(mosque_uuid)
         return self.async_create_entry(title=title, data=data_entry)

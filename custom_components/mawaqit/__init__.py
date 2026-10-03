@@ -45,10 +45,15 @@ async def async_unload_entry(
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: MawaqitConfigEntry
 ) -> bool:
-    """Migrate config entries created by the legacy custom integration."""
+    """Migrate config entries created by older versions."""
     if config_entry.version == 1 and config_entry.minor_version < 2:
         await async_migrate_legacy_entry(hass, config_entry)
         hass.config_entries.async_update_entry(
             config_entry, options={}, minor_version=2
+        )
+    if config_entry.version == 1 and config_entry.minor_version < 3:
+        # After the legacy migration, which can change the mosque.
+        hass.config_entries.async_update_entry(
+            config_entry, unique_id=config_entry.data[CONF_UUID], minor_version=3
         )
     return True

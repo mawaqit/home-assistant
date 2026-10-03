@@ -1,5 +1,6 @@
 """Tests for the Mawaqit integration's config flow in Home Assistant."""
 
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp.client_exceptions import ClientConnectorError
@@ -27,6 +28,7 @@ from custom_components.mawaqit.const import (
 )
 from custom_components.mawaqit.types import MawaqitMosqueData
 from homeassistant import config_entries, data_entry_flow
+from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
@@ -34,11 +36,14 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     CONF_UUID,
+    MAJOR_VERSION,
+    MINOR_VERSION as HA_MINOR_VERSION,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .conftest import MOCK_TOKEN, MOCK_UUID
+from .conftest import MOCK_TOKEN, MOCK_UUID, make_config_entry
 
 USER_INPUT = {CONF_USERNAME: "user", CONF_PASSWORD: "pass"}
 NEW_TOKEN = "new-api-token"
@@ -59,6 +64,7 @@ def _flow(hass: HomeAssistant) -> config_flow.MawaqitPrayerFlowHandler:
     """Return a flow handler bound to hass."""
     flow = config_flow.MawaqitPrayerFlowHandler()
     flow.hass = hass
+    flow.context = {"source": config_entries.SOURCE_USER}
     return flow
 
 
@@ -236,6 +242,7 @@ async def test_search_around_location_creates_entry(
 
     assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result.get("title") == "MAWAQIT - Mosque1-label (1.74 km)"
+    assert result["result"].unique_id == "aaaaa-bbbbb-cccccc-0000"
     mock_client_class.assert_called_once()
     mock_client.get_api_token.assert_awaited_once()
     mock_client.all_mosques_neighborhood.assert_awaited_once()
@@ -378,6 +385,7 @@ async def test_keyword_search_creates_entry(
 
     assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result.get("title") == "MAWAQIT - Mosque1-label - City1"
+    assert result["result"].unique_id == "mosque-1"
     assert result.get("data") == {
         CONF_API_KEY: MOCK_TOKEN,
         CONF_UUID: "mosque-1",
@@ -685,8 +693,6 @@ async def test_reconfigure_changes_mosque_and_keeps_entities(
 ) -> None:
     """Test reconfiguring moves the device and entities to the new mosque, without a login."""
     mock_config_entry.add_to_hass(hass)
-    # Otherwise the reload runs the legacy migration, which drops unknown entities.
-    hass.config_entries.async_update_entry(mock_config_entry, minor_version=2)
     mock_client.all_mosques_neighborhood.return_value = mock_mosques_search_api_raw
     dev_reg = dr.async_get(hass)
     device = dev_reg.async_get_or_create(
@@ -730,6 +736,7 @@ async def test_reconfigure_changes_mosque_and_keeps_entities(
     assert result.get("reason") == "reconfigure_successful"
     assert mock_config_entry.title == "MAWAQIT - Mosque2-label (20.00 km)"
     assert mock_config_entry.data[CONF_UUID] == NEW_MOSQUE_UUID
+    assert mock_config_entry.unique_id == NEW_MOSQUE_UUID
     assert mock_config_entry.data[CONF_API_KEY] == MOCK_TOKEN
     mock_client.get_api_token.assert_not_awaited()
 
@@ -777,6 +784,7 @@ async def test_reconfigure_with_keyword_search(
     assert result.get("reason") == "reconfigure_successful"
     assert mock_config_entry.title == "MAWAQIT - Mosque0-label - City0"
     assert mock_config_entry.data[CONF_UUID] == "mosque-0"
+    assert mock_config_entry.unique_id == "mosque-0"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -788,7 +796,6 @@ async def test_reconfigure_same_mosque_keeps_entities(
 ) -> None:
     """Test choosing the current mosque again leaves the device and entities untouched."""
     mock_config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(mock_config_entry, minor_version=2)
     mock_client.all_mosques_neighborhood.return_value = mock_mosques_search_api_raw
     dev_reg = dr.async_get(hass)
     device = dev_reg.async_get_or_create(
@@ -813,7 +820,421 @@ async def test_reconfigure_same_mosque_keeps_entities(
     await hass.async_block_till_done()
 
     assert result.get("reason") == "reconfigure_successful"
+    assert mock_config_entry.unique_id == MOCK_UUID
     entity = ent_reg.async_get(fajr.entity_id)
     assert entity is not None
     assert entity.unique_id == f"{MOCK_UUID}_prayer_fajr"
     assert dev_reg.async_get(device.id).identifiers == {(DOMAIN, MOCK_UUID)}
+
+
+# ---------------------------------------------------------------------------
+# SEVERAL MOSQUES
+# ---------------------------------------------------------------------------
+
+THIRD_MOSQUE_UUID = "bbbbb-cccccc-ddddd-0001"
+OTHER_TOKEN = "other-api-token"
+
+
+def _patch_setup_entry(**kwargs) -> Any:
+    """Patch the setup of the entries, which do not reach MAWAQIT."""
+    return patch(
+        "custom_components.mawaqit.async_setup_entry",
+        **({"return_value": True} | kwargs),
+    )
+
+
+async def _start_user_flow(
+    hass: HomeAssistant, mock_client: MagicMock
+) -> tuple[data_entry_flow.FlowResult, MagicMock]:
+    """Start a user flow, and return its first step and the patched client class."""
+    with patch(
+        "custom_components.mawaqit.config_flow.AsyncMawaqitClient",
+        return_value=mock_client,
+    ) as mock_client_class:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+    return result, mock_client_class
+
+
+def _add_mosque_device(
+    hass: HomeAssistant, entry: MockConfigEntry, mosque_uuid: str
+) -> tuple[dr.DeviceEntry, er.RegistryEntry]:
+    """Register the device of a mosque and its Fajr sensor for an entry."""
+    device = dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={(DOMAIN, mosque_uuid)}
+    )
+    fajr = er.async_get(hass).async_get_or_create(
+        "sensor",
+        DOMAIN,
+        f"{mosque_uuid}_prayer_fajr",
+        config_entry=entry,
+        device_id=device.id,
+    )
+    return device, fajr
+
+
+async def test_add_mosque_reuses_login(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_mosques_search_api_raw: list[dict],
+) -> None:
+    """Test a second mosque is added with the login of the first one."""
+    entry = make_config_entry()
+    entry.add_to_hass(hass)
+    with _patch_setup_entry():
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert entry.state is ConfigEntryState.LOADED
+        mock_client.all_mosques_neighborhood.return_value = mock_mosques_search_api_raw
+
+        result, mock_client_class = await _start_user_flow(hass, mock_client)
+
+        assert result.get("type") == data_entry_flow.FlowResultType.MENU
+        assert result.get("step_id") == "search_method"
+        mock_client_class.assert_called_once()
+        assert mock_client_class.call_args.kwargs["token"] == MOCK_TOKEN
+        assert mock_client_class.call_args.kwargs["latitude"] == hass.config.latitude
+        assert mock_client_class.call_args.kwargs["longitude"] == hass.config.longitude
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "mosques_coordinates"}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_UUID: NEW_MOSQUE_UUID}
+        )
+        await hass.async_block_till_done()
+
+    assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
+    new_entry = result["result"]
+    assert new_entry.unique_id == NEW_MOSQUE_UUID
+    assert new_entry.data[CONF_UUID] == NEW_MOSQUE_UUID
+    assert new_entry.data[CONF_API_KEY] == MOCK_TOKEN
+    assert new_entry.minor_version == config_flow.MawaqitPrayerFlowHandler.MINOR_VERSION
+    mock_client.get_api_token.assert_not_awaited()
+    assert hass.config_entries.async_entries(DOMAIN) == [entry, new_entry]
+    assert new_entry.state is ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.data[CONF_UUID] == MOCK_UUID
+    assert entry.unique_id == MOCK_UUID
+
+
+@pytest.mark.parametrize(
+    ("disabled_by", "setup_side_effect", "start_reauth"),
+    [
+        (ConfigEntryDisabler.USER, None, False),
+        (None, ConfigEntryNotReady, False),
+        (None, ConfigEntryAuthFailed, False),
+        (None, None, True),
+    ],
+    ids=["disabled", "setup_retry", "auth_failed", "reauth_in_progress"],
+)
+async def test_add_mosque_asks_login_without_logged_in_mosque(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    disabled_by: ConfigEntryDisabler | None,
+    setup_side_effect: type[Exception] | None,
+    start_reauth: bool,
+) -> None:
+    """Test the login is asked when no mosque is set up with a working login."""
+    entry = make_config_entry(disabled_by=disabled_by)
+    entry.add_to_hass(hass)
+    with _patch_setup_entry(side_effect=setup_side_effect):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+    if start_reauth:
+        assert entry.state is ConfigEntryState.LOADED
+        entry.async_start_reauth(hass)
+        await hass.async_block_till_done()
+
+    result, mock_client_class = await _start_user_flow(hass, mock_client)
+
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("step_id") == "user"
+    mock_client_class.assert_not_called()
+
+
+async def test_add_mosque_asks_login_before_setup(
+    hass: HomeAssistant, mock_client: MagicMock
+) -> None:
+    """Test the login is asked when the other mosque is not set up yet."""
+    make_config_entry().add_to_hass(hass)
+
+    result, _ = await _start_user_flow(hass, mock_client)
+
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("step_id") == "user"
+
+
+async def test_add_mosque_reuses_login_of_logged_in_mosque(
+    hass: HomeAssistant, mock_client: MagicMock
+) -> None:
+    """Test the login of a mosque waiting for a new login is not reused."""
+    rejected = make_config_entry(token="rejected-token")
+    working = make_config_entry(NEW_MOSQUE_UUID, "MAWAQIT - Mosque2", token=OTHER_TOKEN)
+    rejected.add_to_hass(hass)
+    working.add_to_hass(hass)
+    with _patch_setup_entry():
+        await hass.config_entries.async_setup(rejected.entry_id)
+        await hass.async_block_till_done()
+    rejected.async_start_reauth(hass)
+    await hass.async_block_till_done()
+
+    result, mock_client_class = await _start_user_flow(hass, mock_client)
+
+    assert result.get("type") == data_entry_flow.FlowResultType.MENU
+    assert mock_client_class.call_args.kwargs["token"] == OTHER_TOKEN
+
+
+@pytest.mark.parametrize(
+    "entry_kwargs",
+    [
+        {},
+        # Disabled entries are never set up, so never migrated to a unique_id.
+        {
+            "minor_version": 2,
+            "unique_id": None,
+            "disabled_by": ConfigEntryDisabler.USER,
+        },
+    ],
+    ids=["set_up", "not_migrated"],
+)
+async def test_add_mosque_already_configured_by_location(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_mosques_search_api_raw: list[dict],
+    entry_kwargs: dict[str, Any],
+) -> None:
+    """Test a mosque found around the location cannot be added twice."""
+    entry = make_config_entry(**entry_kwargs)
+    entry.add_to_hass(hass)
+    mock_client.all_mosques_neighborhood.return_value = mock_mosques_search_api_raw
+
+    flow_id = await _login(hass, mock_client)
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, {"next_step_id": "mosques_coordinates"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, {CONF_UUID: MOCK_UUID}
+    )
+
+    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"
+    assert hass.config_entries.async_entries(DOMAIN) == [entry]
+    assert entry.data[CONF_UUID] == MOCK_UUID
+
+
+async def test_add_mosque_already_configured_by_keyword(
+    hass: HomeAssistant, mock_client: MagicMock
+) -> None:
+    """Test a mosque found by keyword cannot be added twice."""
+    entry = make_config_entry("mosque-1", "MAWAQIT - Mosque1-label - City1")
+    entry.add_to_hass(hass)
+    mock_client.fetch_mosques_by_keyword.return_value = _keyword_mosques(2)
+
+    result = await _search_keyword(hass, mock_client)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_UUID: "mosque-1"}
+    )
+
+    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"
+    assert hass.config_entries.async_entries(DOMAIN) == [entry]
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_add_same_mosque_in_two_flows(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_mosques_search_api_raw: list[dict],
+) -> None:
+    """Test the second of two flows open at once cannot add the same mosque."""
+    mock_client.all_mosques_neighborhood.return_value = mock_mosques_search_api_raw
+    flow_ids = [await _login(hass, mock_client) for _ in range(2)]
+    for flow_id in flow_ids:
+        await hass.config_entries.flow.async_configure(
+            flow_id, {"next_step_id": "mosques_coordinates"}
+        )
+
+    first = await hass.config_entries.flow.async_configure(
+        flow_ids[0], {CONF_UUID: MOCK_UUID}
+    )
+    second = await hass.config_entries.flow.async_configure(
+        flow_ids[1], {CONF_UUID: MOCK_UUID}
+    )
+
+    assert first.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert second.get("type") == data_entry_flow.FlowResultType.ABORT
+    assert second.get("reason") == "already_configured"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+@pytest.mark.parametrize(
+    "other_kwargs",
+    [{}, {"minor_version": 2, "unique_id": None}],
+    ids=["migrated", "not_migrated"],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_to_mosque_of_other_entry_aborts(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_mosques_search_api_raw: list[dict],
+    other_kwargs: dict[str, Any],
+) -> None:
+    """Test reconfiguring to a mosque already set up changes neither entry."""
+    entry = make_config_entry()
+    other = make_config_entry(NEW_MOSQUE_UUID, "MAWAQIT - Mosque2", **other_kwargs)
+    entry.add_to_hass(hass)
+    other.add_to_hass(hass)
+    device, fajr = _add_mosque_device(hass, entry, MOCK_UUID)
+    other_device, other_fajr = _add_mosque_device(hass, other, NEW_MOSQUE_UUID)
+    mock_client.all_mosques_neighborhood.return_value = mock_mosques_search_api_raw
+
+    with patch(
+        "custom_components.mawaqit.config_flow.AsyncMawaqitClient",
+        return_value=mock_client,
+    ):
+        result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "mosques_coordinates"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_UUID: NEW_MOSQUE_UUID}
+    )
+    await hass.async_block_till_done()
+
+    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"
+    assert entry.title == "MAWAQIT - Test Mosque"
+    assert entry.data[CONF_UUID] == MOCK_UUID
+    assert entry.unique_id == MOCK_UUID
+    assert other.data[CONF_UUID] == NEW_MOSQUE_UUID
+    dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
+    for mosque_entry, mosque_device, mosque_fajr, mosque_uuid in (
+        (entry, device, fajr, MOCK_UUID),
+        (other, other_device, other_fajr, NEW_MOSQUE_UUID),
+    ):
+        current_device = dev_reg.async_get(mosque_device.id)
+        assert current_device is not None
+        assert current_device.identifiers == {(DOMAIN, mosque_uuid)}
+        assert current_device.config_entries == {mosque_entry.entry_id}
+        current_fajr = ent_reg.async_get(mosque_fajr.entity_id)
+        assert current_fajr is not None
+        assert current_fajr.unique_id == f"{mosque_uuid}_prayer_fajr"
+        assert current_fajr.config_entry_id == mosque_entry.entry_id
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_leaves_other_mosques_untouched(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_mosques_search_api_raw: list[dict],
+) -> None:
+    """Test reconfiguring a mosque moves only its own device and entities."""
+    entry = make_config_entry()
+    other = make_config_entry(NEW_MOSQUE_UUID, "MAWAQIT - Mosque2")
+    entry.add_to_hass(hass)
+    other.add_to_hass(hass)
+    device, fajr = _add_mosque_device(hass, entry, MOCK_UUID)
+    other_device, other_fajr = _add_mosque_device(hass, other, NEW_MOSQUE_UUID)
+    mock_client.all_mosques_neighborhood.return_value = mock_mosques_search_api_raw
+
+    with patch(
+        "custom_components.mawaqit.config_flow.AsyncMawaqitClient",
+        return_value=mock_client,
+    ):
+        result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "mosques_coordinates"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_UUID: THIRD_MOSQUE_UUID}
+    )
+    await hass.async_block_till_done()
+
+    assert result.get("reason") == "reconfigure_successful"
+    assert entry.unique_id == THIRD_MOSQUE_UUID
+    assert other.unique_id == NEW_MOSQUE_UUID
+    assert other.data[CONF_UUID] == NEW_MOSQUE_UUID
+    dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
+    moved_device = dev_reg.async_get(device.id)
+    assert moved_device is not None
+    assert moved_device.identifiers == {(DOMAIN, THIRD_MOSQUE_UUID)}
+    moved_fajr = ent_reg.async_get(fajr.entity_id)
+    assert moved_fajr is not None
+    assert moved_fajr.unique_id == f"{THIRD_MOSQUE_UUID}_prayer_fajr"
+    other_current_device = dev_reg.async_get(other_device.id)
+    assert other_current_device is not None
+    assert other_current_device.identifiers == {(DOMAIN, NEW_MOSQUE_UUID)}
+    other_current_fajr = ent_reg.async_get(other_fajr.entity_id)
+    assert other_current_fajr is not None
+    assert other_current_fajr.unique_id == f"{NEW_MOSQUE_UUID}_prayer_fajr"
+
+
+async def test_reauth_logs_in_mosques_sharing_the_login(
+    hass: HomeAssistant, mock_client: MagicMock
+) -> None:
+    """Test logging in again for one mosque logs in the others with its token."""
+    entry = make_config_entry()
+    same_login = make_config_entry(NEW_MOSQUE_UUID, "MAWAQIT - Mosque2")
+    other_login = make_config_entry(
+        THIRD_MOSQUE_UUID, "MAWAQIT - Mosque3", token=OTHER_TOKEN
+    )
+    disabled = make_config_entry(
+        "mosque-disabled", "MAWAQIT - Disabled", disabled_by=ConfigEntryDisabler.USER
+    )
+    for mosque_entry in (entry, same_login, other_login, disabled):
+        mosque_entry.add_to_hass(hass)
+
+    async def _setup_entry(_hass: HomeAssistant, config_entry: MockConfigEntry) -> bool:
+        if config_entry.data[CONF_API_KEY] == MOCK_TOKEN:
+            raise ConfigEntryAuthFailed
+        return True
+
+    with _patch_setup_entry(side_effect=_setup_entry):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert same_login.state is ConfigEntryState.SETUP_ERROR
+    assert other_login.state is ConfigEntryState.LOADED
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert {flow["context"]["entry_id"] for flow in flows} == {
+        entry.entry_id,
+        same_login.entry_id,
+    }
+    [flow] = [flow for flow in flows if flow["context"]["entry_id"] == entry.entry_id]
+
+    mock_client.token = NEW_TOKEN
+    with (
+        _patch_setup_entry() as mock_setup,
+        patch(
+            "custom_components.mawaqit.config_flow.AsyncMawaqitClient",
+            return_value=mock_client,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow["flow_id"], USER_INPUT
+        )
+        await hass.async_block_till_done()
+
+    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
+    assert result.get("reason") == "reauth_successful"
+    assert entry.data[CONF_API_KEY] == NEW_TOKEN
+    assert same_login.data[CONF_API_KEY] == NEW_TOKEN
+    assert same_login.data[CONF_UUID] == NEW_MOSQUE_UUID
+    assert other_login.data[CONF_API_KEY] == OTHER_TOKEN
+    assert disabled.data[CONF_API_KEY] == NEW_TOKEN
+    assert disabled.state is ConfigEntryState.NOT_LOADED
+    assert {call.args[1].entry_id for call in mock_setup.call_args_list} == {
+        entry.entry_id,
+        same_login.entry_id,
+    }
+    assert mock_setup.call_count == 2
+    for mosque_entry in (entry, same_login, other_login):
+        assert mosque_entry.state is ConfigEntryState.LOADED
+    # Older releases keep the reauth flow, which logs in again if completed.
+    if (MAJOR_VERSION, HA_MINOR_VERSION) >= (2025, 5):
+        assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
