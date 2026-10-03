@@ -51,6 +51,23 @@ def save_mosque(
     return title, data_entry
 
 
+def drop_imsak_column(
+    calendar: list[dict[str, list[str]]],
+) -> list[dict[str, list[str]]]:
+    """Return the calendar without the Imsak column of some mosques.
+
+    Mosques displaying Sabah and Imsak have 7 times a day: Imsak, Sabah, Shuruq,
+    Dhuhr, Asr, Maghrib, Isha. Like the MAWAQIT app, Sabah is used as Fajr.
+    """
+    return [
+        {
+            day: times[1:] if len(times) == len(PRAYER_NAMES) + 1 else times
+            for day, times in month.items()
+        }
+        for month in calendar
+    ]
+
+
 def extract_time_from_calendar(
     calendar: list[dict[str, list[str]]],
     prayer_name: str,

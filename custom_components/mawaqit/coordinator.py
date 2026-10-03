@@ -104,5 +104,8 @@ class PrayerTimeCoordinator(DataUpdateCoordinator[dict]):
                 translation_key="no_prayer_times_data",
             )
 
+        if calendar := prayer_times.get("calendar"):
+            prayer_times["calendar"] = utils.drop_imsak_column(calendar)
+
         # return fresh data when fetched
         return prayer_times
