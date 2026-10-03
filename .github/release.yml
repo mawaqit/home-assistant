@@ -9,7 +9,7 @@ changelog:
         - breaking-change
     - title: New features
       labels:
-        - enhancement
+        - feat
     - title: Bug fixes
       labels:
         - bug
@@ -18,7 +18,7 @@ changelog:
         - translations
     - title: Documentation
       labels:
-        - documentation
+        - docs
     - title: Dependencies
       labels:
         - dependencies

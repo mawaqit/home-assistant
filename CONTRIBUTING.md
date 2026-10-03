@@ -28,7 +28,7 @@ To try your changes in Home Assistant, copy `custom_components/mawaqit` into the
    | Label | Release notes section |
    | --- | --- |
    | `breaking-change` | Breaking changes (users must change something) |
-   | `enhancement` | New features |
+   | `feat` | New features |
    | `bug` | Bug fixes |
    | `dependencies` | Dependencies |
    | `skip-changelog` | Not listed (CI, docs, refactoring) |
