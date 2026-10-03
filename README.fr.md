@@ -188,7 +188,7 @@ mode: queued
 
 ## Mises à jour des données
 
-- L'intégration récupère les horaires de toute l'année auprès de MAWAQIT à son démarrage, puis toutes les 12 heures. Les changements faits par votre mosquée apparaissent dans les 12 heures, ou tout de suite si vous rechargez l'intégration : **Paramètres** > **Appareils et services** > **MAWAQIT**, menu ⋮ de l'entrée, **Recharger**.
+- L'intégration récupère les horaires de toute l'année auprès de MAWAQIT à son démarrage, puis toutes les 12 heures. Les changements faits par votre mosquée apparaissent dans les 12 heures, ou tout de suite si vous rechargez l'intégration : **Paramètres** > **Appareils et services** > **MAWAQIT**, menu ⋮ de l'entrée, **Recharger**. Si une mise à jour échoue, les sensors gardent les horaires déjà récupérés et l'intégration réessaie toutes les 15 minutes.
 - Les sensors des prières, des iqamas et de la Jumu'a passent au jour suivant au milieu de la nuit, pas à minuit : après Isha, ils montrent encore les horaires de la journée qui se termine.
 - Les moments de la nuit passent à la nuit suivante au Fajr.
 - **Nom de la prochaine prière** et **Heure de la prochaine prière** changent à l'heure de chaque prière.
@@ -202,7 +202,6 @@ Les horaires sont publiés par la mosquée dans son fuseau horaire, et Home Assi
 - Le calendrier ne montre que le mois en cours et le mois suivant : MAWAQIT donne les horaires de chaque jour de l'année, sans l'année.
 - Si MAWAQIT a un horaire invalide, seul cet horaire est ignoré : son sensor et son événement du calendrier sont inconnus, ainsi que ce qui en est calculé, comme les moments de la nuit pour un Maghrib ou un Fajr invalide. Un avertissement est écrit dans les journaux.
 - Pour les mosquées qui affichent Sabah et Imsak, Sabah est utilisé comme Fajr, comme dans l'application MAWAQIT. L'Imsak n'est pas disponible.
-- L'intégration a besoin d'internet. Si MAWAQIT est injoignable, les sensors deviennent indisponibles jusqu'à la prochaine mise à jour réussie ([#142](https://github.com/mawaqit/home-assistant/issues/142)).
 
 ## Dépannage
 
@@ -230,7 +229,7 @@ Si tous les horaires sont décalés de la même durée, par exemple une heure, v
 
 ### Les sensors sont indisponibles ou inconnus
 
-Ouvrez **Paramètres** > **Système** > **Journaux** et cherchez `mawaqit`. Des sensors indisponibles signifient en général que MAWAQIT n'a pas pu être joint : ils reviennent à la prochaine mise à jour réussie, ou quand vous rechargez l'intégration.
+Ouvrez **Paramètres** > **Système** > **Journaux** et cherchez `mawaqit`. Des sensors indisponibles signifient en général que MAWAQIT n'a pas pu être joint au démarrage de l'intégration : ils reviennent dès qu'il peut l'être, ou quand vous rechargez l'intégration.
 
 ### Journaux de débogage
 

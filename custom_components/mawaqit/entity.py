@@ -39,4 +39,5 @@ class MawaqitEntity(CoordinatorEntity[PrayerTimeCoordinator]):
     @override
     def available(self) -> bool:
         """Return True if entity is available."""
-        return super().available and self.coordinator.data is not None
+        # The data covers the whole year: keep using it when a refresh fails.
+        return self.coordinator.data is not None

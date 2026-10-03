@@ -188,7 +188,7 @@ mode: queued
 
 ## Gegevensupdates
 
-- De integratie haalt de gebedstijden van het hele jaar op bij MAWAQIT wanneer ze start, en daarna elke 12 uur. Wijzigingen van je moskee verschijnen binnen 12 uur, of meteen als je de integratie herlaadt: **Instellingen** > **Apparaten & diensten** > **MAWAQIT**, menu ⋮ van de vermelding, **Herladen**.
+- De integratie haalt de gebedstijden van het hele jaar op bij MAWAQIT wanneer ze start, en daarna elke 12 uur. Wijzigingen van je moskee verschijnen binnen 12 uur, of meteen als je de integratie herlaadt: **Instellingen** > **Apparaten & diensten** > **MAWAQIT**, menu ⋮ van de vermelding, **Herladen**. Mislukt een update, dan houden de sensoren de al opgehaalde tijden en probeert de integratie het elke 15 minuten opnieuw.
 - De gebeds-, iqama- en Jumu'a-sensoren gaan midden in de nacht naar de volgende dag, niet om middernacht: na Isha tonen ze nog de tijden van de dag die eindigt.
 - De tijden van de nacht gaan bij Fajr naar de volgende nacht.
 - **Naam volgend gebed** en **Tijd volgend gebed** veranderen op het tijdstip van elk gebed.
@@ -202,7 +202,6 @@ De tijden worden door de moskee in haar tijdzone gepubliceerd, en Home Assistant
 - De agenda toont alleen de huidige en de volgende maand: MAWAQIT geeft de tijden van elke dag van het jaar, zonder het jaar.
 - Als MAWAQIT een ongeldige tijd heeft, wordt alleen die tijd overgeslagen: de sensor en de agenda-afspraak ervan zijn onbekend, net als wat ervan wordt berekend, zoals de tijden van de nacht bij een ongeldige Maghrib of Fajr. Er wordt een waarschuwing in de logboeken geschreven.
 - Voor moskeeën die Sabah en Imsak tonen, wordt Sabah als Fajr gebruikt, zoals in de MAWAQIT-app. Imsak is niet beschikbaar.
-- De integratie heeft internettoegang nodig. Als MAWAQIT niet bereikbaar is, worden de sensoren onbeschikbaar tot de volgende geslaagde update ([#142](https://github.com/mawaqit/home-assistant/issues/142)).
 
 ## Probleemoplossing
 
@@ -230,7 +229,7 @@ Zijn alle tijden met dezelfde duur verschoven, bijvoorbeeld een uur, controleer 
 
 ### De sensoren zijn onbeschikbaar of onbekend
 
-Open **Instellingen** > **Systeem** > **Logboeken** en zoek naar `mawaqit`. Onbeschikbare sensoren betekenen meestal dat MAWAQIT niet bereikt kon worden: ze komen terug bij de volgende geslaagde update, of wanneer je de integratie herlaadt.
+Open **Instellingen** > **Systeem** > **Logboeken** en zoek naar `mawaqit`. Onbeschikbare sensoren betekenen meestal dat MAWAQIT niet bereikt kon worden toen de integratie startte: ze komen terug zodra het weer bereikbaar is, of wanneer je de integratie herlaadt.
 
 ### Debuglogboeken
 
