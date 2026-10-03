@@ -23,7 +23,7 @@ from custom_components.mawaqit.sensor import (
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
 from homeassistant.core import HomeAssistant
 
-from .conftest import MOCK_UUID, build_prayer_data
+from .conftest import MOCK_UUID, PRAYER_TIMES_ROW, build_prayer_data, make_month_data
 
 # ---------------------------------------------------------------------------
 # Sensor setup tests
@@ -294,6 +294,32 @@ async def test_prayer_sensors_use_mosque_time_zone(
     freezer.move_to(now)
     await setup_mawaqit_integration()
 
+    assert {entity_id: hass.states.get(entity_id).state for entity_id in expected} == (
+        expected
+    )
+
+
+async def test_prayer_sensors_with_sabah_and_imsak(
+    hass: HomeAssistant,
+    setup_mawaqit_integration,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test mosques displaying Sabah and Imsak, whose days start with Imsak (#93)."""
+    prayer_data = build_prayer_data()
+    imsak_row = ["05:00", *PRAYER_TIMES_ROW]  # Imsak, then Sabah at 05:30
+    prayer_data["calendar"] = [make_month_data(imsak_row) for _ in range(12)]
+
+    freezer.move_to("2025-04-10 19:00:00+02:00")
+    await setup_mawaqit_integration(prayer_data=prayer_data)
+
+    expected = {
+        "sensor.fajr_prayer": "2025-04-10T03:30:00+00:00",
+        "sensor.shuruq": "2025-04-10T04:45:00+00:00",
+        "sensor.maghrib_prayer": "2025-04-10T16:30:00+00:00",
+        "sensor.isha_prayer": "2025-04-10T18:00:00+00:00",
+        "sensor.fajr_iqama": "2025-04-10T03:40:00+00:00",
+        "sensor.next_salat_name": "isha",
+    }
     assert {entity_id: hass.states.get(entity_id).state for entity_id in expected} == (
         expected
     )
