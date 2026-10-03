@@ -1,0 +1,19 @@
+name: Feature request
+description: Suggest a new feature or an improvement.
+labels: ["feat", "idea"]
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: What do you want to do?
+      description: >-
+        The problem or use case, for example the automation you want to build.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: >-
+        Optional. How the integration could support it: a new sensor, an
+        option, an attribute...
