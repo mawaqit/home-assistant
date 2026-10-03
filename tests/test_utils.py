@@ -27,9 +27,9 @@ from .conftest import (
 PARIS = ZoneInfo("Europe/Paris")
 UTC = ZoneInfo("UTC")
 
-# Islamic midnight at 23:45, before 00:00.
+# Middle of the night at 23:45, before 00:00.
 WINTER_ROW = ["06:30", "08:00", "12:45", "14:45", "17:00", "18:30"]
-# Islamic midnight at 01:00, after 00:00.
+# Middle of the night at 01:00, after 00:00.
 SUMMER_ROW = ["04:30", "06:00", "13:45", "17:45", "21:30", "23:00"]
 
 
@@ -76,27 +76,27 @@ def test_to_utc_falsy_time_string_returns_none(time_str) -> None:
 
 
 # ---------------------------------------------------------------------------
-# compute_islamic_midnight
+# compute_middle_of_the_night
 # ---------------------------------------------------------------------------
 
 
-def test_compute_islamic_midnight_is_the_middle_of_the_night() -> None:
-    """Test Islamic midnight is halfway between Maghrib (18:30) and Fajr (05:30)."""
-    assert utils.compute_islamic_midnight(
+def test_compute_middle_of_the_night() -> None:
+    """Test the middle of the night between Maghrib (18:30) and Fajr (05:30)."""
+    assert utils.compute_middle_of_the_night(
         build_prayer_data(), date(2025, 4, 10), "Europe/Paris"
     ) == datetime(2025, 4, 11, 0, 0, tzinfo=PARIS)
 
 
-def test_compute_islamic_midnight_dst_change() -> None:
+def test_compute_middle_of_the_night_dst_change() -> None:
     """Test the night lasts an hour less when clocks go forward (10 hours)."""
-    assert utils.compute_islamic_midnight(
+    assert utils.compute_middle_of_the_night(
         build_prayer_data(), date(2025, 3, 29), "Europe/Paris"
     ) == datetime(2025, 3, 29, 23, 30, tzinfo=PARIS)
 
 
 @pytest.mark.parametrize("failing", [0, 1], ids=["maghrib", "fajr"])
-def test_compute_islamic_midnight_localization_fails(failing: int) -> None:
-    """Test compute_islamic_midnight returns None when a time cannot be localized."""
+def test_compute_middle_of_the_night_localization_fails(failing: int) -> None:
+    """Test compute_middle_of_the_night returns None when a time cannot be localized."""
     times = [
         datetime(2025, 4, 10, 18, 30, tzinfo=PARIS),
         datetime(2025, 4, 11, 5, 29, tzinfo=PARIS),
@@ -104,7 +104,7 @@ def test_compute_islamic_midnight_localization_fails(failing: int) -> None:
     times[failing] = None
     with patch("custom_components.mawaqit.utils.time_with_timezone", side_effect=times):
         assert (
-            utils.compute_islamic_midnight(
+            utils.compute_middle_of_the_night(
                 {"calendar": _two_day_april_calendar()},
                 date(2025, 4, 10),
                 "Europe/Paris",
@@ -116,22 +116,24 @@ def test_compute_islamic_midnight_localization_fails(failing: int) -> None:
 @pytest.mark.parametrize(
     ("day", "index"), [("10", 4), ("11", 0)], ids=["maghrib", "fajr"]
 )
-def test_compute_islamic_midnight_invalid_time(day: str, index: int) -> None:
-    """Test compute_islamic_midnight returns None when Maghrib or Fajr is invalid."""
+def test_compute_middle_of_the_night_invalid_time(day: str, index: int) -> None:
+    """Test compute_middle_of_the_night returns None when Maghrib or Fajr is invalid."""
     calendar = _two_day_april_calendar()
     calendar[3][day][index] = "invalid"
 
     assert (
-        utils.compute_islamic_midnight(
+        utils.compute_middle_of_the_night(
             {"calendar": calendar}, date(2025, 4, 10), "Europe/Paris"
         )
         is None
     )
 
 
-def test_compute_islamic_midnight_no_calendar() -> None:
-    """Test compute_islamic_midnight returns None without a calendar."""
-    assert utils.compute_islamic_midnight({}, date(2025, 4, 10), "Europe/Paris") is None
+def test_compute_middle_of_the_night_no_calendar() -> None:
+    """Test compute_middle_of_the_night returns None without a calendar."""
+    assert (
+        utils.compute_middle_of_the_night({}, date(2025, 4, 10), "Europe/Paris") is None
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -150,14 +152,14 @@ def test_compute_islamic_midnight_no_calendar() -> None:
     ],
     ids=[
         "afternoon",
-        "before_midnight_before_00",
-        "at_midnight_before_00",
-        "before_midnight_after_00",
-        "at_midnight_after_00",
+        "before_middle_before_00",
+        "at_middle_before_00",
+        "before_middle_after_00",
+        "at_middle_after_00",
     ],
 )
 def test_get_islamic_date(row: list[str], now: str, expected: date) -> None:
-    """Test the day of the prayer times changes at Islamic midnight."""
+    """Test the day of the prayer times changes at the middle of the night."""
     with freeze_time(now):
         assert utils.get_islamic_date(_daily_data(row), "Europe/Paris") == expected
 
@@ -427,7 +429,7 @@ def test_add_minutes_to_time_internal_error() -> None:
 
 
 # ---------------------------------------------------------------------------
-# get_next_islamic_midnight
+# get_next_middle_of_the_night
 # ---------------------------------------------------------------------------
 
 
@@ -438,12 +440,12 @@ def test_add_minutes_to_time_internal_error() -> None:
         ("2025-04-10 23:45:00+02:00", datetime(2025, 4, 11, 23, 45, tzinfo=PARIS)),
         ("2025-04-11 00:30:00+02:00", datetime(2025, 4, 11, 23, 45, tzinfo=PARIS)),
     ],
-    ids=["afternoon", "at_islamic_midnight", "after_00"],
+    ids=["afternoon", "at_middle_of_the_night", "after_00"],
 )
-def test_get_next_islamic_midnight(now: str, expected: datetime) -> None:
-    """Test the next Islamic midnight, between Maghrib (17:00) and Fajr (06:30)."""
+def test_get_next_middle_of_the_night(now: str, expected: datetime) -> None:
+    """Test the next middle of the night, between Maghrib (17:00) and Fajr (06:30)."""
     with freeze_time(now):
-        assert utils.get_next_islamic_midnight(_daily_data(WINTER_ROW)) == expected
+        assert utils.get_next_middle_of_the_night(_daily_data(WINTER_ROW)) == expected
 
 
 @freeze_time("2025-04-10 12:00:00+02:00")
@@ -456,9 +458,9 @@ def test_get_next_islamic_midnight(now: str, expected: datetime) -> None:
     ],
     ids=["no_timezone", "invalid_timezone", "empty_calendar"],
 )
-def test_get_next_islamic_midnight_missing_data(prayer_data: dict) -> None:
-    """Test get_next_islamic_midnight returns None without usable data."""
-    assert utils.get_next_islamic_midnight(prayer_data) is None
+def test_get_next_middle_of_the_night_missing_data(prayer_data: dict) -> None:
+    """Test get_next_middle_of_the_night returns None without usable data."""
+    assert utils.get_next_middle_of_the_night(prayer_data) is None
 
 
 # ---------------------------------------------------------------------------
@@ -614,14 +616,17 @@ def test_get_jumua_time_success() -> None:
     [
         ("2025-04-10 12:00:00+02:00", date(2025, 4, 11)),  # Thursday
         ("2025-04-11 14:00:00+02:00", date(2025, 4, 11)),  # Friday, after Jumua
-        ("2025-04-11 23:59:00+02:00", date(2025, 4, 11)),  # before Islamic midnight
+        (
+            "2025-04-11 23:59:00+02:00",
+            date(2025, 4, 11),
+        ),  # before the middle of the night
         ("2025-04-12 12:00:00+02:00", date(2025, 4, 18)),  # Saturday
     ],
 )
-def test_get_jumua_time_keeps_friday_until_islamic_midnight(
+def test_get_jumua_time_keeps_friday_until_middle_of_the_night(
     now: str, expected: date
 ) -> None:
-    """Test Jumua stays on Friday until Islamic midnight, then moves a week ahead."""
+    """Test Jumua stays on Friday until the middle of the night, then a week ahead."""
     with freeze_time(now):
         result = utils.get_jumua_time(build_prayer_data(), "jumua")
     assert result == datetime.combine(expected, time(13), PARIS)

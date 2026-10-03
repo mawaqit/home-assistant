@@ -26,7 +26,7 @@ class PrayerTimeCoordinator(TimestampDataUpdateCoordinator[dict]):
     """Coordinator to fetch prayer times from the Mawaqit API.
 
     The API is called twice a day to fetch the full prayer calendar. Listeners
-    are also updated at Islamic midnight, when prayer times move to the next day,
+    are also updated at the middle of the night, when prayer times move to the next day,
     and at Fajr, when night times move to the next night.
     """
 
@@ -58,7 +58,7 @@ class PrayerTimeCoordinator(TimestampDataUpdateCoordinator[dict]):
         if not self.data:
             return
         changes = (
-            utils.get_next_islamic_midnight(self.data),
+            utils.get_next_middle_of_the_night(self.data),
             utils.get_night_end(self.data),
         )
         if next_change := min((change for change in changes if change), default=None):

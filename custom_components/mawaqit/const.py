@@ -27,6 +27,6 @@ PRAYER_NAMES_IQAMA = ["fajr", "dhuhr", "asr", "maghrib", "isha"]
 # Times of the night, as fractions of the night from Maghrib to the next Fajr.
 NIGHT_TIMES = {
     "first_third_end": (1, 3),
-    "midnight": (1, 2),
+    "middle_of_the_night": (1, 2),
     "last_third_start": (2, 3),
 }

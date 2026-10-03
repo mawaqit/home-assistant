@@ -16,7 +16,7 @@ import homeassistant.util.dt as dt_util
 
 from .conftest import build_prayer_data
 
-NIGHT = ("End of the first third", "Midnight", "Start of the last third")
+NIGHT = ("End of the first third", "Middle of the night", "Start of the last third")
 
 ENTITY_ID = "calendar.test_mosque_prayer_times"
 
@@ -85,7 +85,11 @@ async def test_calendar_events_of_a_friday(
     events = await get_events(hass, "2025-04-11 00:00:00", "2025-04-12 00:00:00")
 
     assert [(event["summary"], event["start"], event["end"]) for event in events] == [
-        ("Midnight", "2025-04-11T00:00:00+02:00", "2025-04-11T00:00:00+02:00"),
+        (
+            "Middle of the night",
+            "2025-04-11T00:00:00+02:00",
+            "2025-04-11T00:00:00+02:00",
+        ),
         (
             "Start of the last third",
             "2025-04-11T01:50:00+02:00",
@@ -156,7 +160,7 @@ async def test_calendar_isha_iqama_after_midnight(
 
     assert [(event["summary"], event["end"]) for event in events] == [
         ("Isha", "2025-04-11T00:05:00+02:00"),
-        ("Midnight", "2025-04-11T00:00:00+02:00"),
+        ("Middle of the night", "2025-04-11T00:00:00+02:00"),
     ]
 
 
@@ -185,10 +189,10 @@ async def test_calendar_skips_invalid_data(
         for event in events
         if event["summary"] in NIGHT
     ] == [
-        ("Midnight", "2025-04-10T00:00:00+02:00"),
+        ("Middle of the night", "2025-04-10T00:00:00+02:00"),
         ("Start of the last third", "2025-04-10T01:50:00+02:00"),
         ("End of the first third", "2025-04-10T22:10:00+02:00"),
-        ("Midnight", "2025-04-11T00:00:00+02:00"),
+        ("Middle of the night", "2025-04-11T00:00:00+02:00"),
         ("Start of the last third", "2025-04-11T01:50:00+02:00"),
     ]
     events = [event for event in events if event["summary"] not in NIGHT]
@@ -223,7 +227,7 @@ async def test_calendar_with_missing_months(
 
     # The night of April 30 ends in May.
     assert summaries(events) == [
-        "Midnight",
+        "Middle of the night",
         "Start of the last third",
         *["Fajr", "Shuruq", "Dhuhr", "Asr", "Maghrib", "Isha"],
     ]
@@ -307,7 +311,7 @@ async def test_calendar_in_december_shows_january(
 
     events = await get_events(hass, "2026-01-05 00:00:00", "2026-01-06 00:00:00")
     assert [(event["summary"], event["start"]) for event in events[:3]] == [
-        ("Midnight", "2026-01-05T00:45:00+01:00"),
+        ("Middle of the night", "2026-01-05T00:45:00+01:00"),
         ("Start of the last third", "2026-01-05T02:50:00+01:00"),
         ("Fajr", "2026-01-05T07:00:00+01:00"),
     ]

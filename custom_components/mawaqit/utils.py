@@ -271,55 +271,57 @@ def get_night(
 
 
 def night_time(night: tuple[datetime, datetime], fraction: tuple[int, int]) -> datetime:
-    """Return the time at a fraction of a night, e.g. (1, 2) for midnight."""
+    """Return the time at a fraction of a night, e.g. (1, 2) for its middle."""
     maghrib, fajr = night
     numerator, denominator = fraction
     return maghrib + (fajr - maghrib) * numerator / denominator
 
 
-def compute_islamic_midnight(
+def compute_middle_of_the_night(
     prayer_data: dict, night: date, timezone: str
 ) -> datetime | None:
     """Return the middle of the night from Maghrib of `night` to the next Fajr."""
     bounds = get_night(prayer_data, night, timezone)
-    return night_time(bounds, NIGHT_TIMES["midnight"]) if bounds else None
+    return night_time(bounds, NIGHT_TIMES["middle_of_the_night"]) if bounds else None
 
 
-def _next_islamic_midnight(
+def _next_middle_of_the_night(
     prayer_data: dict, now: datetime, timezone: str
 ) -> tuple[date, datetime] | None:
-    """Return the next Islamic midnight and the day its night starts on."""
-    # Islamic midnight can be before or after 00:00, tomorrow's is always ahead.
+    """Return the next middle of the night and the day its night starts on."""
+    # It can be before or after 00:00, tomorrow's is always ahead.
     today = now.date()
     for night in (today - timedelta(days=1), today, today + timedelta(days=1)):
-        midnight = compute_islamic_midnight(prayer_data, night, timezone)
+        middle = compute_middle_of_the_night(prayer_data, night, timezone)
         # Skipping an invalid night could move prayer times a day ahead.
-        if midnight is None or midnight > now:
+        if middle is None or middle > now:
             break
-    return (night, midnight) if midnight else None
+    return (night, middle) if middle else None
 
 
 def get_islamic_date(prayer_data: dict, timezone: str) -> date:
-    """Return the day whose prayer times are shown, until its Islamic midnight."""
+    """Return the day whose prayer times are shown, until the middle of its night."""
     tz = dt_util.get_time_zone(timezone)
     now = dt_util.now(tz) if tz else dt_util.now()
 
-    if next_midnight := _next_islamic_midnight(prayer_data, now, timezone):
-        return next_midnight[0]
+    if next_middle := _next_middle_of_the_night(prayer_data, now, timezone):
+        return next_middle[0]
 
     # Debug: called by every sensor update, the cause is logged elsewhere.
-    _LOGGER.debug("Could not compute Islamic midnight, falling back to civil date")
+    _LOGGER.debug(
+        "Could not compute the middle of the night, falling back to civil date"
+    )
     return now.date()
 
 
-def get_next_islamic_midnight(prayer_data: dict) -> datetime | None:
-    """Return the next Islamic midnight, when prayer times move to the next day."""
+def get_next_middle_of_the_night(prayer_data: dict) -> datetime | None:
+    """Return the next middle of the night, when prayer times move to the next day."""
     timezone = prayer_data.get("timezone")
     if not timezone or not (tz := dt_util.get_time_zone(timezone)):
         return None
 
-    next_midnight = _next_islamic_midnight(prayer_data, dt_util.now(tz), timezone)
-    return next_midnight[1] if next_midnight else None
+    next_middle = _next_middle_of_the_night(prayer_data, dt_util.now(tz), timezone)
+    return next_middle[1] if next_middle else None
 
 
 def _current_night(prayer_data: dict) -> tuple[datetime, datetime] | None:
@@ -454,7 +456,7 @@ def get_jumua_time(prayer_data: dict, jumua_name: str) -> datetime | None:
     if not jumua_time:
         return None
 
-    # Like the other prayers, today's Jumua is kept until Islamic midnight.
+    # Like the other prayers, today's Jumua is kept until the middle of the night.
     day = get_islamic_date(prayer_data, timezone)
     friday = day + timedelta(days=(4 - day.weekday()) % 7)
     return _to_utc(timezone, friday, jumua_time)

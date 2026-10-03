@@ -99,7 +99,7 @@ async def test_new_install_entity_ids(
         "sensor.test_mosque_jumua_prayer",
         "sensor.test_mosque_maghrib_iqama",
         "sensor.test_mosque_maghrib_prayer",
-        "sensor.test_mosque_midnight",
+        "sensor.test_mosque_middle_of_the_night",
         "sensor.test_mosque_next_salat_name",
         "sensor.test_mosque_next_salat_time",
         "sensor.test_mosque_second_jumua_prayer",

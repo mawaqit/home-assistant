@@ -35,7 +35,7 @@ PRAYER_SUMMARIES = {
 JUMUA_SUMMARIES = {"jumua": "Jumua", "jumua2": "Jumua 2", "jumua3": "Jumua 3"}
 NIGHT_SUMMARIES = {
     "first_third_end": "End of the first third",
-    "midnight": "Midnight",
+    "middle_of_the_night": "Middle of the night",
     "last_third_start": "Start of the last third",
 }
 

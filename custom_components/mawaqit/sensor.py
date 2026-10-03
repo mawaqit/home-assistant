@@ -3,7 +3,7 @@
 It includes the following sensor entities:
 - Prayer time sensors
 - Iqama prayer time sensors
-- Night sensors: midnight and thirds of the night
+- Night sensors: middle and thirds of the night
 - Next prayer sensors
 
 The sensors are set up using the `async_setup_entry` function, which initializes the necessary coordinators and adds the entities to the platform.

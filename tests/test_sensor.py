@@ -185,12 +185,12 @@ async def test_next_prayer_sensor_moves_on_at_prayer_time(
     assert hass.states.get("sensor.test_mosque_next_salat_name").state == "asr"
 
 
-async def test_prayer_sensors_move_to_next_day_at_islamic_midnight(
+async def test_prayer_sensors_move_to_next_day_at_middle_of_the_night(
     hass: HomeAssistant,
     setup_mawaqit_integration,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test prayer times switch day at Islamic midnight, not at the next API refresh."""
+    """Test prayer times switch day at the middle of the night, not at a refresh."""
     prayer_data = build_prayer_data()
     prayer_data["calendar"][3]["11"][1] = "06:43"  # Shuruq, 06:45 the day before
     entity_ids = (
@@ -199,7 +199,7 @@ async def test_prayer_sensors_move_to_next_day_at_islamic_midnight(
         "sensor.test_mosque_fajr_iqama",
     )
 
-    # Maghrib at 18:30 and Fajr at 05:30: Islamic midnight is at 00:00.
+    # Maghrib at 18:30 and Fajr at 05:30: the middle of the night is at 00:00.
     freezer.move_to("2025-04-10 20:30:00+02:00")
     await setup_mawaqit_integration(prayer_data=prayer_data)
 
@@ -227,10 +227,10 @@ async def test_night_sensors_move_to_next_night_at_fajr(
     setup_mawaqit_integration,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the night times are kept after Islamic midnight, until Fajr."""
+    """Test the night times are kept after the middle of the night, until Fajr."""
     entity_ids = (
         "sensor.test_mosque_end_of_the_first_third",
-        "sensor.test_mosque_midnight",
+        "sensor.test_mosque_middle_of_the_night",
         "sensor.test_mosque_start_of_the_last_third",
     )
 
