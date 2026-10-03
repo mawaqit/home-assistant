@@ -462,13 +462,21 @@ def get_jumua_time(prayer_data: dict, jumua_name: str) -> datetime | None:
     return _to_utc(timezone, friday, jumua_time)
 
 
+def has_iqamas(prayer_data: dict) -> bool:
+    """Return True if the mosque publishes its iqamas."""
+    return bool(prayer_data.get("iqamaEnabled") and prayer_data.get("iqamaCalendar"))
+
+
 def get_iqama_time(prayer_data: dict, prayer_name: str) -> datetime | None:
     """Get Iqama prayer time."""
+    if not has_iqamas(prayer_data):
+        return None
+
     calendar = prayer_data.get("calendar")
-    iqama_calendar = prayer_data.get("iqamaCalendar")
+    iqama_calendar = prayer_data["iqamaCalendar"]
     timezone = prayer_data.get("timezone")
 
-    if not calendar or not iqama_calendar or not timezone:
+    if not calendar or not timezone:
         _LOGGER.warning("Missing calendar data for %s Iqama", prayer_name)
         return None
 

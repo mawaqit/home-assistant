@@ -719,6 +719,7 @@ def test_get_iqama_time_formats(iqama_day_data, expected_hour, expected_minute) 
     prayer_data = {
         "calendar": calendar,
         "iqamaCalendar": iqama_calendar,
+        "iqamaEnabled": True,
         "timezone": "Europe/Paris",
     }
     result = utils.get_iqama_time(prayer_data, "Fajr")
@@ -732,10 +733,23 @@ def test_get_iqama_time_formats(iqama_day_data, expected_hour, expected_minute) 
     "prayer_data",
     [
         {},
-        {"calendar": [{}], "iqamaCalendar": [{}], "timezone": "Europe/Paris"},
+        {"iqamaCalendar": [{}], "iqamaEnabled": True},
+        {
+            "calendar": [{}],
+            "iqamaCalendar": [{}],
+            "iqamaEnabled": True,
+            "timezone": "Europe/Paris",
+        },
         {
             "calendar": _calendar_with_april(),
             "iqamaCalendar": [{}],
+            "iqamaEnabled": True,
+            "timezone": "Europe/Paris",
+        },
+        {
+            "calendar": _calendar_with_april(),
+            "iqamaCalendar": [make_iqama_month_data() for _ in range(12)],
+            "iqamaEnabled": False,
             "timezone": "Europe/Paris",
         },
     ],
@@ -753,6 +767,7 @@ def test_get_iqama_time_parse_returns_none() -> None:
     prayer_data = {
         "calendar": _calendar_with_april(),
         "iqamaCalendar": iqama_calendar,
+        "iqamaEnabled": True,
         "timezone": "Europe/Paris",
     }
     with patch("custom_components.mawaqit.utils.parse_iqama_time", return_value=None):
@@ -767,6 +782,7 @@ def test_get_iqama_time_invalid_localization() -> None:
     prayer_data = {
         "calendar": _calendar_with_april(),
         "iqamaCalendar": iqama_calendar,
+        "iqamaEnabled": True,
         "timezone": "Europe/Paris",
     }
     with patch("custom_components.mawaqit.utils.time_with_timezone", return_value=None):

@@ -189,6 +189,7 @@ mode: queued
 ## Data updates
 
 - The integration fetches the prayer times of the whole year from MAWAQIT when it starts, then every 12 hours. Changes made by your mosque appear within 12 hours, or right away if you reload the integration: **Settings** > **Devices & services** > **MAWAQIT**, ⋮ menu of the entry, **Reload**. If an update fails, the sensors keep the times already fetched and the integration tries again every 15 minutes.
+- The iqama and Jumu'a sensors are added as soon as your mosque publishes them, so within 12 hours too. If it stops publishing them, they stay and become unknown. After a reload or a restart, Home Assistant shows them as no longer provided, and you can delete them.
 - The prayer, iqama and Jumu'a sensors move to the next day at the middle of the night, not at midnight: after Isha, they still show the times of the day that is ending.
 - The times of the night move to the next night at Fajr.
 - **Next Salat Name** and **Next Salat Time** change at the time of each prayer.
@@ -198,7 +199,6 @@ Times are published by the mosque in its own time zone, and Home Assistant shows
 ## Known limitations
 
 - Only one mosque per Home Assistant instance ([#143](https://github.com/mawaqit/home-assistant/issues/143)).
-- The iqama and Jumu'a sensors are created when the integration starts, from what your mosque publishes at that time. If your mosque adds them later, reload the integration ([#144](https://github.com/mawaqit/home-assistant/issues/144)).
 - The calendar only shows the current and the next month: MAWAQIT gives the times of each day of the year, without the year.
 - If MAWAQIT has an invalid time, only that time is skipped: its sensor and its calendar event are unknown, as well as what is computed from it, such as the times of the night for an invalid Maghrib or Fajr. A warning is written in the logs.
 - For mosques that display Sabah and Imsak, Sabah is used as Fajr, like in the MAWAQIT app. Imsak is not available.
