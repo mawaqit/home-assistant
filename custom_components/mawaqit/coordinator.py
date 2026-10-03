@@ -26,7 +26,8 @@ class PrayerTimeCoordinator(TimestampDataUpdateCoordinator[dict]):
     """Coordinator to fetch prayer times from the Mawaqit API.
 
     The API is called twice a day to fetch the full prayer calendar. Listeners
-    are also updated at Islamic midnight, when prayer times move to the next day.
+    are also updated at Islamic midnight, when prayer times move to the next day,
+    and at Fajr, when night times move to the next night.
     """
 
     def __init__(
@@ -51,17 +52,23 @@ class PrayerTimeCoordinator(TimestampDataUpdateCoordinator[dict]):
     @callback
     @override
     def async_update_listeners(self) -> None:
-        """Update listeners, then schedule their next update at Islamic midnight."""
+        """Update listeners, then schedule their next update."""
         super().async_update_listeners()
         self._cancel_day_change()
-        if self.data and (next_day := utils.get_next_islamic_midnight(self.data)):
+        if not self.data:
+            return
+        changes = (
+            utils.get_next_islamic_midnight(self.data),
+            utils.get_night_end(self.data),
+        )
+        if next_change := min((change for change in changes if change), default=None):
             self._unsub_day_change = async_track_point_in_utc_time(
-                self.hass, self._async_day_changed, next_day
+                self.hass, self._async_day_changed, next_change
             )
 
     @callback
     def _async_day_changed(self, _now: datetime) -> None:
-        """Refresh the sensors with the times of the new day."""
+        """Refresh the sensors with the times of the new day or night."""
         self._unsub_day_change = None
         self.async_update_listeners()
 

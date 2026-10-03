@@ -83,6 +83,9 @@
       }
     },
     "sensor": {
+      "first_third_end": {
+        "name": "Fin du premier tiers"
+      },
       "iqama_asr": {
         "name": "Iqama Asr"
       },
@@ -97,6 +100,12 @@
       },
       "iqama_maghrib": {
         "name": "Iqama Maghrib"
+      },
+      "last_third_start": {
+        "name": "Début du dernier tiers"
+      },
+      "midnight": {
+        "name": "Milieu de la nuit"
       },
       "next_salat_name": {
         "name": "Nom de la prochaine prière",

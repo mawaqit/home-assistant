@@ -3,6 +3,7 @@
 It includes the following sensor entities:
 - Prayer time sensors
 - Iqama prayer time sensors
+- Night sensors: midnight and thirds of the night
 - Next prayer sensors
 
 The sensors are set up using the `async_setup_entry` function, which initializes the necessary coordinators and adds the entities to the platform.
@@ -18,6 +19,7 @@ Functions:
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from functools import partial
 import logging
 from typing import override
 
@@ -33,7 +35,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 import homeassistant.util.dt as dt_util
 
 from . import MawaqitConfigEntry, utils
-from .const import PRAYER_NAMES
+from .const import NIGHT_TIMES, PRAYER_NAMES
 from .coordinator import PrayerTimeCoordinator
 from .entity import MawaqitEntity
 
@@ -142,6 +144,16 @@ IQAMA_PRAYER_TIME_SENSOR_DESCRIPTIONS = [
     ),
 ]
 
+NIGHT_SENSOR_DESCRIPTIONS = [
+    MawaqitPrayerTimeSensorEntityDescription(
+        key=key,
+        translation_key=key,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        get_value=partial(utils.get_night_time, fraction=fraction),
+    )
+    for key, fraction in NIGHT_TIMES.items()
+]
+
 NEXT_SALAT_SENSOR_DESCRIPTION = [
     SensorEntityDescription(
         key="next_salat_name",
@@ -199,6 +211,13 @@ async def async_setup_entry(
                 for desc in IQAMA_PRAYER_TIME_SENSOR_DESCRIPTIONS
             ]
         )
+
+    entities.extend(
+        [
+            MawaqitPrayerTimeSensor(prayer_time_coordinator, desc, mosque_uuid)
+            for desc in NIGHT_SENSOR_DESCRIPTIONS
+        ]
+    )
 
     # Register Next Prayer Sensors
     entities.extend(

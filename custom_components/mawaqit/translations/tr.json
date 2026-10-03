@@ -83,6 +83,9 @@
       }
     },
     "sensor": {
+      "first_third_end": {
+        "name": "İlk Üçte Birin Sonu"
+      },
       "iqama_asr": {
         "name": "İkindi Kameti"
       },
@@ -97,6 +100,12 @@
       },
       "iqama_maghrib": {
         "name": "Akşam Kameti"
+      },
+      "last_third_start": {
+        "name": "Son Üçte Birin Başı"
+      },
+      "midnight": {
+        "name": "Gece Yarısı"
       },
       "next_salat_name": {
         "name": "Sonraki namaz adı",

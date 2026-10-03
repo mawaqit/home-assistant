@@ -83,6 +83,9 @@
       }
     },
     "sensor": {
+      "first_third_end": {
+        "name": "End of the First Third"
+      },
       "iqama_asr": {
         "name": "Asr Iqama"
       },
@@ -97,6 +100,12 @@
       },
       "iqama_maghrib": {
         "name": "Maghrib Iqama"
+      },
+      "last_third_start": {
+        "name": "Start of the Last Third"
+      },
+      "midnight": {
+        "name": "Midnight"
       },
       "next_salat_name": {
         "name": "Next Salat Name",
