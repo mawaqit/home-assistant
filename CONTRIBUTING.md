@@ -40,7 +40,7 @@ To try your changes in Home Assistant, copy `custom_components/mawaqit` into the
 5. A member of [@mawaqit/home-assistant](https://github.com/orgs/mawaqit/teams/home-assistant) approves it. Every comment must be resolved, and a new push needs a new approval.
 6. The pull request is squash merged: its title becomes the commit message on `main`, so keep it clear (`Add Imsak sensor`, not `fix stuff`). The branch is deleted automatically.
 
-Dependabot opens weekly pull requests for Python dependencies and GitHub Actions.
+Dependabot opens weekly pull requests for Python dependencies and GitHub Actions. It skips `tests/requirements_min_ha.txt`, which pins the oldest supported Home Assistant: update it by hand when `hacs.json` changes.
 
 ## Releases
 

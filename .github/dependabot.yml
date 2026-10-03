@@ -2,6 +2,9 @@ version: 2
 updates:
   - package-ecosystem: pip
     directory: /
+    exclude-paths:
+      # Pinned to the oldest supported Home Assistant release.
+      - tests/requirements_min_ha.txt
     schedule:
       interval: weekly
     cooldown:
