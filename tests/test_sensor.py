@@ -70,15 +70,15 @@ async def test_sensor_setup_creates_entities(
 @pytest.mark.parametrize(
     ("prayer_data_kwargs", "entity_id", "should_exist"),
     [
-        ({}, "sensor.fajr_iqama", True),
-        ({"iqama_enabled": False}, "sensor.fajr_iqama", False),
-        ({"with_iqama_calendar": False}, "sensor.fajr_iqama", False),
-        ({}, "sensor.jumua_prayer", True),
-        ({"jumua": None}, "sensor.jumua_prayer", False),
-        ({}, "sensor.second_jumua_prayer", True),
-        ({"jumua2": None}, "sensor.second_jumua_prayer", False),
-        ({"jumua3": "15:00"}, "sensor.third_jumua_prayer", True),
-        ({"jumua3": None}, "sensor.third_jumua_prayer", False),
+        ({}, "sensor.test_mosque_fajr_iqama", True),
+        ({"iqama_enabled": False}, "sensor.test_mosque_fajr_iqama", False),
+        ({"with_iqama_calendar": False}, "sensor.test_mosque_fajr_iqama", False),
+        ({}, "sensor.test_mosque_jumua_prayer", True),
+        ({"jumua": None}, "sensor.test_mosque_jumua_prayer", False),
+        ({}, "sensor.test_mosque_second_jumua_prayer", True),
+        ({"jumua2": None}, "sensor.test_mosque_second_jumua_prayer", False),
+        ({"jumua3": "15:00"}, "sensor.test_mosque_third_jumua_prayer", True),
+        ({"jumua3": None}, "sensor.test_mosque_third_jumua_prayer", False),
     ],
 )
 async def test_conditional_sensor_creation(
@@ -100,8 +100,8 @@ async def test_conditional_sensor_creation(
 @pytest.mark.parametrize(
     ("coordinator_attr", "entity_id"),
     [
-        ("prayer_time_coordinator", "sensor.fajr_prayer"),
-        ("prayer_time_coordinator", "sensor.next_salat_name"),
+        ("prayer_time_coordinator", "sensor.test_mosque_fajr_prayer"),
+        ("prayer_time_coordinator", "sensor.test_mosque_next_salat_name"),
     ],
 )
 async def test_sensor_unavailable_when_no_coordinator_data(
@@ -138,7 +138,7 @@ async def test_prayer_time_sensor_get_value_error(
     coordinator.async_set_updated_data({"invalid": "data"})
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.fajr_prayer")
+    state = hass.states.get("sensor.test_mosque_fajr_prayer")
     assert state is not None
     assert state.state == "unknown"
 
@@ -154,13 +154,13 @@ async def test_next_prayer_sensors(
         prayer_data=build_prayer_data(fill_all_months=False)
     )
 
-    name_state = hass.states.get("sensor.next_salat_name")
+    name_state = hass.states.get("sensor.test_mosque_next_salat_name")
     assert name_state is not None
     assert name_state.state == "dhuhr"
     assert name_state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENUM
     assert name_state.attributes[ATTR_OPTIONS] == PRAYER_NAMES
 
-    time_state = hass.states.get("sensor.next_salat_time")
+    time_state = hass.states.get("sensor.test_mosque_next_salat_time")
     assert time_state is not None
     assert time_state.state not in ("unavailable", "unknown")
 
@@ -176,13 +176,13 @@ async def test_next_prayer_sensor_moves_on_at_prayer_time(
     await setup_mawaqit_integration(
         prayer_data=build_prayer_data(fill_all_months=False)
     )
-    assert hass.states.get("sensor.next_salat_name").state == "dhuhr"
+    assert hass.states.get("sensor.test_mosque_next_salat_name").state == "dhuhr"
 
     freezer.move_to("2025-04-10 12:30:01+02:00")
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.next_salat_name").state == "asr"
+    assert hass.states.get("sensor.test_mosque_next_salat_name").state == "asr"
 
 
 async def test_prayer_sensors_move_to_next_day_at_islamic_midnight(
@@ -193,7 +193,11 @@ async def test_prayer_sensors_move_to_next_day_at_islamic_midnight(
     """Test prayer times switch day at Islamic midnight, not at the next API refresh."""
     prayer_data = build_prayer_data()
     prayer_data["calendar"][3]["11"][1] = "06:43"  # Shuruq, 06:45 the day before
-    entity_ids = ("sensor.fajr_prayer", "sensor.shuruq", "sensor.fajr_iqama")
+    entity_ids = (
+        "sensor.test_mosque_fajr_prayer",
+        "sensor.test_mosque_shuruq",
+        "sensor.test_mosque_fajr_iqama",
+    )
 
     # Isha at 20:00 and Fajr at 05:30: Islamic midnight is at 00:45.
     freezer.move_to("2025-04-10 20:30:00+02:00")
@@ -256,7 +260,7 @@ async def test_invalid_prayer_time_is_ignored(
     await setup_mawaqit_integration(prayer_data=prayer_data)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert hass.states.get("sensor.next_salat_name").state == next_prayer
+    assert hass.states.get("sensor.test_mosque_next_salat_name").state == next_prayer
     assert [
         record.getMessage()
         for record in caplog.records
@@ -280,7 +284,7 @@ async def test_invalid_imsak_is_not_reported(
     freezer.move_to("2025-04-10 12:00:00+02:00")
     await setup_mawaqit_integration(prayer_data=prayer_data)
 
-    assert hass.states.get("sensor.next_salat_name").state == "dhuhr"
+    assert hass.states.get("sensor.test_mosque_next_salat_name").state == "dhuhr"
     assert "Invalid prayer times" not in caplog.text
 
 
@@ -299,7 +303,7 @@ async def test_next_prayer_sensor_no_calendar(
     coordinator.async_set_updated_data({"timezone": "Europe/Paris"})
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.next_salat_name")
+    state = hass.states.get("sensor.test_mosque_next_salat_name")
     assert state is not None
     assert state.state == "unknown"
 
@@ -307,7 +311,11 @@ async def test_next_prayer_sensor_no_calendar(
 @freeze_time("2025-04-10 12:00:00+02:00")
 @pytest.mark.parametrize(
     "entity_id",
-    ["sensor.fajr_prayer", "sensor.shuruq", "sensor.jumua_prayer"],
+    [
+        "sensor.test_mosque_fajr_prayer",
+        "sensor.test_mosque_shuruq",
+        "sensor.test_mosque_jumua_prayer",
+    ],
 )
 async def test_prayer_sensors_return_valid_state(
     hass: HomeAssistant,
@@ -341,21 +349,21 @@ def system_time_zone_utc(monkeypatch: pytest.MonkeyPatch) -> Generator[None]:
         (
             "2025-01-15 11:00:00+01:00",
             {
-                "sensor.fajr_prayer": "2025-01-15T04:30:00+00:00",
-                "sensor.shuruq": "2025-01-15T05:45:00+00:00",
-                "sensor.asr_iqama": "2025-01-15T14:55:00+00:00",
-                "sensor.jumua_prayer": "2025-01-17T12:00:00+00:00",
-                "sensor.next_salat_time": "2025-01-15T11:30:00+00:00",
+                "sensor.test_mosque_fajr_prayer": "2025-01-15T04:30:00+00:00",
+                "sensor.test_mosque_shuruq": "2025-01-15T05:45:00+00:00",
+                "sensor.test_mosque_asr_iqama": "2025-01-15T14:55:00+00:00",
+                "sensor.test_mosque_jumua_prayer": "2025-01-17T12:00:00+00:00",
+                "sensor.test_mosque_next_salat_time": "2025-01-15T11:30:00+00:00",
             },
         ),
         (
             "2025-07-15 11:00:00+02:00",
             {
-                "sensor.fajr_prayer": "2025-07-15T03:30:00+00:00",
-                "sensor.shuruq": "2025-07-15T04:45:00+00:00",
-                "sensor.asr_iqama": "2025-07-15T13:55:00+00:00",
-                "sensor.jumua_prayer": "2025-07-18T11:00:00+00:00",
-                "sensor.next_salat_time": "2025-07-15T10:30:00+00:00",
+                "sensor.test_mosque_fajr_prayer": "2025-07-15T03:30:00+00:00",
+                "sensor.test_mosque_shuruq": "2025-07-15T04:45:00+00:00",
+                "sensor.test_mosque_asr_iqama": "2025-07-15T13:55:00+00:00",
+                "sensor.test_mosque_jumua_prayer": "2025-07-18T11:00:00+00:00",
+                "sensor.test_mosque_next_salat_time": "2025-07-15T10:30:00+00:00",
             },
         ),
     ],
@@ -391,12 +399,12 @@ async def test_prayer_sensors_with_sabah_and_imsak(
     await setup_mawaqit_integration(prayer_data=prayer_data)
 
     expected = {
-        "sensor.fajr_prayer": "2025-04-10T03:30:00+00:00",
-        "sensor.shuruq": "2025-04-10T04:45:00+00:00",
-        "sensor.maghrib_prayer": "2025-04-10T16:30:00+00:00",
-        "sensor.isha_prayer": "2025-04-10T18:00:00+00:00",
-        "sensor.fajr_iqama": "2025-04-10T03:40:00+00:00",
-        "sensor.next_salat_name": "isha",
+        "sensor.test_mosque_fajr_prayer": "2025-04-10T03:30:00+00:00",
+        "sensor.test_mosque_shuruq": "2025-04-10T04:45:00+00:00",
+        "sensor.test_mosque_maghrib_prayer": "2025-04-10T16:30:00+00:00",
+        "sensor.test_mosque_isha_prayer": "2025-04-10T18:00:00+00:00",
+        "sensor.test_mosque_fajr_iqama": "2025-04-10T03:40:00+00:00",
+        "sensor.test_mosque_next_salat_name": "isha",
     }
     assert {entity_id: hass.states.get(entity_id).state for entity_id in expected} == (
         expected
@@ -423,8 +431,9 @@ def test_sensor_native_value_none_when_no_data(
 ) -> None:
     """Test native_value returns None when coordinator data is None."""
     coordinator = MagicMock(spec=coordinator_spec)
-    coordinator.data = None
+    coordinator.data = {}
     sensor = sensor_cls(coordinator, *extra_args)
+    coordinator.data = None
     assert sensor.native_value is None
 
 
@@ -445,6 +454,7 @@ def test_prayer_time_sensor_native_value_raises() -> None:
 def test_next_prayer_sensor_native_value_unhandled_key() -> None:
     """Test NextPrayerSensor returns None for a description key it does not handle."""
     coordinator = MagicMock(spec=PrayerTimeCoordinator)
+    coordinator.data = {}
     sensor = NextPrayerSensor(
         coordinator, SensorEntityDescription(key="unhandled"), MOCK_UUID
     )

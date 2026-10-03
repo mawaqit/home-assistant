@@ -12,12 +12,12 @@ from homeassistant.components.calendar import (
 from homeassistant.const import CONF_UUID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.dt as dt_util
 
 from . import MawaqitConfigEntry, utils
 from .const import PRAYER_NAMES, PRAYER_NAMES_IQAMA
 from .coordinator import PrayerTimeCoordinator
+from .entity import MawaqitEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -122,13 +122,11 @@ def _day_events(prayer_data: dict, day: date, tz: tzinfo) -> list[CalendarEvent]
     return sorted(events, key=lambda event: event.start)
 
 
-class MawaqitPrayerCalendar(CalendarEntity, CoordinatorEntity[PrayerTimeCoordinator]):
+class MawaqitPrayerCalendar(MawaqitEntity, CalendarEntity):
     """Calendar with one event per prayer of the current and next month.
 
     The API returns a calendar without year, so other months are not shown.
     """
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -137,7 +135,7 @@ class MawaqitPrayerCalendar(CalendarEntity, CoordinatorEntity[PrayerTimeCoordina
         mosque_uuid: str,
     ) -> None:
         """Initialize the calendar."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, mosque_uuid)
         self.entity_description = description
         self._attr_unique_id = f"{mosque_uuid}_{description.key}"
 
@@ -191,9 +189,3 @@ class MawaqitPrayerCalendar(CalendarEntity, CoordinatorEntity[PrayerTimeCoordina
             for event in events
             if event.start < end_date and event.end >= start_date
         ]
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return super().available and self.coordinator.data is not None
