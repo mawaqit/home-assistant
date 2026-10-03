@@ -102,6 +102,20 @@ def test_compute_islamic_midnight_fajr_localization_fails() -> None:
         )
 
 
+@pytest.mark.parametrize(("day", "index"), [("10", 5), ("11", 0)], ids=["isha", "fajr"])
+def test_compute_islamic_midnight_invalid_time(day: str, index: int) -> None:
+    """Test compute_islamic_midnight returns None when Isha or Fajr is invalid."""
+    calendar = _two_day_april_calendar()
+    calendar[3][day][index] = "invalid"
+
+    assert (
+        utils.compute_islamic_midnight(
+            {"calendar": calendar}, date(2025, 4, 10), "Europe/Paris"
+        )
+        is None
+    )
+
+
 # ---------------------------------------------------------------------------
 # save_mosque
 # ---------------------------------------------------------------------------
@@ -210,6 +224,41 @@ def test_time_with_timezone_valid() -> None:
 def test_time_with_timezone_invalid() -> None:
     """Test converting time with invalid timezone."""
     assert utils.time_with_timezone("Invalid/Timezone", "2025-04-10", "12:30") is None
+
+
+def test_time_with_timezone_invalid_time() -> None:
+    """Test converting a time that is not HH:MM."""
+    assert utils.time_with_timezone("Europe/Paris", "2025-04-10", "invalid") is None
+
+
+# ---------------------------------------------------------------------------
+# parse_time / find_invalid_times
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("time_str", "expected"),
+    [
+        ("05:30", time(5, 30)),
+        ("invalid", None),
+        ("", None),
+        ("25:00", None),
+        (None, None),
+    ],
+)
+def test_parse_time(time_str: str | None, expected: time | None) -> None:
+    """Test parse_time returns None for times that are not HH:MM."""
+    assert utils.parse_time(time_str) == expected
+
+
+def test_find_invalid_times() -> None:
+    """Test find_invalid_times returns the days with an invalid time."""
+    calendar = _calendar_with_april(
+        extra_days={"11": ["05:29", "06:44", "invalid", "15:44", "18:29", "19:59"]}
+    )
+    calendar[11] = {"31": ["", "06:44", "12:29", "15:44", "18:29", "19:59"]}
+
+    assert utils.find_invalid_times(calendar) == ["4/11", "12/31"]
 
 
 # ---------------------------------------------------------------------------
@@ -327,6 +376,43 @@ def test_find_next_prayer_tomorrow() -> None:
     )
     assert index == 0  # First prayer tomorrow
     assert prayer_time is not None
+
+
+@pytest.mark.parametrize(
+    ("day", "index", "hour", "expected_index"),
+    [
+        ("10", 3, 14, 4),  # Asr invalid: Maghrib
+        ("10", 5, 19, 0),  # Isha invalid: Fajr tomorrow
+        ("11", 0, 21, 1),  # Fajr tomorrow invalid: Shuruq tomorrow
+    ],
+    ids=["today", "last_today", "first_tomorrow"],
+)
+def test_find_next_prayer_skips_invalid_time(
+    day: str, index: int, hour: int, expected_index: int
+) -> None:
+    """Test finding the next prayer skips times that are not HH:MM."""
+    calendar = _two_day_april_calendar()
+    calendar[3][day][index] = "invalid"
+    current_time = datetime(2025, 4, 10, hour, 0, tzinfo=PARIS)
+
+    next_index, prayer_time = utils.find_next_prayer(
+        current_time, calendar, "Europe/Paris"
+    )
+    assert next_index == expected_index
+    assert prayer_time is not None
+
+
+def test_find_next_prayer_no_valid_time() -> None:
+    """Test finding the next prayer when no time of today or tomorrow is valid."""
+    calendar = _calendar_with_april()
+    calendar[3]["10"] = ["invalid"] * 6
+    calendar[3]["11"] = ["invalid"] * 6
+    current_time = datetime(2025, 4, 10, 12, 0, tzinfo=PARIS)
+
+    assert utils.find_next_prayer(current_time, calendar, "Europe/Paris") == (
+        None,
+        None,
+    )
 
 
 def test_find_next_prayer_invalid_timezone() -> None:
@@ -460,6 +546,11 @@ def test_parse_iqama_time_valid(prayer_time, iqama_time, expected) -> None:
 def test_parse_iqama_time_returns_none(iqama_time) -> None:
     """Test parse_iqama_time with invalid / empty formats returns None."""
     assert utils.parse_iqama_time("05:30", iqama_time) is None
+
+
+def test_parse_iqama_time_invalid_prayer_time() -> None:
+    """Test an iqama offset from a prayer time that is not HH:MM returns None."""
+    assert utils.parse_iqama_time("invalid", "+10") is None
 
 
 # ---------------------------------------------------------------------------

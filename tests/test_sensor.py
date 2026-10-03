@@ -28,6 +28,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_CLASS
 from homeassistant.core import HomeAssistant
 
@@ -214,6 +215,49 @@ async def test_prayer_sensors_move_to_next_day_at_islamic_midnight(
         "2025-04-11T04:43:00+00:00",
         "2025-04-11T03:40:00+00:00",
     ]
+
+
+@pytest.mark.parametrize(
+    ("now", "day", "index", "next_prayer"),
+    [
+        ("2025-04-10 00:30:00+02:00", "9", 5, "fajr"),
+        ("2025-04-10 00:30:00+02:00", "10", 0, "shuruq"),
+        ("2025-04-10 12:00:00+02:00", "10", 2, "asr"),
+        ("2025-04-10 21:00:00+02:00", "10", 5, "fajr"),
+        ("2025-04-10 21:00:00+02:00", "11", 0, "shuruq"),
+        ("2025-04-10 21:00:00+02:00", "11", 2, "fajr"),
+    ],
+    ids=[
+        "isha_yesterday",
+        "fajr_today",
+        "dhuhr_today",
+        "isha_today",
+        "fajr_tomorrow",
+        "dhuhr_tomorrow",
+    ],
+)
+async def test_invalid_prayer_time_is_ignored(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    setup_mawaqit_integration,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    now: str,
+    day: str,
+    index: int,
+    next_prayer: str,
+) -> None:
+    """Test a time that is not HH:MM is logged and skipped instead of failing (#134)."""
+    prayer_data = build_prayer_data(fill_all_months=False)
+    prayer_data["calendar"][3][day][index] = "invalid"
+
+    freezer.move_to(now)
+    await setup_mawaqit_integration(prayer_data=prayer_data)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert f"Invalid prayer times from MAWAQIT, ignored on: 4/{day}" in caplog.text
+    assert hass.states.get("sensor.next_salat_name").state == next_prayer
+    assert "Error retrieving prayer time" not in caplog.text
 
 
 @freeze_time("2025-04-10 12:00:00+02:00")
