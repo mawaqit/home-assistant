@@ -1,4 +1,14 @@
 {
+  "common": {
+    "adhan_afassy": "Adhan by Al-Afassy",
+    "adhan_algeria": "Adhan of Algeria",
+    "adhan_egypt": "Adhan of Egypt",
+    "adhan_madina": "Adhan of Madinah",
+    "adhan_maquah": "Adhan of Makkah",
+    "adhan_quds": "Adhan of Al-Quds",
+    "bip": "Beep",
+    "fajr_adhan": "{adhan} (Fajr)"
+  },
   "config": {
     "abort": {
       "cannot_connect": "Failed to connect to the MAWAQIT server. Please check your internet connection and try again.",
@@ -156,6 +166,9 @@
     },
     "no_prayer_times_data": {
       "message": "No prayer times were returned by MAWAQIT."
+    },
+    "unknown_adhan": {
+      "message": "Unknown adhan: {adhan}."
     }
   },
   "selector": {

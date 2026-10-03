@@ -1,4 +1,14 @@
 {
+  "common": {
+    "adhan_afassy": "El-Afasi ezanı",
+    "adhan_algeria": "Cezayir ezanı",
+    "adhan_egypt": "Mısır ezanı",
+    "adhan_madina": "Medine ezanı",
+    "adhan_maquah": "Mekke ezanı",
+    "adhan_quds": "Kudüs ezanı",
+    "bip": "Bip",
+    "fajr_adhan": "{adhan} (Sabah)"
+  },
   "config": {
     "abort": {
       "cannot_connect": "MAWAQIT sunucusuna bağlanılamadı. Lütfen internet bağlantınızı kontrol edip tekrar deneyin.",
@@ -156,6 +166,9 @@
     },
     "no_prayer_times_data": {
       "message": "MAWAQIT namaz vakti döndürmedi."
+    },
+    "unknown_adhan": {
+      "message": "Bilinmeyen ezan: {adhan}."
     }
   },
   "selector": {

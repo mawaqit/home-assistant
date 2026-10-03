@@ -1,4 +1,14 @@
 {
+  "common": {
+    "adhan_afassy": "Adhan von Al-Afassy",
+    "adhan_algeria": "Adhan aus Algerien",
+    "adhan_egypt": "Adhan aus Ägypten",
+    "adhan_madina": "Adhan aus Medina",
+    "adhan_maquah": "Adhan aus Mekka",
+    "adhan_quds": "Adhan aus Al-Quds",
+    "bip": "Signalton",
+    "fajr_adhan": "{adhan} (Fajr)"
+  },
   "config": {
     "abort": {
       "cannot_connect": "Verbindung zum MAWAQIT-Server fehlgeschlagen. Bitte überprüfe deine Internetverbindung und versuche es erneut.",
@@ -156,6 +166,9 @@
     },
     "no_prayer_times_data": {
       "message": "MAWAQIT hat keine Gebetszeiten zurückgegeben."
+    },
+    "unknown_adhan": {
+      "message": "Unbekannter Adhan: {adhan}."
     }
   },
   "selector": {
