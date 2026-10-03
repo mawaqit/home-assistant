@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from datetime import datetime
 import json
+import logging
 from pathlib import Path
 import time
 from unittest.mock import MagicMock
@@ -28,6 +29,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_CLASS
 from homeassistant.core import HomeAssistant
 
@@ -214,6 +216,72 @@ async def test_prayer_sensors_move_to_next_day_at_islamic_midnight(
         "2025-04-11T04:43:00+00:00",
         "2025-04-11T03:40:00+00:00",
     ]
+
+
+@pytest.mark.parametrize(
+    ("now", "day", "index", "next_prayer"),
+    [
+        ("2025-04-10 00:30:00+02:00", "9", 5, "fajr"),
+        ("2025-04-10 00:30:00+02:00", "10", 0, "shuruq"),
+        ("2025-04-10 12:00:00+02:00", "10", 2, "asr"),
+        ("2025-04-10 21:00:00+02:00", "10", 5, "fajr"),
+        ("2025-04-10 21:00:00+02:00", "11", 0, "shuruq"),
+        ("2025-04-10 21:00:00+02:00", "11", 2, "fajr"),
+    ],
+    ids=[
+        "isha_yesterday",
+        "fajr_today",
+        "dhuhr_today",
+        "isha_today",
+        "fajr_tomorrow",
+        "dhuhr_tomorrow",
+    ],
+)
+async def test_invalid_prayer_time_is_ignored(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    setup_mawaqit_integration,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    now: str,
+    day: str,
+    index: int,
+    next_prayer: str,
+) -> None:
+    """Test a time that is not HH:MM is logged and skipped instead of failing (#134)."""
+    prayer_data = build_prayer_data(fill_all_months=False)
+    prayer_data["calendar"][3][day][index] = "invalid"
+
+    freezer.move_to(now)
+    await setup_mawaqit_integration(prayer_data=prayer_data)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.next_salat_name").state == next_prayer
+    assert [
+        record.getMessage()
+        for record in caplog.records
+        if record.levelno >= logging.WARNING
+        and record.name.startswith("custom_components.mawaqit")
+    ] == [f"Invalid prayer times from MAWAQIT, ignored on: 4/{day}"]
+
+
+async def test_invalid_imsak_is_not_reported(
+    hass: HomeAssistant,
+    setup_mawaqit_integration,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an invalid Imsak, dropped from the calendar, is not reported."""
+    prayer_data = build_prayer_data()
+    prayer_data["calendar"] = [
+        make_month_data(["invalid", *PRAYER_TIMES_ROW]) for _ in range(12)
+    ]
+
+    freezer.move_to("2025-04-10 12:00:00+02:00")
+    await setup_mawaqit_integration(prayer_data=prayer_data)
+
+    assert hass.states.get("sensor.next_salat_name").state == "dhuhr"
+    assert "Invalid prayer times" not in caplog.text
 
 
 @freeze_time("2025-04-10 12:00:00+02:00")

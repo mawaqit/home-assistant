@@ -1,6 +1,6 @@
 """Utility functions for the Mawaqit integration."""
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
 import logging
 import re
 
@@ -143,6 +143,24 @@ def extract_time_from_calendar(
         return None
 
 
+def parse_time(time_str: str) -> time | None:
+    """Return a HH:MM time, or None if it is invalid."""
+    try:
+        return datetime.strptime(time_str, "%H:%M").time()
+    except (TypeError, ValueError):
+        return None
+
+
+def find_invalid_times(calendar: list[dict[str, list[str]]]) -> list[str]:
+    """Return the days of a yearly calendar with invalid times, as month/day."""
+    return [
+        f"{month}/{day}"
+        for month, days in enumerate(calendar, 1)
+        for day, times in days.items()
+        if any(parse_time(time_str) is None for time_str in times)
+    ]
+
+
 def time_with_timezone(
     timezone: str, target_date: str | date, time: str
 ) -> datetime | None:
@@ -154,14 +172,18 @@ def time_with_timezone(
         time (str): The time string in "HH:MM" format.
 
     Returns:
-        datetime: The timezone-aware datetime object, or None if the timezone is invalid.
+        datetime: The timezone-aware datetime object, or None if the timezone or
+            the time is invalid.
 
     """
     tz = dt_util.get_time_zone(timezone)
     if not tz:
         _LOGGER.error("Invalid timezone: %s", timezone)
         return None
-    naive_time = datetime.strptime(f"{target_date} {time}", "%Y-%m-%d %H:%M")
+    try:
+        naive_time = datetime.strptime(f"{target_date} {time}", "%Y-%m-%d %H:%M")
+    except ValueError:
+        return None
     return dt_util.as_local(naive_time.replace(tzinfo=tz))
 
 
@@ -216,6 +238,9 @@ def parse_iqama_time(prayer_time: str, iqama_value: str) -> str | None:
         return None
 
     if iqama_value.startswith("+"):
+        # The coordinator already warns about invalid prayer times.
+        if parse_time(prayer_time) is None:
+            return None
         return add_minutes_to_time(prayer_time, iqama_value)
 
     # If it's not an offset, it should be an absolute time in HH:MM format
@@ -290,7 +315,8 @@ def get_islamic_date(prayer_data: dict, timezone: str) -> date:
     islamic_midnight = compute_islamic_midnight(prayer_data, yesterday, timezone)
 
     if islamic_midnight is None:
-        _LOGGER.warning(
+        # Debug: called by every sensor update, the cause is logged elsewhere.
+        _LOGGER.debug(
             "Could not compute Islamic midnight for %s — falling back to civil date",
             yesterday,
         )
@@ -377,32 +403,20 @@ def find_next_prayer(
     today_prayer_times = prayer_times_two_days["today"]["prayer_times"]
     tomorrow_prayer_times = prayer_times_two_days["tomorrow"]["prayer_times"]
 
-    # Find the next prayer time
-    next_prayer_index = None
-    next_prayer_datetime = None
+    # The first valid time after now, today or tomorrow
+    tomorrow = current_time.date() + timedelta(days=1)
+    for day, times in (
+        (current_time.date(), today_prayer_times),
+        (tomorrow, tomorrow_prayer_times),
+    ):
+        for index, time_str in enumerate(times):
+            if (prayer_time := parse_time(time_str)) is None:
+                continue
+            prayer_datetime = datetime.combine(day, prayer_time, tz)
+            if prayer_datetime > current_time:
+                return index, prayer_datetime.astimezone(dt_util.UTC)
 
-    # Check today's remaining prayer times
-    for index, time_str in enumerate(today_prayer_times):
-        prayer_time = datetime.strptime(time_str, "%H:%M").time()
-        prayer_datetime = datetime.combine(current_time.date(), prayer_time, tz)
-
-        if prayer_datetime > current_time:
-            next_prayer_index = index
-            next_prayer_datetime = prayer_datetime
-            break  # Stop at the first future prayer time
-
-    # If no prayer is found today, use the first prayer time tomorrow
-    if next_prayer_index is None and tomorrow_prayer_times:
-        next_prayer_index = 0
-        prayer_time = datetime.strptime(tomorrow_prayer_times[0], "%H:%M").time()
-        next_prayer_datetime = datetime.combine(
-            current_time.date() + timedelta(days=1), prayer_time, tz
-        )
-
-    if next_prayer_datetime is not None:
-        next_prayer_datetime = next_prayer_datetime.astimezone(dt_util.UTC)
-
-    return next_prayer_index, next_prayer_datetime
+    return None, None
 
 
 def get_regular_prayer_time(prayer_data: dict, prayer_name: str) -> datetime | None:
