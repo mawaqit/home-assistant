@@ -1,6 +1,6 @@
 """Tests for the Mawaqit utility functions."""
 
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timedelta
 from unittest.mock import MagicMock, patch
 from zoneinfo import ZoneInfo
 
@@ -25,6 +25,20 @@ from .conftest import (
 # ---------------------------------------------------------------------------
 
 PARIS = ZoneInfo("Europe/Paris")
+UTC = ZoneInfo("UTC")
+
+# Middle of the night at 23:45, before 00:00.
+WINTER_ROW = ["06:30", "08:00", "12:45", "14:45", "17:00", "18:30"]
+# Middle of the night at 01:00, after 00:00.
+SUMMER_ROW = ["04:30", "06:00", "13:45", "17:45", "21:30", "23:00"]
+
+
+def _daily_data(row: list[str]) -> dict:
+    """Return prayer data with the same times every day."""
+    return {
+        **build_prayer_data(),
+        "calendar": [make_month_data(row) for _ in range(12)],
+    }
 
 
 def _calendar_with_april(extra_days: dict | None = None) -> list[dict]:
@@ -62,58 +76,177 @@ def test_to_utc_falsy_time_string_returns_none(time_str) -> None:
 
 
 # ---------------------------------------------------------------------------
-# compute_islamic_midnight
+# compute_middle_of_the_night
 # ---------------------------------------------------------------------------
 
 
-def test_compute_islamic_midnight_isha_localization_fails() -> None:
-    """Test compute_islamic_midnight returns None when isha localization fails."""
-    prayer_data = {"calendar": _two_day_april_calendar()}
-    target_date = date(2025, 4, 10)
+def test_compute_middle_of_the_night() -> None:
+    """Test the middle of the night between Maghrib (18:30) and Fajr (05:30)."""
+    assert utils.compute_middle_of_the_night(
+        build_prayer_data(), date(2025, 4, 10), "Europe/Paris"
+    ) == datetime(2025, 4, 11, 0, 0, tzinfo=PARIS)
 
-    with patch(
-        "custom_components.mawaqit.utils.time_with_timezone",
-        side_effect=[
-            None,  # isha -> fails
-            datetime(2025, 4, 11, 5, 29, tzinfo=ZoneInfo("Europe/Paris")),
-        ],
-    ):
+
+def test_compute_middle_of_the_night_dst_change() -> None:
+    """Test the night lasts an hour less when clocks go forward (10 hours)."""
+    assert utils.compute_middle_of_the_night(
+        build_prayer_data(), date(2025, 3, 29), "Europe/Paris"
+    ) == datetime(2025, 3, 29, 23, 30, tzinfo=PARIS)
+
+
+@pytest.mark.parametrize("failing", [0, 1], ids=["maghrib", "fajr"])
+def test_compute_middle_of_the_night_localization_fails(failing: int) -> None:
+    """Test compute_middle_of_the_night returns None when a time cannot be localized."""
+    times = [
+        datetime(2025, 4, 10, 18, 30, tzinfo=PARIS),
+        datetime(2025, 4, 11, 5, 29, tzinfo=PARIS),
+    ]
+    times[failing] = None
+    with patch("custom_components.mawaqit.utils.time_with_timezone", side_effect=times):
         assert (
-            utils.compute_islamic_midnight(prayer_data, target_date, "Europe/Paris")
+            utils.compute_middle_of_the_night(
+                {"calendar": _two_day_april_calendar()},
+                date(2025, 4, 10),
+                "Europe/Paris",
+            )
             is None
         )
 
 
-def test_compute_islamic_midnight_fajr_localization_fails() -> None:
-    """Test compute_islamic_midnight returns None when fajr localization fails."""
-    prayer_data = {"calendar": _two_day_april_calendar()}
-    target_date = date(2025, 4, 10)
-
-    with patch(
-        "custom_components.mawaqit.utils.time_with_timezone",
-        side_effect=[
-            datetime(2025, 4, 10, 20, 0, tzinfo=ZoneInfo("Europe/Paris")),  # isha ok
-            None,  # fajr -> fails
-        ],
-    ):
-        assert (
-            utils.compute_islamic_midnight(prayer_data, target_date, "Europe/Paris")
-            is None
-        )
-
-
-@pytest.mark.parametrize(("day", "index"), [("10", 5), ("11", 0)], ids=["isha", "fajr"])
-def test_compute_islamic_midnight_invalid_time(day: str, index: int) -> None:
-    """Test compute_islamic_midnight returns None when Isha or Fajr is invalid."""
+@pytest.mark.parametrize(
+    ("day", "index"), [("10", 4), ("11", 0)], ids=["maghrib", "fajr"]
+)
+def test_compute_middle_of_the_night_invalid_time(day: str, index: int) -> None:
+    """Test compute_middle_of_the_night returns None when Maghrib or Fajr is invalid."""
     calendar = _two_day_april_calendar()
     calendar[3][day][index] = "invalid"
 
     assert (
-        utils.compute_islamic_midnight(
+        utils.compute_middle_of_the_night(
             {"calendar": calendar}, date(2025, 4, 10), "Europe/Paris"
         )
         is None
     )
+
+
+def test_compute_middle_of_the_night_no_calendar() -> None:
+    """Test compute_middle_of_the_night returns None without a calendar."""
+    assert (
+        utils.compute_middle_of_the_night({}, date(2025, 4, 10), "Europe/Paris") is None
+    )
+
+
+# ---------------------------------------------------------------------------
+# get_islamic_date
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("row", "now", "expected"),
+    [
+        (PRAYER_TIMES_ROW, "2025-04-10 12:00:00+02:00", date(2025, 4, 10)),
+        (WINTER_ROW, "2025-04-10 23:44:59+02:00", date(2025, 4, 10)),
+        (WINTER_ROW, "2025-04-10 23:45:00+02:00", date(2025, 4, 11)),
+        (SUMMER_ROW, "2025-04-11 00:59:59+02:00", date(2025, 4, 10)),
+        (SUMMER_ROW, "2025-04-11 01:00:00+02:00", date(2025, 4, 11)),
+    ],
+    ids=[
+        "afternoon",
+        "before_middle_before_00",
+        "at_middle_before_00",
+        "before_middle_after_00",
+        "at_middle_after_00",
+    ],
+)
+def test_get_islamic_date(row: list[str], now: str, expected: date) -> None:
+    """Test the day of the prayer times changes at the middle of the night."""
+    with freeze_time(now):
+        assert utils.get_islamic_date(_daily_data(row), "Europe/Paris") == expected
+
+
+@pytest.mark.parametrize(
+    ("now", "day", "index"),
+    [
+        ("2025-04-11 00:30:00+02:00", "10", 4),
+        ("2025-04-10 12:00:00+02:00", "11", 0),
+    ],
+    ids=["last_night", "next_night"],
+)
+def test_get_islamic_date_invalid_night(now: str, day: str, index: int) -> None:
+    """Test an invalid night falls back to the civil date, never a day ahead."""
+    prayer_data = _daily_data(SUMMER_ROW)
+    prayer_data["calendar"][3][day][index] = "invalid"
+    with freeze_time(now):
+        assert utils.get_islamic_date(
+            prayer_data, "Europe/Paris"
+        ) == date.fromisoformat(now[:10])
+
+
+# ---------------------------------------------------------------------------
+# get_night_time / get_night_end
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("now", "night"),
+    [
+        ("2025-04-10 12:00:00+02:00", date(2025, 4, 10)),
+        ("2025-04-11 03:00:00+02:00", date(2025, 4, 10)),
+        ("2025-04-11 05:30:00+02:00", date(2025, 4, 11)),
+    ],
+    ids=["afternoon", "after_last_third", "at_fajr"],
+)
+def test_get_night_time(now: str, night: date) -> None:
+    """Test the night times are kept until Fajr (05:30), then move to the next night."""
+    next_day = night + timedelta(days=1)
+    with freeze_time(now):
+        prayer_data = build_prayer_data()
+        assert [
+            utils.get_night_time(prayer_data, fraction)
+            for fraction in ((1, 3), (1, 2), (2, 3))
+        ] == [
+            datetime.combine(night, time(22, 10), PARIS),
+            datetime.combine(next_day, time(0, 0), PARIS),
+            datetime.combine(next_day, time(1, 50), PARIS),
+        ]
+        assert utils.get_night_end(prayer_data) == datetime.combine(
+            next_day, time(5, 30), PARIS
+        )
+
+
+def test_get_night_time_dst_change() -> None:
+    """Test the last third starts after 2/3 of a night shortened by DST (10 hours)."""
+    with freeze_time("2025-03-29 12:00:00+01:00"):
+        assert utils.get_night_time(build_prayer_data(), (2, 3)) == datetime(
+            2025, 3, 30, 0, 10, tzinfo=UTC
+        )
+
+
+@freeze_time("2025-04-11 03:00:00+02:00")
+def test_get_night_time_skips_invalid_night() -> None:
+    """Test an invalid night is skipped for the next one."""
+    prayer_data = build_prayer_data()
+    prayer_data["calendar"][3]["10"][4] = "invalid"
+
+    assert utils.get_night_time(prayer_data, (1, 2)) == datetime(
+        2025, 4, 12, 0, 0, tzinfo=PARIS
+    )
+
+
+@freeze_time("2025-04-10 12:00:00+02:00")
+@pytest.mark.parametrize(
+    "prayer_data",
+    [
+        {"calendar": [make_month_data() for _ in range(12)]},
+        {"calendar": [make_month_data() for _ in range(12)], "timezone": "Invalid/Tz"},
+        {"calendar": [{} for _ in range(12)], "timezone": "Europe/Paris"},
+    ],
+    ids=["no_timezone", "invalid_timezone", "empty_calendar"],
+)
+def test_get_night_time_missing_data(prayer_data: dict) -> None:
+    """Test the night times are None without usable data."""
+    assert utils.get_night_time(prayer_data, (1, 2)) is None
+    assert utils.get_night_end(prayer_data) is None
 
 
 # ---------------------------------------------------------------------------
@@ -296,23 +429,23 @@ def test_add_minutes_to_time_internal_error() -> None:
 
 
 # ---------------------------------------------------------------------------
-# get_next_islamic_midnight
+# get_next_middle_of_the_night
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(
     ("now", "expected"),
     [
-        ("2025-04-10 12:00:00+02:00", datetime(2025, 4, 11, 0, 45, tzinfo=PARIS)),
-        ("2025-04-11 00:30:00+02:00", datetime(2025, 4, 11, 0, 45, tzinfo=PARIS)),
-        ("2025-04-11 00:45:00+02:00", datetime(2025, 4, 12, 0, 45, tzinfo=PARIS)),
+        ("2025-04-10 12:00:00+02:00", datetime(2025, 4, 10, 23, 45, tzinfo=PARIS)),
+        ("2025-04-10 23:45:00+02:00", datetime(2025, 4, 11, 23, 45, tzinfo=PARIS)),
+        ("2025-04-11 00:30:00+02:00", datetime(2025, 4, 11, 23, 45, tzinfo=PARIS)),
     ],
-    ids=["afternoon", "before_islamic_midnight", "at_islamic_midnight"],
+    ids=["afternoon", "at_middle_of_the_night", "after_00"],
 )
-def test_get_next_islamic_midnight(now: str, expected: datetime) -> None:
-    """Test the next Islamic midnight is halfway between Isha (20:00) and Fajr (05:30)."""
+def test_get_next_middle_of_the_night(now: str, expected: datetime) -> None:
+    """Test the next middle of the night, between Maghrib (17:00) and Fajr (06:30)."""
     with freeze_time(now):
-        assert utils.get_next_islamic_midnight(build_prayer_data()) == expected
+        assert utils.get_next_middle_of_the_night(_daily_data(WINTER_ROW)) == expected
 
 
 @freeze_time("2025-04-10 12:00:00+02:00")
@@ -325,9 +458,9 @@ def test_get_next_islamic_midnight(now: str, expected: datetime) -> None:
     ],
     ids=["no_timezone", "invalid_timezone", "empty_calendar"],
 )
-def test_get_next_islamic_midnight_missing_data(prayer_data: dict) -> None:
-    """Test get_next_islamic_midnight returns None without usable data."""
-    assert utils.get_next_islamic_midnight(prayer_data) is None
+def test_get_next_middle_of_the_night_missing_data(prayer_data: dict) -> None:
+    """Test get_next_middle_of_the_night returns None without usable data."""
+    assert utils.get_next_middle_of_the_night(prayer_data) is None
 
 
 # ---------------------------------------------------------------------------
@@ -483,14 +616,17 @@ def test_get_jumua_time_success() -> None:
     [
         ("2025-04-10 12:00:00+02:00", date(2025, 4, 11)),  # Thursday
         ("2025-04-11 14:00:00+02:00", date(2025, 4, 11)),  # Friday, after Jumua
-        ("2025-04-12 00:30:00+02:00", date(2025, 4, 11)),  # before Islamic midnight
+        (
+            "2025-04-11 23:59:00+02:00",
+            date(2025, 4, 11),
+        ),  # before the middle of the night
         ("2025-04-12 12:00:00+02:00", date(2025, 4, 18)),  # Saturday
     ],
 )
-def test_get_jumua_time_keeps_friday_until_islamic_midnight(
+def test_get_jumua_time_keeps_friday_until_middle_of_the_night(
     now: str, expected: date
 ) -> None:
-    """Test Jumua stays on Friday until Islamic midnight, then moves a week ahead."""
+    """Test Jumua stays on Friday until the middle of the night, then a week ahead."""
     with freeze_time(now):
         result = utils.get_jumua_time(build_prayer_data(), "jumua")
     assert result == datetime.combine(expected, time(13), PARIS)

@@ -44,12 +44,12 @@ from .conftest import MOCK_UUID, PRAYER_TIMES_ROW, build_prayer_data, make_month
 @pytest.mark.parametrize(
     ("prayer_data_kwargs", "expected_count"),
     [
-        ({}, 15),  # 6 prayers + 2 jumua + 5 iqama + 2 next = 15
-        ({"iqama_enabled": False}, 10),  # no iqama sensors
-        ({"with_iqama_calendar": False}, 10),  # no iqama sensors
-        ({"jumua2": None}, 14),  # only 1 Jumua
-        ({"jumua3": "15:00"}, 16),  # 3 Jumua prayers
-        ({"jumua2": None, "iqama_enabled": False}, 9),  # 1 Jumua, no iqama
+        ({}, 18),  # 6 prayers + 2 jumua + 5 iqama + 3 night + 2 next = 18
+        ({"iqama_enabled": False}, 13),  # no iqama sensors
+        ({"with_iqama_calendar": False}, 13),  # no iqama sensors
+        ({"jumua2": None}, 17),  # only 1 Jumua
+        ({"jumua3": "15:00"}, 19),  # 3 Jumua prayers
+        ({"jumua2": None, "iqama_enabled": False}, 12),  # 1 Jumua, no iqama
     ],
 )
 async def test_sensor_setup_creates_entities(
@@ -185,12 +185,12 @@ async def test_next_prayer_sensor_moves_on_at_prayer_time(
     assert hass.states.get("sensor.test_mosque_next_salat_name").state == "asr"
 
 
-async def test_prayer_sensors_move_to_next_day_at_islamic_midnight(
+async def test_prayer_sensors_move_to_next_day_at_middle_of_the_night(
     hass: HomeAssistant,
     setup_mawaqit_integration,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test prayer times switch day at Islamic midnight, not at the next API refresh."""
+    """Test prayer times switch day at the middle of the night, not at a refresh."""
     prayer_data = build_prayer_data()
     prayer_data["calendar"][3]["11"][1] = "06:43"  # Shuruq, 06:45 the day before
     entity_ids = (
@@ -199,11 +199,11 @@ async def test_prayer_sensors_move_to_next_day_at_islamic_midnight(
         "sensor.test_mosque_fajr_iqama",
     )
 
-    # Isha at 20:00 and Fajr at 05:30: Islamic midnight is at 00:45.
+    # Maghrib at 18:30 and Fajr at 05:30: the middle of the night is at 00:00.
     freezer.move_to("2025-04-10 20:30:00+02:00")
     await setup_mawaqit_integration(prayer_data=prayer_data)
 
-    freezer.move_to("2025-04-11 00:44:59+02:00")
+    freezer.move_to("2025-04-10 23:59:59+02:00")
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert [hass.states.get(entity_id).state for entity_id in entity_ids] == [
@@ -212,13 +212,59 @@ async def test_prayer_sensors_move_to_next_day_at_islamic_midnight(
         "2025-04-10T03:40:00+00:00",
     ]
 
-    freezer.move_to("2025-04-11 00:45:00+02:00")
+    freezer.move_to("2025-04-11 00:00:00+02:00")
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert [hass.states.get(entity_id).state for entity_id in entity_ids] == [
         "2025-04-11T03:30:00+00:00",
         "2025-04-11T04:43:00+00:00",
         "2025-04-11T03:40:00+00:00",
+    ]
+
+
+async def test_night_sensors_move_to_next_night_at_fajr(
+    hass: HomeAssistant,
+    setup_mawaqit_integration,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the night times are kept after the middle of the night, until Fajr."""
+    entity_ids = (
+        "sensor.test_mosque_end_of_the_first_third",
+        "sensor.test_mosque_middle_of_the_night",
+        "sensor.test_mosque_start_of_the_last_third",
+    )
+
+    # Maghrib at 18:30 and Fajr at 05:30: the night lasts 11 hours.
+    freezer.move_to("2025-04-10 20:30:00+02:00")
+    await setup_mawaqit_integration()
+    tonight = [
+        "2025-04-10T20:10:00+00:00",
+        "2025-04-10T22:00:00+00:00",
+        "2025-04-10T23:50:00+00:00",
+    ]
+    assert [hass.states.get(entity_id).state for entity_id in entity_ids] == tonight
+
+    # The prayer times move to the next day, the last third is still ahead.
+    freezer.move_to("2025-04-11 00:00:00+02:00")
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.test_mosque_fajr_prayer").state == (
+        "2025-04-11T03:30:00+00:00"
+    )
+    assert [hass.states.get(entity_id).state for entity_id in entity_ids] == tonight
+
+    freezer.move_to("2025-04-11 05:29:59+02:00")
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert [hass.states.get(entity_id).state for entity_id in entity_ids] == tonight
+
+    freezer.move_to("2025-04-11 05:30:00+02:00")
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert [hass.states.get(entity_id).state for entity_id in entity_ids] == [
+        "2025-04-11T20:10:00+00:00",
+        "2025-04-11T22:00:00+00:00",
+        "2025-04-11T23:50:00+00:00",
     ]
 
 

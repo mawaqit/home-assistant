@@ -43,7 +43,7 @@ async def test_prayer_time_coordinator_unload_cancels_day_change(
     setup_mawaqit_integration,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the Islamic midnight update does not run after the entry is unloaded."""
+    """Test the middle of the night update does not run after the entry is unloaded."""
     freezer.move_to("2025-04-10 20:30:00+02:00")
     await setup_mawaqit_integration()
     coordinator = mock_config_entry.runtime_data.prayer_time_coordinator

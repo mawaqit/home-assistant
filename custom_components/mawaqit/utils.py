@@ -7,7 +7,7 @@ import re
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_UUID
 import homeassistant.util.dt as dt_util
 
-from .const import PRAYER_NAMES, PRAYER_NAMES_IQAMA
+from .const import NIGHT_TIMES, PRAYER_NAMES, PRAYER_NAMES_IQAMA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -187,7 +187,7 @@ def time_with_timezone(
     return dt_util.as_local(naive_time.replace(tzinfo=tz))
 
 
-def _to_utc(timezone: str, day: date, time_str: str) -> datetime | None:
+def _to_utc(timezone: str, day: date, time_str: str | None) -> datetime | None:
     """Localize a HH:MM time string on a given date and return it in UTC."""
     if not time_str:
         return None
@@ -251,93 +251,103 @@ def parse_iqama_time(prayer_time: str, iqama_value: str) -> str | None:
     return None
 
 
-def compute_islamic_midnight(
-    prayer_data: dict, target_date: date, timezone: str
-) -> datetime | None:
-    """Return the Islamic midnight for a given date.
-
-    Islamic midnight is the midpoint between Isha of `target_date` and Fajr of
-    the following day.  It is always timezone-aware and expressed in the
-    mosque's local timezone.
-
-    Args:
-        prayer_data: Full prayer data dict (must contain a ``calendar`` key).
-        target_date: Civil date (datetime.date) whose Isha starts the interval.
-        timezone:    IANA timezone string (e.g. ``"Africa/Casablanca"``).
-
-    Returns:
-        Timezone-aware datetime, or None when Isha / Fajr data are unavailable.
-    """
+def get_night(
+    prayer_data: dict, night: date, timezone: str
+) -> tuple[datetime, datetime] | None:
+    """Return the night starting on a day: from its Maghrib to the next Fajr, in UTC."""
     calendar = prayer_data.get("calendar")
     if not calendar:
         return None
 
-    next_day = target_date + timedelta(days=1)
+    next_day = night + timedelta(days=1)
+    # In UTC: subtracting datetimes of the same time zone ignores DST changes.
+    maghrib = _to_utc(
+        timezone, night, extract_time_from_calendar(calendar, "maghrib", night)
+    )
+    fajr = _to_utc(
+        timezone, next_day, extract_time_from_calendar(calendar, "fajr", next_day)
+    )
+    return (maghrib, fajr) if maghrib and fajr else None
 
-    isha_str = extract_time_from_calendar(calendar, "isha", target_date)
-    fajr_str = extract_time_from_calendar(calendar, "fajr", next_day)
 
-    if not isha_str or not fajr_str:
-        _LOGGER.warning(
-            "Cannot compute Islamic midnight for %s: missing Isha or Fajr time",
-            target_date,
-        )
-        return None
+def night_time(night: tuple[datetime, datetime], fraction: tuple[int, int]) -> datetime:
+    """Return the time at a fraction of a night, e.g. (1, 2) for its middle."""
+    maghrib, fajr = night
+    numerator, denominator = fraction
+    return maghrib + (fajr - maghrib) * numerator / denominator
 
-    isha_dt = time_with_timezone(timezone, target_date, isha_str)
-    fajr_dt = time_with_timezone(timezone, next_day, fajr_str)
 
-    if not isha_dt or not fajr_dt:
-        return None
+def compute_middle_of_the_night(
+    prayer_data: dict, night: date, timezone: str
+) -> datetime | None:
+    """Return the middle of the night from Maghrib of `night` to the next Fajr."""
+    bounds = get_night(prayer_data, night, timezone)
+    return night_time(bounds, NIGHT_TIMES["middle_of_the_night"]) if bounds else None
 
-    return isha_dt + (fajr_dt - isha_dt) / 2
+
+def _next_middle_of_the_night(
+    prayer_data: dict, now: datetime, timezone: str
+) -> tuple[date, datetime] | None:
+    """Return the next middle of the night and the day its night starts on."""
+    # It can be before or after 00:00, tomorrow's is always ahead.
+    today = now.date()
+    for night in (today - timedelta(days=1), today, today + timedelta(days=1)):
+        middle = compute_middle_of_the_night(prayer_data, night, timezone)
+        # Skipping an invalid night could move prayer times a day ahead.
+        if middle is None or middle > now:
+            break
+    return (night, middle) if middle else None
 
 
 def get_islamic_date(prayer_data: dict, timezone: str) -> date:
-    """Return the civil date that corresponds to the current Islamic day.
-
-    The Islamic day advances at Islamic midnight (the midpoint between
-    yesterday's Isha and today's Fajr).  Before that point (even though the
-    clock has already ticked past 00:00) we are still in the previous Islamic day.
-
-    Args:
-        prayer_data: Full prayer data dict.
-        timezone:    IANA timezone string.
-
-    Returns:
-        datetime.date for the active Islamic day, or civil today as fallback.
-    """
+    """Return the day whose prayer times are shown, until the middle of its night."""
     tz = dt_util.get_time_zone(timezone)
     now = dt_util.now(tz) if tz else dt_util.now()
-    today = now.date()
-    yesterday = today - timedelta(days=1)
 
-    islamic_midnight = compute_islamic_midnight(prayer_data, yesterday, timezone)
+    if next_middle := _next_middle_of_the_night(prayer_data, now, timezone):
+        return next_middle[0]
 
-    if islamic_midnight is None:
-        # Debug: called by every sensor update, the cause is logged elsewhere.
-        _LOGGER.debug(
-            "Could not compute Islamic midnight for %s — falling back to civil date",
-            yesterday,
-        )
-        return today
-
-    # both now and islamic_midnight are timezone-aware so they can be compared directly
-    return today if now >= islamic_midnight else yesterday
+    # Debug: called by every sensor update, the cause is logged elsewhere.
+    _LOGGER.debug(
+        "Could not compute the middle of the night, falling back to civil date"
+    )
+    return now.date()
 
 
-def get_next_islamic_midnight(prayer_data: dict) -> datetime | None:
-    """Return the next Islamic midnight, when prayer times move to the next day."""
+def get_next_middle_of_the_night(prayer_data: dict) -> datetime | None:
+    """Return the next middle of the night, when prayer times move to the next day."""
+    timezone = prayer_data.get("timezone")
+    if not timezone or not (tz := dt_util.get_time_zone(timezone)):
+        return None
+
+    next_middle = _next_middle_of_the_night(prayer_data, dt_util.now(tz), timezone)
+    return next_middle[1] if next_middle else None
+
+
+def _current_night(prayer_data: dict) -> tuple[datetime, datetime] | None:
+    """Return the night in progress, or the next one once Fajr has passed."""
     timezone = prayer_data.get("timezone")
     if not timezone or not (tz := dt_util.get_time_zone(timezone)):
         return None
 
     now = dt_util.now(tz)
-    for day in (now.date() - timedelta(days=1), now.date()):
-        islamic_midnight = compute_islamic_midnight(prayer_data, day, timezone)
-        if islamic_midnight and islamic_midnight > now:
-            return islamic_midnight
+    for night in (now.date() - timedelta(days=1), now.date()):
+        # A night with invalid times is skipped.
+        if (bounds := get_night(prayer_data, night, timezone)) and bounds[1] > now:
+            return bounds
     return None
+
+
+def get_night_time(prayer_data: dict, fraction: tuple[int, int]) -> datetime | None:
+    """Return a time of the current night, kept until Fajr like the prayer times."""
+    bounds = _current_night(prayer_data)
+    return night_time(bounds, fraction) if bounds else None
+
+
+def get_night_end(prayer_data: dict) -> datetime | None:
+    """Return the Fajr ending the current night, when night times move on."""
+    bounds = _current_night(prayer_data)
+    return bounds[1] if bounds else None
 
 
 def get_prayer_times_for_two_days(
@@ -446,7 +456,7 @@ def get_jumua_time(prayer_data: dict, jumua_name: str) -> datetime | None:
     if not jumua_time:
         return None
 
-    # Like the other prayers, today's Jumua is kept until Islamic midnight.
+    # Like the other prayers, today's Jumua is kept until the middle of the night.
     day = get_islamic_date(prayer_data, timezone)
     friday = day + timedelta(days=(4 - day.weekday()) % 7)
     return _to_utc(timezone, friday, jumua_time)
