@@ -91,6 +91,7 @@ async def test_new_install_entity_ids(
         "sensor.test_mosque_asr_prayer",
         "sensor.test_mosque_dhuhr_iqama",
         "sensor.test_mosque_dhuhr_prayer",
+        "sensor.test_mosque_end_of_the_first_third",
         "sensor.test_mosque_fajr_iqama",
         "sensor.test_mosque_fajr_prayer",
         "sensor.test_mosque_isha_iqama",
@@ -98,10 +99,12 @@ async def test_new_install_entity_ids(
         "sensor.test_mosque_jumua_prayer",
         "sensor.test_mosque_maghrib_iqama",
         "sensor.test_mosque_maghrib_prayer",
+        "sensor.test_mosque_middle_of_the_night",
         "sensor.test_mosque_next_salat_name",
         "sensor.test_mosque_next_salat_time",
         "sensor.test_mosque_second_jumua_prayer",
         "sensor.test_mosque_shuruq",
+        "sensor.test_mosque_start_of_the_last_third",
     ]
     state = hass.states.get("sensor.test_mosque_fajr_prayer")
     assert state is not None

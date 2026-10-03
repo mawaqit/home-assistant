@@ -16,6 +16,8 @@ import homeassistant.util.dt as dt_util
 
 from .conftest import build_prayer_data
 
+NIGHT = ("End of the first third", "Middle of the night", "Start of the last third")
+
 ENTITY_ID = "calendar.test_mosque_prayer_times"
 
 
@@ -83,6 +85,16 @@ async def test_calendar_events_of_a_friday(
     events = await get_events(hass, "2025-04-11 00:00:00", "2025-04-12 00:00:00")
 
     assert [(event["summary"], event["start"], event["end"]) for event in events] == [
+        (
+            "Middle of the night",
+            "2025-04-11T00:00:00+02:00",
+            "2025-04-11T00:00:00+02:00",
+        ),
+        (
+            "Start of the last third",
+            "2025-04-11T01:50:00+02:00",
+            "2025-04-11T01:50:00+02:00",
+        ),
         ("Fajr", "2025-04-11T05:30:00+02:00", "2025-04-11T05:40:00+02:00"),
         ("Shuruq", "2025-04-11T06:45:00+02:00", "2025-04-11T06:45:00+02:00"),
         ("Dhuhr", "2025-04-11T12:30:00+02:00", "2025-04-11T12:45:00+02:00"),
@@ -91,6 +103,11 @@ async def test_calendar_events_of_a_friday(
         ("Asr", "2025-04-11T15:45:00+02:00", "2025-04-11T15:55:00+02:00"),
         ("Maghrib", "2025-04-11T18:30:00+02:00", "2025-04-11T18:35:00+02:00"),
         ("Isha", "2025-04-11T20:00:00+02:00", "2025-04-11T20:10:00+02:00"),
+        (
+            "End of the first third",
+            "2025-04-11T22:10:00+02:00",
+            "2025-04-11T22:10:00+02:00",
+        ),
     ]
 
 
@@ -106,7 +123,9 @@ async def test_calendar_covers_current_and_next_month(
     assert await get_events(hass, "2025-03-31 00:00:00", "2025-04-01 00:00:00") == []
     assert (
         len(await get_events(hass, "2025-04-01 00:00:00", "2025-07-01 00:00:00"))
-        == 61 * 6 + 9 * 2  # 61 days, and the Jumua 1 and 2 of 9 Fridays
+        # 61 days and nights, the Jumua 1 and 2 of 9 Fridays, and the last
+        # third of the night of March 31
+        == 61 * 6 + 9 * 2 + 61 * 3 + 1
     )
 
 
@@ -140,7 +159,8 @@ async def test_calendar_isha_iqama_after_midnight(
     events = await get_events(hass, "2025-04-11 00:00:00", "2025-04-11 01:00:00")
 
     assert [(event["summary"], event["end"]) for event in events] == [
-        ("Isha", "2025-04-11T00:05:00+02:00")
+        ("Isha", "2025-04-11T00:05:00+02:00"),
+        ("Middle of the night", "2025-04-11T00:00:00+02:00"),
     ]
 
 
@@ -163,6 +183,19 @@ async def test_calendar_skips_invalid_data(
 
     events = await get_events(hass, "2025-04-10 00:00:00", "2025-04-13 00:00:00")
 
+    # The night of the 11th ends on the 12th, whose times are incomplete.
+    assert [
+        (event["summary"], event["start"])
+        for event in events
+        if event["summary"] in NIGHT
+    ] == [
+        ("Middle of the night", "2025-04-10T00:00:00+02:00"),
+        ("Start of the last third", "2025-04-10T01:50:00+02:00"),
+        ("End of the first third", "2025-04-10T22:10:00+02:00"),
+        ("Middle of the night", "2025-04-11T00:00:00+02:00"),
+        ("Start of the last third", "2025-04-11T01:50:00+02:00"),
+    ]
+    events = [event for event in events if event["summary"] not in NIGHT]
     assert summaries(events) == [
         *["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"],
         *["Fajr", "Shuruq", "Dhuhr", "Asr", "Maghrib", "Isha"],
@@ -192,7 +225,12 @@ async def test_calendar_with_missing_months(
 
     events = await get_events(hass, "2025-04-30 00:00:00", "2025-05-02 00:00:00")
 
-    assert len(events) == 6
+    # The night of April 30 ends in May.
+    assert summaries(events) == [
+        "Middle of the night",
+        "Start of the last third",
+        *["Fajr", "Shuruq", "Dhuhr", "Asr", "Maghrib", "Isha"],
+    ]
 
 
 @pytest.mark.parametrize(
@@ -245,11 +283,12 @@ async def test_calendar_moves_to_the_next_month(
     freezer.move_to("2025-04-30 21:00:00+02:00")
     await setup_mawaqit_integration()
     june = ("2025-06-01 00:00:00", "2025-06-02 00:00:00")
-    assert await get_events(hass, *june) == []
+    # Only the end of the night of May 31.
+    assert summaries(await get_events(hass, *june)) == list(NIGHT[1:])
 
     freezer.tick(timedelta(hours=4))
     assert dt_util.now().month == 5
-    assert len(await get_events(hass, *june)) == 6
+    assert len(await get_events(hass, *june)) == 2 + 6 + 1
 
 
 async def test_calendar_in_december_shows_january(
@@ -271,9 +310,16 @@ async def test_calendar_in_december_shows_january(
     await setup_mawaqit_integration(prayer_data=prayer_data)
 
     events = await get_events(hass, "2026-01-05 00:00:00", "2026-01-06 00:00:00")
-    assert events[0]["start"] == "2026-01-05T07:00:00+01:00"
-    assert len(events) == 6
-    assert await get_events(hass, "2026-02-01 00:00:00", "2026-02-02 00:00:00") == []
+    assert [(event["summary"], event["start"]) for event in events[:3]] == [
+        ("Middle of the night", "2026-01-05T00:45:00+01:00"),
+        ("Start of the last third", "2026-01-05T02:50:00+01:00"),
+        ("Fajr", "2026-01-05T07:00:00+01:00"),
+    ]
+    assert len(events) == 2 + 6 + 2
+    # Only the end of the night of January 31.
+    assert summaries(
+        await get_events(hass, "2026-02-01 00:00:00", "2026-02-02 00:00:00")
+    ) == list(NIGHT[1:])
 
 
 async def test_calendar_iqama_before_adhan(

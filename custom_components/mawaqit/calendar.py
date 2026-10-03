@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 import homeassistant.util.dt as dt_util
 
 from . import MawaqitConfigEntry, utils
-from .const import PRAYER_NAMES, PRAYER_NAMES_IQAMA
+from .const import NIGHT_TIMES, PRAYER_NAMES, PRAYER_NAMES_IQAMA
 from .coordinator import PrayerTimeCoordinator
 from .entity import MawaqitEntity
 
@@ -33,6 +33,11 @@ PRAYER_SUMMARIES = {
     "isha": "Isha",
 }
 JUMUA_SUMMARIES = {"jumua": "Jumua", "jumua2": "Jumua 2", "jumua3": "Jumua 3"}
+NIGHT_SUMMARIES = {
+    "first_third_end": "End of the first third",
+    "middle_of_the_night": "Middle of the night",
+    "last_third_start": "Start of the last third",
+}
 
 CALENDAR_DESCRIPTION = CalendarEntityDescription(
     key="prayer_times",
@@ -76,7 +81,10 @@ def _day_row(calendar: list[dict[str, list[str]]] | None, day: date) -> list[str
 
 
 def _day_events(prayer_data: dict, day: date, tz: tzinfo) -> list[CalendarEvent]:
-    """Return the prayers of a day, each one lasting until its iqama if known."""
+    """Return the prayers of a day, each one lasting until its iqama if known.
+
+    Also return the times of the night after it, which last no time.
+    """
     times = _day_row(prayer_data["calendar"], day)
     if len(times) != len(PRAYER_NAMES):
         return []
@@ -119,6 +127,20 @@ def _day_events(prayer_data: dict, day: date, tz: tzinfo) -> list[CalendarEvent]
                 start=start, end=end, summary=summary, uid=f"{day.isoformat()}_{key}"
             )
         )
+
+    # The night after the day, until the next Fajr.
+    if night := utils.get_night(prayer_data, day, prayer_data["timezone"]):
+        for key, fraction in NIGHT_TIMES.items():
+            start = utils.night_time(night, fraction).astimezone(tz)
+            events.append(
+                CalendarEvent(
+                    start=start,
+                    end=start,
+                    summary=NIGHT_SUMMARIES[key],
+                    uid=f"{day.isoformat()}_{key}",
+                )
+            )
+    # Sorted: the end of the first third can be before Isha in summer.
     return sorted(events, key=lambda event: event.start)
 
 
@@ -154,7 +176,7 @@ class MawaqitPrayerCalendar(MawaqitEntity, CalendarEntity):
         window_start = dt_util.now(tz).date().replace(day=1)
         window_end = (window_start + timedelta(days=62)).replace(day=1)
 
-        # The day before only for an Isha whose iqama is after midnight.
+        # The day before only for its times after midnight: night, Isha iqama.
         window_start_time = datetime.combine(window_start, time.min, tz)
         day = max(first_day, window_start - timedelta(days=1))
         events: list[CalendarEvent] = []

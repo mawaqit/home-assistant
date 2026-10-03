@@ -83,6 +83,9 @@
       }
     },
     "sensor": {
+      "first_third_end": {
+        "name": "نهاية الثلث الأول"
+      },
       "iqama_asr": {
         "name": "إقامة العصر"
       },
@@ -97,6 +100,12 @@
       },
       "iqama_maghrib": {
         "name": "إقامة المغرب"
+      },
+      "last_third_start": {
+        "name": "بداية الثلث الأخير"
+      },
+      "middle_of_the_night": {
+        "name": "منتصف الليل"
       },
       "next_salat_name": {
         "name": "اسم الصلاة القادمة",

@@ -83,6 +83,9 @@
       }
     },
     "sensor": {
+      "first_third_end": {
+        "name": "Einde eerste derde"
+      },
       "iqama_asr": {
         "name": "Asr Iqama"
       },
@@ -97,6 +100,12 @@
       },
       "iqama_maghrib": {
         "name": "Maghrib Iqama"
+      },
+      "last_third_start": {
+        "name": "Begin laatste derde"
+      },
+      "middle_of_the_night": {
+        "name": "Midden van de nacht"
       },
       "next_salat_name": {
         "name": "Naam volgend gebed",
