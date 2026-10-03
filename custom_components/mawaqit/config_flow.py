@@ -16,7 +16,8 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME, CONF_UUID
-from homeassistant.helpers import selector
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er, selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import mawaqit_wrapper, utils
@@ -55,6 +56,25 @@ KEYWORD_SCHEMA = vol.Schema(
         ),
     }
 )
+
+
+@callback
+def _async_move_entities(
+    hass: HomeAssistant, entry_id: str, old_uuid: str, new_uuid: str
+) -> None:
+    """Move the entities to the unique_ids of the new mosque, keeping their IDs."""
+    if old_uuid == new_uuid:
+        # Otherwise each entity would be removed as its own stale duplicate.
+        return
+    ent_reg = er.async_get(hass)
+    for entity in er.async_entries_for_config_entry(ent_reg, entry_id):
+        if not entity.unique_id.startswith(f"{old_uuid}_"):
+            continue
+        new_unique_id = new_uuid + entity.unique_id.removeprefix(old_uuid)
+        # A stale entity can hold the new unique_id: the registry refuses duplicates.
+        if stale := ent_reg.async_get_entity_id(entity.domain, DOMAIN, new_unique_id):
+            ent_reg.async_remove(stale)
+        ent_reg.async_update_entity(entity.entity_id, new_unique_id=new_unique_id)
 
 
 class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -134,6 +154,18 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Change the mosque, keeping the login and the entities."""
+        self.client = AsyncMawaqitClient(
+            latitude=self.hass.config.latitude,
+            longitude=self.hass.config.longitude,
+            token=self._get_reconfigure_entry().data[CONF_API_KEY],
+            session=async_get_clientsession(self.hass),
+        )
+        return await self.async_step_search_method()
 
     async def _async_login(self, client: AsyncMawaqitClient) -> dict[str, str]:
         """Log in to MAWAQIT and return the form errors, empty on success."""
@@ -312,7 +344,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     def _create_mosque_entry(self, mosque_uuid: str) -> config_entries.ConfigFlowResult:
-        """Create the config entry for the chosen mosque."""
+        """Create the config entry for the chosen mosque, or update it."""
         title, data_entry = utils.save_mosque(
             self.mosques[mosque_uuid].display_name,
             mosque_uuid,
@@ -320,4 +352,13 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.hass.config.latitude,
             self.hass.config.longitude,
         )
+        if self.source == config_entries.SOURCE_RECONFIGURE:
+            entry = self._get_reconfigure_entry()
+            # Before the reload, so the sensors find their entities.
+            _async_move_entities(
+                self.hass, entry.entry_id, entry.data[CONF_UUID], mosque_uuid
+            )
+            return self.async_update_reload_and_abort(
+                entry, title=title, data_updates=data_entry
+            )
         return self.async_create_entry(title=title, data=data_entry)
