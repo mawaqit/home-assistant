@@ -60,6 +60,8 @@ The integration adds a device named after your mosque, linked to its MAWAQIT pag
 
 It also adds a `calendar.<mosque>_prayer_times` calendar (`calendar.<mosque>_horaires_des_prieres` in French) with the prayers of the current and the next month. Each prayer is an event named `Fajr`, `Shuruq`, `Dhuhr`, `Asr`, `Maghrib` or `Isha` (and `Jumua`, `Jumua 2`, `Jumua 3` on Fridays) whatever your language. It starts at the adhan and ends at the iqama if your mosque publishes it, otherwise when it starts. The times of the night are events named `End of the first third`, `Middle of the night` and `Start of the last third`, which end when they start. Use it with a `calendar` trigger, see the examples below.
 
+The adhans of the MAWAQIT mosque screens (Makkah, Madinah, Al-Quds, Al-Afassy, Algeria, Egypt, each with its Fajr version) are available in the media browser. Listen to them in _Media > MAWAQIT_, selecting _This browser_ as the player, then pick one in the **Play media** action of your automation. They are streamed from the MAWAQIT servers.
+
 ### Upgrading from version 3.x
 
 Version 4 is a rewrite based on the code submitted to Home Assistant core. Your configuration is migrated automatically when Home Assistant restarts:
@@ -99,17 +101,19 @@ Prayer sensors are timestamps, so they can be used directly in a `time` trigger,
         media_content_type: routine
   mode: single
 
-# Play adhan on a connected speaker
+# Play the adhan of Makkah on a speaker
 - id: 'isha_adhan'
   alias: Isha adhan
   triggers:
     - trigger: time
       at: sensor.my_mosque_isha_prayer
   actions:
-    - action: mqtt.publish
+    - action: media_player.play_media
+      target:
+        entity_id: media_player.living_room
       data:
-        topic: 'commande/play/mini'
-        payload: 'http://192.168.10.101/mp3/adhan.mp3' # an http url to mp3 file
+        media_content_id: media-source://mawaqit/adhan-maquah # adhan-maquah-fajr for Fajr
+        media_content_type: audio/mpeg
   mode: single
 
 # Wake up for Qiyam al-Layl
@@ -160,6 +164,8 @@ Le composant est rajouté à Home Assistant (version **2025.3** minimum) sous fo
 Après le redémarrage de Home Assistant, allez dans _Paramètres > Appareils et Services > Ajouter une intégration_ et cherchez **"Mawaqit"**. Entrez le login et mot de passe de votre compte **mawaqit.net** et cliquez sur **Valider**. Choisissez ensuite comment trouver votre mosquée : autour des coordonnées GPS (latitude/longitude) enregistrées dans Home Assistant, ou par mot-clé (comme le nom de la mosquée ou sa ville, avec 5 résultats par page et une option pour lancer une nouvelle recherche). S'il n'y a aucune mosquée autour de vous, le composant vous propose la recherche par mot-clé. Laissez le mot-clé vide pour revenir au choix de la recherche. Sélectionnez enfin votre mosquée préférée. Une seule mosquée peut être configurée : pour en changer, ouvrez _Paramètres > Appareils et Services > MAWAQIT_ et choisissez **Reconfigurer**. Vos sensors gardent leurs identifiants, donc vos automatisations continuent de fonctionner.
 
 L'intégration ajoute un appareil au nom de votre mosquée, avec un lien vers sa page MAWAQIT, et des composants de type ```sensor``` : les 5 horaires des prières, le Shuruq, les iqamas associées (si votre mosquée les publie), les horaires de Jumu'a, ainsi que le nom et l'heure de la prochaine prière (voir le tableau ci-dessus). Leurs identifiants commencent par le nom de la mosquée et suivent la langue de Home Assistant : pour une mosquée nommée « Ma Mosquée », la prière de Fajr est `sensor.ma_mosquee_priere_fajr` et la prochaine prière `sensor.ma_mosquee_nom_de_la_prochaine_priere`. Les sensors de la nuit donnent la fin du premier tiers, le milieu de la nuit et le début du dernier tiers, la nuit allant du Maghrib au Fajr suivant : ils passent à la nuit suivante au Fajr. Les horaires des prières passent au jour suivant au milieu de la nuit. Le nom de la prochaine prière s'affiche traduit (par ex. « Dhohr »), mais vos automatisations utilisent toujours la valeur `dhuhr`. Un calendrier `calendar.ma_mosquee_horaires_des_prieres` contient aussi les prières du mois en cours et du mois suivant : chaque prière est un événement nommé `Fajr`, `Shuruq`, `Dhuhr`, `Asr`, `Maghrib` ou `Isha` (et `Jumua` le vendredi) quelle que soit la langue, de l'adhan jusqu'à l'iqama si votre mosquée la publie, ainsi que les moments de la nuit (`End of the first third`, `Middle of the night`, `Start of the last third`). Utilisez-le avec un déclencheur `calendar`, comme un rappel 5 minutes avant la fin de l'événement, donc avant l'iqama.
+
+Les adhans des écrans MAWAQIT (La Mecque, Médine, Al-Qods, Al-Afassy, Algérie, Égypte, chacun avec sa version Fajr) sont disponibles dans le navigateur de médias. Écoutez-les dans _Médias > MAWAQIT_ en choisissant _Ce navigateur_ comme lecteur, puis choisissez-en un dans l'action **Lire un média** de votre automatisation. Ils sont lus depuis les serveurs MAWAQIT.
 
 **Mise à jour depuis la version 3.x** : la configuration est migrée automatiquement au redémarrage. Les sensors existants gardent leurs identifiants (par ex. `sensor.fajr_adhan`), donc vos automatisations continuent de fonctionner. Ils sont regroupés dans un appareil au nom de votre mosquée, et leurs noms commencent par celui-ci (par ex. « Ma Mosquée Prière Fajr »). `sensor.my_mosque` et `sensor.next_salat_preparation` sont supprimés, et `sensor.next_salat_name` renvoie désormais des valeurs en minuscules (`fajr`, `shuruq`, `dhuhr`, ...).
 
