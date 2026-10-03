@@ -109,7 +109,7 @@ class PrayerTimeCoordinator(TimestampDataUpdateCoordinator[dict]):
 
         if calendar := prayer_times.get("calendar"):
             prayer_times["calendar"] = utils.drop_imsak_column(calendar)
-            if invalid_days := utils.find_invalid_times(calendar):
+            if invalid_days := utils.find_invalid_times(prayer_times["calendar"]):
                 _LOGGER.warning(
                     "Invalid prayer times from MAWAQIT, ignored on: %s",
                     ", ".join(invalid_days),

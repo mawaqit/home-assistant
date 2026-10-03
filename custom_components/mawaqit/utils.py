@@ -315,7 +315,8 @@ def get_islamic_date(prayer_data: dict, timezone: str) -> date:
     islamic_midnight = compute_islamic_midnight(prayer_data, yesterday, timezone)
 
     if islamic_midnight is None:
-        _LOGGER.warning(
+        # Debug: called by every sensor update, the cause is logged elsewhere.
+        _LOGGER.debug(
             "Could not compute Islamic midnight for %s — falling back to civil date",
             yesterday,
         )
