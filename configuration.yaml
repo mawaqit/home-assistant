@@ -18,7 +18,7 @@ input_datetime:
     name: next salat time
     has_date: true
     has_time: true
-  next_prep_salat_time: # 10 minutes before prayer call, cf. the blueprints to change it
+  next_prep_salat_time: # 10 minutes before prayer call
     name: next prep salat time
     has_date: true
     has_time: true
@@ -31,8 +31,8 @@ automation:
       value_template: >
         {% set a1 = states("sensor.time").split(":")[0]  %}
         {% set b1 = states("sensor.time").split(":")[1] %}
-        {% set a = states("sensor.maghrib_adhan").split(" ")[1].split(":")[0] %}
-        {% set b = states("sensor.maghrib_adhan").split(":")[1] %}
+        {% set a = states("sensor.maghrib_prayer").split(" ")[1].split(":")[0] %}
+        {% set b = states("sensor.maghrib_prayer").split(":")[1] %}
         {{ b | int == b1 | int and a | int == a1 | int  }}
     action: # the action below is given as an example and is to adapt based on on your homeassistant installation
       - service: mqtt.publish
@@ -49,8 +49,8 @@ automation:
       value_template: >
         {% set a1 = states("sensor.time").split(":")[0]  %}
         {% set b1 = states("sensor.time").split(":")[1] %}
-        {% set a = states("sensor.asr_adhan").split(" ")[1].split(":")[0] %}
-        {% set b = states("sensor.asr_adhan").split(":")[1] %}
+        {% set a = states("sensor.asr_prayer").split(" ")[1].split(":")[0] %}
+        {% set b = states("sensor.asr_prayer").split(":")[1] %}
         {{ b | int == b1 | int and a | int == a1 | int  }}
     action: # the action below is given as an example and is to adapt based on on your homeassistant installation
       - service: mqtt.publish
@@ -67,8 +67,8 @@ automation:
       value_template: >
         {% set a1 = states("sensor.time").split(":")[0]  %}
         {% set b1 = states("sensor.time").split(":")[1] %}
-        {% set a = states("sensor.dhuhr_adhan").split(" ")[1].split(":")[0] %}
-        {% set b = states("sensor.dhuhr_adhan").split(":")[1] %}
+        {% set a = states("sensor.dhuhr_prayer").split(" ")[1].split(":")[0] %}
+        {% set b = states("sensor.dhuhr_prayer").split(":")[1] %}
         {{ b | int == b1 | int and a | int == a1 | int  }}
     action: # the action below is given as an example and is to adapt based on on your homeassistant installation
       - service: mqtt.publish
@@ -85,8 +85,8 @@ automation:
       value_template: >
         {% set a1 = states("sensor.time").split(":")[0]  %}
         {% set b1 = states("sensor.time").split(":")[1] %}
-        {% set a = states("sensor.isha_adhan").split(" ")[1].split(":")[0] %}
-        {% set b = states("sensor.isha_adhan").split(":")[1] %}
+        {% set a = states("sensor.isha_prayer").split(" ")[1].split(":")[0] %}
+        {% set b = states("sensor.isha_prayer").split(":")[1] %}
         {{ b | int == b1 | int and a | int == a1 | int  }}
     action: # the action below is given as an example and is to adapt based on on your homeassistant installation
       - service: mqtt.publish
@@ -103,8 +103,8 @@ automation:
       value_template: >
         {% set a1 = states("sensor.time").split(":")[0]  %}
         {% set b1 = states("sensor.time").split(":")[1] %}
-        {% set a = states("sensor.fajr_adhan").split(" ")[1].split(":")[0] %}
-        {% set b = states("sensor.fajr_adhan").split(":")[1] %}
+        {% set a = states("sensor.fajr_prayer").split(" ")[1].split(":")[0] %}
+        {% set b = states("sensor.fajr_prayer").split(":")[1] %}
         {{ b | int == b1 | int and a | int == a1 | int  }}
     action: # the action below is given as an example and is to adapt based on on your homeassistant installation
       - service: mqtt.publish
@@ -120,11 +120,11 @@ automation:
     trigger:
       platform: template
       value_template: >
-        {% set before1 = (as_timestamp(states('sensor.maghrib_adhan')) - 10 * 60) | timestamp_custom("%H:%M")   %}
-        {% set before2 = (as_timestamp(states('sensor.isha_adhan')) - 10 * 60) | timestamp_custom("%H:%M")   %}
-        {% set before3 = (as_timestamp(states('sensor.dhuhr_adhan')) - 10 * 60) | timestamp_custom("%H:%M")   %}
-        {% set before4 = (as_timestamp(states('sensor.fajr_adhan')) - 60 * 60) | timestamp_custom("%H:%M")   %}
-        {% set before5 = (as_timestamp(states('sensor.fajr_adhan')) - 10 * 60) | timestamp_custom("%H:%M")   %}
+        {% set before1 = (as_timestamp(states('sensor.maghrib_prayer')) - 10 * 60) | timestamp_custom("%H:%M")   %}
+        {% set before2 = (as_timestamp(states('sensor.isha_prayer')) - 10 * 60) | timestamp_custom("%H:%M")   %}
+        {% set before3 = (as_timestamp(states('sensor.dhuhr_prayer')) - 10 * 60) | timestamp_custom("%H:%M")   %}
+        {% set before4 = (as_timestamp(states('sensor.fajr_prayer')) - 60 * 60) | timestamp_custom("%H:%M")   %}
+        {% set before5 = (as_timestamp(states('sensor.fajr_prayer')) - 10 * 60) | timestamp_custom("%H:%M")   %}
         {% set b1 = states("sensor.time") | timestamp_custom("%H:%M") %}
         {{ b1  == before1 or b1  == before2 or b1  == before3 or b1  == before4 or b1  == before5   }}
     action: # the action below is given as an example and is to adapt based on on your homeassistant installation
@@ -141,11 +141,11 @@ automation:
     trigger:
       platform: template
       value_template: >
-        {% set before1 = (as_timestamp(states('sensor.maghrib_adhan')) - 1 * 60) | timestamp_custom("%H:%M")   %}
-        {% set before2 = (as_timestamp(states('sensor.isha_adhan')) - 1 * 60) | timestamp_custom("%H:%M")   %}
-        {% set before3 = (as_timestamp(states('sensor.dhuhr_adhan')) - 1 * 60) | timestamp_custom("%H:%M")   %}
-        {% set before4 = (as_timestamp(states('sensor.fajr_adhan')) - 1 * 60) | timestamp_custom("%H:%M")   %}
-        {% set before5 = (as_timestamp(states('sensor.fajr_adhan')) - 1 * 60) | timestamp_custom("%H:%M")   %}
+        {% set before1 = (as_timestamp(states('sensor.maghrib_prayer')) - 1 * 60) | timestamp_custom("%H:%M")   %}
+        {% set before2 = (as_timestamp(states('sensor.isha_prayer')) - 1 * 60) | timestamp_custom("%H:%M")   %}
+        {% set before3 = (as_timestamp(states('sensor.dhuhr_prayer')) - 1 * 60) | timestamp_custom("%H:%M")   %}
+        {% set before4 = (as_timestamp(states('sensor.fajr_prayer')) - 1 * 60) | timestamp_custom("%H:%M")   %}
+        {% set before5 = (as_timestamp(states('sensor.fajr_prayer')) - 1 * 60) | timestamp_custom("%H:%M")   %}
         {% set b1 = states("sensor.time") | timestamp_custom("%H:%M") %}
         {{ b1  == before1 or b1  == before2 or b1  == before3 or b1  == before4 or b1  == before5   }}
     action: # the action below is given as an example and is to adapt based on on your homeassistant installation

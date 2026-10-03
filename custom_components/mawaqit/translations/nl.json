@@ -1,0 +1,107 @@
+{
+  "config": {
+    "abort": {
+      "cannot_connect": "Kan geen verbinding maken met de MAWAQIT-server. Controleer je internetverbinding en probeer het opnieuw.",
+      "no_mosque": "Er zijn geen MAWAQIT-moskeeën gevonden in de buurt van je Home Assistant-locatie. Zorg ervoor dat je locatie in de buurt van een moskee is ingesteld. Zoeken op trefwoord wordt nog niet ondersteund, maar is gepland voor een toekomstige versie."
+    },
+    "error": {
+      "cannot_connect_to_server": "Kan geen verbinding maken met de server, probeer het later opnieuw.",
+      "wrong_credential": "Onjuiste gebruikersnaam of wachtwoord, probeer het opnieuw."
+    },
+    "step": {
+      "mosques_coordinates": {
+        "data": {
+          "mosques": "Er zijn meerdere moskeeën bij je in de buurt, kies er een:",
+          "uuid": "Moskee"
+        },
+        "data_description": {
+          "mosques": "Moskeeën in de buurt van je Home Assistant-locatie.",
+          "uuid": "Kies de moskee die het dichtst bij je locatie ligt."
+        },
+        "title": "Je favoriete moskee"
+      },
+      "user": {
+        "data": {
+          "password": "Wachtwoord",
+          "username": "E-mail"
+        },
+        "data_description": {
+          "password": "Het wachtwoord van je MAWAQIT-account.",
+          "username": "Het e-mailadres van je MAWAQIT-account."
+        },
+        "description": "Registreer op [mawaqit.net]({mawaqit_url}) en log hieronder in",
+        "title": "Inloggen bij MAWAQIT"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "iqama_asr": {
+        "name": "Asr Iqama"
+      },
+      "iqama_dhuhr": {
+        "name": "Dhuhr Iqama"
+      },
+      "iqama_fajr": {
+        "name": "Fajr Iqama"
+      },
+      "iqama_isha": {
+        "name": "Isha Iqama"
+      },
+      "iqama_maghrib": {
+        "name": "Maghrib Iqama"
+      },
+      "next_salat_name": {
+        "name": "Naam volgend gebed"
+      },
+      "next_salat_time": {
+        "name": "Tijd volgend gebed"
+      },
+      "prayer_asr": {
+        "name": "Asr-gebed"
+      },
+      "prayer_dhuhr": {
+        "name": "Dhuhr-gebed"
+      },
+      "prayer_fajr": {
+        "name": "Fajr-gebed"
+      },
+      "prayer_isha": {
+        "name": "Isha-gebed"
+      },
+      "prayer_jumua": {
+        "name": "Jumua-gebed"
+      },
+      "prayer_jumua_2": {
+        "name": "Tweede Jumua-gebed"
+      },
+      "prayer_jumua_3": {
+        "name": "Derde Jumua-gebed"
+      },
+      "prayer_maghrib": {
+        "name": "Maghrib-gebed"
+      },
+      "prayer_shuruq": {
+        "name": "Shuruq"
+      }
+    }
+  },
+  "exceptions": {
+    "auth_failed": {
+      "message": "Authenticatie bij MAWAQIT is mislukt. Authenticeer je account opnieuw."
+    },
+    "mawaqit_error": {
+      "message": "Fout bij communicatie met MAWAQIT: {error}"
+    },
+    "network_error": {
+      "message": "Netwerkfout bij verbinden met MAWAQIT: {error}"
+    },
+    "no_mosque_data": {
+      "message": "MAWAQIT heeft geen moskeegegevens teruggegeven."
+    },
+    "no_prayer_times_data": {
+      "message": "MAWAQIT heeft geen gebedstijden teruggegeven."
+    }
+  },
+  "title": "MAWAQIT gebedstijden"
+}

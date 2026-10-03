@@ -1,0 +1,46 @@
+name: Release
+
+on:
+  # Creates a draft release from the manifest version, so the tag always matches it.
+  workflow_dispatch:
+    inputs:
+      prerelease:
+        description: "Pre-release (beta)"
+        type: boolean
+        default: false
+  # Publishing the draft (or a release created by hand) attaches the zip.
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: "ubuntu-latest"
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: "actions/checkout@v4"
+      - name: Read the manifest version
+        run: echo "TAG=v$(jq -r .version custom_components/mawaqit/manifest.json)" >> "$GITHUB_ENV"
+      - name: Check the version
+        run: |
+          if [[ "$TAG" == *dev* ]]; then
+            echo "::error::$TAG is a development version, bump the manifest first (see RELEASING.md)"
+            exit 1
+          fi
+          if [ "$GITHUB_EVENT_NAME" = release ] && [ "$GITHUB_REF_NAME" != "$TAG" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match the manifest version $TAG"
+            exit 1
+          fi
+      - name: Create the draft release
+        if: github.event_name == 'workflow_dispatch'
+        run: >-
+          gh release create "$TAG" --draft --generate-notes --title "$TAG"
+          --target "$GITHUB_SHA" ${{ inputs.prerelease && '--prerelease' || '' }}
+      - name: Build the zip
+        # Files at the zip root: users extract it into custom_components/mawaqit.
+        run: cd custom_components/mawaqit && zip -r "$RUNNER_TEMP/mawaqit.zip" . -x "*__pycache__*" ".gitignore"
+      - name: Attach the zip
+        run: gh release upload "$TAG" "$RUNNER_TEMP/mawaqit.zip" --clobber

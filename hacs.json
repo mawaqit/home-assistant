@@ -1,5 +1,5 @@
 {
     "name": "MAWAQIT",
     "render_readme": true,
-    "persistent_directory": "mawaqit/data"
+    "homeassistant": "2025.3.0"
 }
