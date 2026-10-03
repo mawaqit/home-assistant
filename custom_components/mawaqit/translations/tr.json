@@ -2,7 +2,8 @@
   "config": {
     "abort": {
       "cannot_connect": "MAWAQIT sunucusuna bağlanılamadı. Lütfen internet bağlantınızı kontrol edip tekrar deneyin.",
-      "no_mosque": "Home Assistant konumunuzun yakınında MAWAQIT camisi bulunamadı. Lütfen konumunuzun bir camiye yakın ayarlandığından emin olun. Anahtar kelimeyle arama henüz desteklenmiyor ancak gelecek bir sürüm için planlanıyor."
+      "no_mosque": "Home Assistant konumunuzun yakınında MAWAQIT camisi bulunamadı. Lütfen konumunuzun bir camiye yakın ayarlandığından emin olun. Anahtar kelimeyle arama henüz desteklenmiyor ancak gelecek bir sürüm için planlanıyor.",
+      "reauth_successful": "Yeniden kimlik doğrulama başarılı oldu."
     },
     "error": {
       "cannot_connect_to_server": "Sunucuya bağlanılamıyor, lütfen daha sonra tekrar deneyin.",
@@ -19,6 +20,18 @@
           "uuid": "Konumunuza en yakın camiyi seçin."
         },
         "title": "Favori caminiz"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "Şifre",
+          "username": "E-posta"
+        },
+        "data_description": {
+          "password": "MAWAQIT hesabınızın şifresi.",
+          "username": "MAWAQIT hesabınızın e-posta adresi."
+        },
+        "description": "MAWAQIT girişiniz artık geçerli değil, örneğin şifrenizi değiştirdikten sonra. Namaz vakitlerinizi güncel tutmak için yeniden giriş yapın.",
+        "title": "MAWAQIT'e yeniden giriş yapın"
       },
       "user": {
         "data": {

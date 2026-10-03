@@ -8,6 +8,7 @@ from mawaqit import AsyncMawaqitClient
 from mawaqit.exceptions import BadCredentialsException, MawaqitException
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -80,10 +81,9 @@ class PrayerTimeCoordinator(DataUpdateCoordinator[dict]):
         try:
             prayer_times = await self.client.fetch_prayer_times()
         except BadCredentialsException as err:
-            raise UpdateFailed(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
-                translation_key="mawaqit_error",
-                translation_placeholders={"error": str(err)},
+                translation_key="auth_failed",
             ) from err
         except MawaqitException as err:
             raise UpdateFailed(

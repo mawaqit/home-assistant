@@ -2,7 +2,8 @@
   "config": {
     "abort": {
       "cannot_connect": "Failed to connect to the MAWAQIT server. Please check your internet connection and try again.",
-      "no_mosque": "No MAWAQIT mosques were found near your Home Assistant location. Please make sure your location is set to somewhere near a mosque. Searching by keyword is not yet supported but is planned for a future release."
+      "no_mosque": "No MAWAQIT mosques were found near your Home Assistant location. Please make sure your location is set to somewhere near a mosque. Searching by keyword is not yet supported but is planned for a future release.",
+      "reauth_successful": "Re-authentication was successful."
     },
     "error": {
       "cannot_connect_to_server": "Cannot connect to the server, please retry later.",
@@ -19,6 +20,18 @@
           "uuid": "Select the mosque closest to your location."
         },
         "title": "Your favourite mosque"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "Password",
+          "username": "Email"
+        },
+        "data_description": {
+          "password": "Your MAWAQIT account password.",
+          "username": "Your MAWAQIT account email address."
+        },
+        "description": "Your MAWAQIT login is no longer valid, for example after a password change. Log in again to keep your prayer times up to date.",
+        "title": "Log in to MAWAQIT again"
       },
       "user": {
         "data": {

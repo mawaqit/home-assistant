@@ -40,6 +40,8 @@ Do not download the repository itself: the `main` branch contains unreleased cha
 
 Only one mosque can be configured. To change it, remove the integration and add it again.
 
+If your MAWAQIT password changes or your login stops working, Home Assistant asks you to log in again from _Settings > Devices & Services_. Your sensors and their settings are kept.
+
 ### Components of Mawaqit Integration
 
 The integration adds the following ```sensor``` entities (all times are timestamps):

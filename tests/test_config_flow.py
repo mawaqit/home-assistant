@@ -5,17 +5,19 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aiohttp.client_exceptions import ClientConnectorError
 from mawaqit.exceptions import BadCredentialsException, MawaqitException, NoMosqueAround
 import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.mawaqit import config_flow
 from custom_components.mawaqit.const import CANNOT_CONNECT_TO_SERVER, WRONG_CREDENTIAL
 from custom_components.mawaqit.types import MawaqitMosqueData
 from homeassistant import data_entry_flow
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_UUID
+from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME, CONF_UUID
 from homeassistant.core import HomeAssistant
 
-from .conftest import MOCK_TOKEN
+from .conftest import MOCK_TOKEN, MOCK_UUID
 
 USER_INPUT = {CONF_USERNAME: "user", CONF_PASSWORD: "pass"}
+NEW_TOKEN = "new-api-token"
 
 
 @pytest.fixture
@@ -225,3 +227,85 @@ async def test_async_step_mosques_coordinates(
 
     assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert "data" in result and result["data"][CONF_UUID] == mosque_uuid
+
+
+# ---------------------------------------------------------------------------
+# REAUTH
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test reauthentication stores the new token and keeps the mosque."""
+    mock_config_entry.add_to_hass(hass)
+    mock_client.token = NEW_TOKEN
+    mock_client.get_api_token.return_value = NEW_TOKEN
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("step_id") == "reauth_confirm"
+
+    with patch(
+        "custom_components.mawaqit.config_flow.AsyncMawaqitClient",
+        return_value=mock_client,
+    ) as mock_client_class:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+        await hass.async_block_till_done()
+
+    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
+    assert result.get("reason") == "reauth_successful"
+    assert mock_client_class.call_args.kwargs[CONF_USERNAME] == "user"
+    assert mock_client_class.call_args.kwargs[CONF_PASSWORD] == "pass"
+    assert mock_config_entry.data[CONF_API_KEY] == NEW_TOKEN
+    assert mock_config_entry.data[CONF_UUID] == MOCK_UUID
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (BadCredentialsException, WRONG_CREDENTIAL),
+        (MawaqitException, CANNOT_CONNECT_TO_SERVER),
+    ],
+    ids=["bad_credentials", "mawaqit_error"],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow_errors_then_recovers(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    side_effect: type[Exception],
+    expected_error: str,
+) -> None:
+    """Test the reauth form shows login errors and lets the user retry."""
+    mock_config_entry.add_to_hass(hass)
+    mock_client.get_api_token.side_effect = side_effect
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    with patch(
+        "custom_components.mawaqit.config_flow.AsyncMawaqitClient",
+        return_value=mock_client,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+        assert result.get("type") == data_entry_flow.FlowResultType.FORM
+        assert result.get("step_id") == "reauth_confirm"
+        assert result.get("errors") == {"base": expected_error}
+
+        mock_client.get_api_token.side_effect = None
+        mock_client.token = NEW_TOKEN
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+        await hass.async_block_till_done()
+
+    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
+    assert result.get("reason") == "reauth_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == NEW_TOKEN

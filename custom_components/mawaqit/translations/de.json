@@ -2,7 +2,8 @@
   "config": {
     "abort": {
       "cannot_connect": "Verbindung zum MAWAQIT-Server fehlgeschlagen. Bitte überprüfe deine Internetverbindung und versuche es erneut.",
-      "no_mosque": "In der Nähe deines Home-Assistant-Standorts wurden keine MAWAQIT-Moscheen gefunden. Bitte stelle sicher, dass dein Standort in der Nähe einer Moschee liegt. Die Suche per Stichwort wird noch nicht unterstützt, ist aber für eine zukünftige Version geplant."
+      "no_mosque": "In der Nähe deines Home-Assistant-Standorts wurden keine MAWAQIT-Moscheen gefunden. Bitte stelle sicher, dass dein Standort in der Nähe einer Moschee liegt. Die Suche per Stichwort wird noch nicht unterstützt, ist aber für eine zukünftige Version geplant.",
+      "reauth_successful": "Die erneute Authentifizierung war erfolgreich."
     },
     "error": {
       "cannot_connect_to_server": "Verbindung zum Server nicht möglich, bitte versuche es später erneut.",
@@ -19,6 +20,18 @@
           "uuid": "Wähle die Moschee, die deinem Standort am nächsten liegt."
         },
         "title": "Deine bevorzugte Moschee"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "Passwort",
+          "username": "E-Mail"
+        },
+        "data_description": {
+          "password": "Das Passwort deines MAWAQIT-Kontos.",
+          "username": "Die E-Mail-Adresse deines MAWAQIT-Kontos."
+        },
+        "description": "Deine MAWAQIT-Anmeldung ist nicht mehr gültig, zum Beispiel nach einer Passwortänderung. Melde dich erneut an, damit deine Gebetszeiten aktuell bleiben.",
+        "title": "Erneut bei MAWAQIT anmelden"
       },
       "user": {
         "data": {
