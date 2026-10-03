@@ -1,17 +1,15 @@
 homeassistant:
 
-
 sensor:
   - platform: time_date
     display_options:
-      - 'time'
+      - "time"
 
 template:
   - sensor:
       - name: "time to next prayer"
         unit_of_measurement: "min"
         state: '{{ ((as_timestamp(states("sensor.next_salat_time")) - (as_timestamp(now())))/60) | int }}'
-
 
 input_datetime:
   next_salat_time:
@@ -37,10 +35,8 @@ automation:
     action: # the action below is given as an example and is to adapt based on on your homeassistant installation
       - service: mqtt.publish
         data_template:
-          topic: 'commande/play/mini'
+          topic: "commande/play/mini"
           payload: "http://192.168.10.101/Quran/nofajr.mp3"
-
-
 
   - alias: Prayer Time Asr
     initial_state: true
@@ -55,10 +51,8 @@ automation:
     action: # the action below is given as an example and is to adapt based on on your homeassistant installation
       - service: mqtt.publish
         data_template:
-          topic: 'commande/play/mini'
+          topic: "commande/play/mini"
           payload: "http://192.168.10.101/Quran/nofajr.mp3"
-
-
 
   - alias: Prayer Time Dhuhr
     initial_state: true
@@ -73,10 +67,8 @@ automation:
     action: # the action below is given as an example and is to adapt based on on your homeassistant installation
       - service: mqtt.publish
         data_template:
-          topic: 'commande/play/mini'
+          topic: "commande/play/mini"
           payload: "http://192.168.10.101/Quran/nofajr.mp3"
-
-
 
   - alias: Prayer Time Isha
     initial_state: true
@@ -91,10 +83,8 @@ automation:
     action: # the action below is given as an example and is to adapt based on on your homeassistant installation
       - service: mqtt.publish
         data_template:
-          topic: 'commande/play/mini'
+          topic: "commande/play/mini"
           payload: "http://192.168.10.101/Quran/nofajr.mp3"
-
-
 
   - alias: Prayer Time Fajr
     initial_state: true
@@ -109,11 +99,8 @@ automation:
     action: # the action below is given as an example and is to adapt based on on your homeassistant installation
       - service: mqtt.publish
         data_template:
-          topic: 'commande/play/mini'
+          topic: "commande/play/mini"
           payload: "http://192.168.10.101/Quran/fajr.mp3"
-
-
-
 
   - alias: Quran before Prayer Time
     initial_state: true
@@ -130,11 +117,8 @@ automation:
     action: # the action below is given as an example and is to adapt based on on your homeassistant installation
       - service: mqtt.publish
         data_template:
-          topic: 'commande/play/mini'
+          topic: "commande/play/mini"
           payload: "http://192.168.10.101/Quran/Nasser/088.mp3"
-
-
-
 
   - alias: Annonce before Prayer Time
     initial_state: true
@@ -151,5 +135,5 @@ automation:
     action: # the action below is given as an example and is to adapt based on on your homeassistant installation
       service: mqtt.publish
       data_template:
-        topic: 'commande/say/mini'
+        topic: "commande/say/mini"
         payload: "la prochaine salat aura lieu dans une minute. soyez prets"

@@ -4,10 +4,12 @@ from datetime import datetime
 from unittest.mock import MagicMock
 
 from freezegun import freeze_time
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
-from homeassistant.core import HomeAssistant
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant_custom_component.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+)
 
 from custom_components.mawaqit.coordinator import PrayerTimeCoordinator
 from custom_components.mawaqit.sensor import (
@@ -16,6 +18,8 @@ from custom_components.mawaqit.sensor import (
     MawaqitPrayerTimeSensorEntityDescription,
     NextPrayerSensor,
 )
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
+from homeassistant.core import HomeAssistant
 
 from .conftest import MOCK_UUID, build_prayer_data
 
@@ -145,6 +149,26 @@ async def test_next_prayer_sensors(
     time_state = hass.states.get("sensor.next_salat_time")
     assert time_state is not None
     assert time_state.state not in ("unavailable", "unknown")
+
+
+async def test_next_prayer_sensor_moves_on_at_prayer_time(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    setup_mawaqit_integration,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the next prayer switches to Asr once Dhuhr (12:30 Paris) is reached."""
+    freezer.move_to("2025-04-10 12:00:00+02:00")
+    await setup_mawaqit_integration(
+        prayer_data=build_prayer_data(fill_all_months=False)
+    )
+    assert hass.states.get("sensor.next_salat_name").state == "dhuhr"
+
+    freezer.move_to("2025-04-10 12:30:01+02:00")
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.next_salat_name").state == "asr"
 
 
 @freeze_time("2025-04-10 12:00:00+02:00")

@@ -6,14 +6,14 @@ from collections.abc import Callable, Generator
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from homeassistant import config_entries
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
-from homeassistant.core import HomeAssistant
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.mawaqit.const import DOMAIN
 from custom_components.mawaqit.types import MawaqitMosqueData
+from homeassistant import config_entries
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.core import HomeAssistant
 
 # ---------------------------------------------------------------------------
 # Shared constants

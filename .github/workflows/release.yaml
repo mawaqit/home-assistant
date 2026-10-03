@@ -12,16 +12,24 @@ on:
   release:
     types: [published]
 
-permissions:
-  contents: write
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
 
 jobs:
   release:
-    runs-on: "ubuntu-latest"
+    name: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the release and upload the zip
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
-      - uses: "actions/checkout@v4"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Read the manifest version
         run: echo "TAG=v$(jq -r .version custom_components/mawaqit/manifest.json)" >> "$GITHUB_ENV"
       - name: Check the version
@@ -36,9 +44,11 @@ jobs:
           fi
       - name: Create the draft release
         if: github.event_name == 'workflow_dispatch'
+        env:
+          PRERELEASE: ${{ inputs.prerelease }}
         run: >-
           gh release create "$TAG" --draft --generate-notes --title "$TAG"
-          --target "$GITHUB_SHA" ${{ inputs.prerelease && '--prerelease' || '' }}
+          --target "$GITHUB_SHA" --prerelease="$PRERELEASE"
       - name: Build the zip
         # Files at the zip root: users extract it into custom_components/mawaqit.
         run: cd custom_components/mawaqit && zip -r "$RUNNER_TEMP/mawaqit.zip" . -x "*__pycache__*" ".gitignore"

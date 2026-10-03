@@ -1,0 +1,2 @@
+*.md
+custom_components/*/translations/*.json
