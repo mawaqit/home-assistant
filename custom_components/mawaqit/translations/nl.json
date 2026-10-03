@@ -2,14 +2,35 @@
   "config": {
     "abort": {
       "cannot_connect": "Kan geen verbinding maken met de MAWAQIT-server. Controleer je internetverbinding en probeer het opnieuw.",
-      "no_mosque": "Er zijn geen MAWAQIT-moskeeën gevonden in de buurt van je Home Assistant-locatie. Zorg ervoor dat je locatie in de buurt van een moskee is ingesteld. Zoeken op trefwoord wordt nog niet ondersteund, maar is gepland voor een toekomstige versie.",
       "reauth_successful": "Opnieuw authenticeren is gelukt."
     },
     "error": {
       "cannot_connect_to_server": "Kan geen verbinding maken met de server, probeer het later opnieuw.",
+      "no_more_mosques": "Er zijn geen andere moskeeën voor dit trefwoord.",
+      "no_mosque_around": "Er zijn geen MAWAQIT-moskeeën gevonden in de buurt van je Home Assistant-locatie. Zoek je moskee in plaats daarvan op trefwoord.",
+      "no_mosque_found": "Geen moskee gevonden met dit trefwoord.",
       "wrong_credential": "Onjuiste gebruikersnaam of wachtwoord, probeer het opnieuw."
     },
     "step": {
+      "keyword_results": {
+        "data": {
+          "uuid": "Moskee"
+        },
+        "data_description": {
+          "uuid": "Kies je moskee, een andere pagina met resultaten of een nieuwe zoekopdracht."
+        },
+        "description": "Moskeeën voor \"{keyword}\", pagina {page}.",
+        "title": "Je favoriete moskee"
+      },
+      "keyword_search": {
+        "data": {
+          "keyword": "Trefwoord"
+        },
+        "data_description": {
+          "keyword": "Naam van de moskee of van haar stad."
+        },
+        "title": "Zoek je moskee"
+      },
       "mosques_coordinates": {
         "data": {
           "mosques": "Er zijn meerdere moskeeën bij je in de buurt, kies er een:",
@@ -32,6 +53,14 @@
         },
         "description": "Je MAWAQIT-login is niet meer geldig, bijvoorbeeld na een wachtwoordwijziging. Log opnieuw in om je gebedstijden up-to-date te houden.",
         "title": "Opnieuw inloggen bij MAWAQIT"
+      },
+      "search_method": {
+        "description": "Hoe wil je je moskee vinden?",
+        "menu_options": {
+          "keyword_search": "Zoeken op trefwoord",
+          "mosques_coordinates": "Moskeeën in de buurt van mijn locatie"
+        },
+        "title": "Vind je moskee"
       },
       "user": {
         "data": {
@@ -114,6 +143,15 @@
     },
     "no_prayer_times_data": {
       "message": "MAWAQIT heeft geen gebedstijden teruggegeven."
+    }
+  },
+  "selector": {
+    "keyword_results": {
+      "options": {
+        "new_search": "Nieuwe zoekopdracht",
+        "next_page": "Volgende pagina",
+        "previous_page": "Vorige pagina"
+      }
     }
   },
   "title": "MAWAQIT gebedstijden"

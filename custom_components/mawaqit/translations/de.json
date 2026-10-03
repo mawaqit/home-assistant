@@ -2,14 +2,35 @@
   "config": {
     "abort": {
       "cannot_connect": "Verbindung zum MAWAQIT-Server fehlgeschlagen. Bitte überprüfe deine Internetverbindung und versuche es erneut.",
-      "no_mosque": "In der Nähe deines Home-Assistant-Standorts wurden keine MAWAQIT-Moscheen gefunden. Bitte stelle sicher, dass dein Standort in der Nähe einer Moschee liegt. Die Suche per Stichwort wird noch nicht unterstützt, ist aber für eine zukünftige Version geplant.",
       "reauth_successful": "Die erneute Authentifizierung war erfolgreich."
     },
     "error": {
       "cannot_connect_to_server": "Verbindung zum Server nicht möglich, bitte versuche es später erneut.",
+      "no_more_mosques": "Für dieses Stichwort gibt es keine weiteren Moscheen.",
+      "no_mosque_around": "In der Nähe deines Home-Assistant-Standorts wurden keine MAWAQIT-Moscheen gefunden. Suche deine Moschee stattdessen per Stichwort.",
+      "no_mosque_found": "Keine Moschee mit diesem Stichwort gefunden.",
       "wrong_credential": "Falscher Benutzername oder falsches Passwort, bitte versuche es erneut."
     },
     "step": {
+      "keyword_results": {
+        "data": {
+          "uuid": "Moschee"
+        },
+        "data_description": {
+          "uuid": "Wähle deine Moschee, eine andere Ergebnisseite oder eine neue Suche."
+        },
+        "description": "Moscheen zu „{keyword}“, Seite {page}.",
+        "title": "Deine bevorzugte Moschee"
+      },
+      "keyword_search": {
+        "data": {
+          "keyword": "Stichwort"
+        },
+        "data_description": {
+          "keyword": "Name der Moschee oder ihrer Stadt."
+        },
+        "title": "Suche deine Moschee"
+      },
       "mosques_coordinates": {
         "data": {
           "mosques": "Mehrere Moscheen sind in deiner Nähe verfügbar, wähle eine aus:",
@@ -32,6 +53,14 @@
         },
         "description": "Deine MAWAQIT-Anmeldung ist nicht mehr gültig, zum Beispiel nach einer Passwortänderung. Melde dich erneut an, damit deine Gebetszeiten aktuell bleiben.",
         "title": "Erneut bei MAWAQIT anmelden"
+      },
+      "search_method": {
+        "description": "Wie möchtest du deine Moschee finden?",
+        "menu_options": {
+          "keyword_search": "Per Stichwort suchen",
+          "mosques_coordinates": "Moscheen in meiner Nähe"
+        },
+        "title": "Finde deine Moschee"
       },
       "user": {
         "data": {
@@ -114,6 +143,15 @@
     },
     "no_prayer_times_data": {
       "message": "MAWAQIT hat keine Gebetszeiten zurückgegeben."
+    }
+  },
+  "selector": {
+    "keyword_results": {
+      "options": {
+        "new_search": "Neue Suche",
+        "next_page": "Nächste Seite",
+        "previous_page": "Vorherige Seite"
+      }
     }
   },
   "title": "MAWAQIT Gebetszeiten"

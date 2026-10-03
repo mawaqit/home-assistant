@@ -2,14 +2,35 @@
   "config": {
     "abort": {
       "cannot_connect": "MAWAQIT sunucusuna bağlanılamadı. Lütfen internet bağlantınızı kontrol edip tekrar deneyin.",
-      "no_mosque": "Home Assistant konumunuzun yakınında MAWAQIT camisi bulunamadı. Lütfen konumunuzun bir camiye yakın ayarlandığından emin olun. Anahtar kelimeyle arama henüz desteklenmiyor ancak gelecek bir sürüm için planlanıyor.",
       "reauth_successful": "Yeniden kimlik doğrulama başarılı oldu."
     },
     "error": {
       "cannot_connect_to_server": "Sunucuya bağlanılamıyor, lütfen daha sonra tekrar deneyin.",
+      "no_more_mosques": "Bu anahtar kelime için başka cami yok.",
+      "no_mosque_around": "Home Assistant konumunuzun yakınında MAWAQIT camisi bulunamadı. Bunun yerine caminizi anahtar kelimeyle arayın.",
+      "no_mosque_found": "Bu anahtar kelimeyle cami bulunamadı.",
       "wrong_credential": "Hatalı kullanıcı adı veya şifre, lütfen tekrar deneyin."
     },
     "step": {
+      "keyword_results": {
+        "data": {
+          "uuid": "Cami"
+        },
+        "data_description": {
+          "uuid": "Caminizi, başka bir sonuç sayfasını veya yeni bir arama seçin."
+        },
+        "description": "\"{keyword}\" ile eşleşen camiler, sayfa {page}.",
+        "title": "Favori caminiz"
+      },
+      "keyword_search": {
+        "data": {
+          "keyword": "Anahtar kelime"
+        },
+        "data_description": {
+          "keyword": "Caminin veya bulunduğu şehrin adı."
+        },
+        "title": "Caminizi arayın"
+      },
       "mosques_coordinates": {
         "data": {
           "mosques": "Çevrenizde birden fazla cami mevcut, birini seçin:",
@@ -32,6 +53,14 @@
         },
         "description": "MAWAQIT girişiniz artık geçerli değil, örneğin şifrenizi değiştirdikten sonra. Namaz vakitlerinizi güncel tutmak için yeniden giriş yapın.",
         "title": "MAWAQIT'e yeniden giriş yapın"
+      },
+      "search_method": {
+        "description": "Caminizi nasıl bulmak istiyorsunuz?",
+        "menu_options": {
+          "keyword_search": "Anahtar kelimeyle ara",
+          "mosques_coordinates": "Konumumun çevresindeki camiler"
+        },
+        "title": "Caminizi bulun"
       },
       "user": {
         "data": {
@@ -114,6 +143,15 @@
     },
     "no_prayer_times_data": {
       "message": "MAWAQIT namaz vakti döndürmedi."
+    }
+  },
+  "selector": {
+    "keyword_results": {
+      "options": {
+        "new_search": "Yeni arama",
+        "next_page": "Sonraki sayfa",
+        "previous_page": "Önceki sayfa"
+      }
     }
   },
   "title": "MAWAQIT Namaz Vakitleri"

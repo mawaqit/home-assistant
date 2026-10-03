@@ -36,7 +36,9 @@ Do not download the repository itself: the `main` branch contains unreleased cha
 * Restart Home Assistant installation (e.g. From UI go to _Settings > System > Hardware > Power button at top right_)
 * After restarting Home Assistant, go to _Settings > Devices & Services > Add Integration_ and search for **"Mawaqit"**.
 * Enter the login and password of your **mawaqit.net** account and click on **Submit**.
-* Based on your GPS coordinates (latitude/longitude) stored in Home Assistant, the component searches for the Mawaqit mosques around you and will ask you to select your **preferred** mosque.
+* Choose how to find your mosque, then select your **preferred** mosque:
+  * **Mosques around my location**: the mosques around the GPS coordinates (latitude/longitude) stored in Home Assistant. If there are none, the component asks for a keyword instead.
+  * **Search by keyword**: for example the name of the mosque or its city. Results come 10 at a time, use _Next page_ and _Previous page_ to browse them, or _New search_ to change the keyword.
 
 Only one mosque can be configured. To change it, remove the integration and add it again.
 
@@ -117,7 +119,7 @@ Ce composant permet d'intégrer les données de votre mosquée Mawaqit dans Home
 
 Le composant est rajouté à Home Assistant (version **2025.3** minimum) sous forme d'une intégration, à installer via [HACS](https://www.hacs.xyz/) en ajoutant ce dépôt comme dépôt personnalisé (catégorie **Intégration**). Pour une installation manuelle, téléchargez **[mawaqit.zip](https://github.com/mawaqit/home-assistant/releases/latest/download/mawaqit.zip)** depuis la dernière release et extrayez-le dans `custom_components/mawaqit` de votre configuration Home Assistant (créez les dossiers s'ils n'existent pas). Ne téléchargez pas le dépôt lui-même : la branche `main` contient des changements pas encore publiés.
 
-Après le redémarrage de Home Assistant, allez dans _Paramètres > Appareils et Services > Ajouter une intégration_ et cherchez **"Mawaqit"**. Entrez le login et mot de passe de votre compte **mawaqit.net** et cliquez sur **Valider**. En se basant sur vos coordonnées GPS (latitude/longitude) enregistrées dans Home Assistant, le composant cherche les mosquées Mawaqit autour de vous et vous demande de sélectionner votre mosquée préférée. Une seule mosquée peut être configurée : pour en changer, supprimez l'intégration puis ajoutez-la à nouveau.
+Après le redémarrage de Home Assistant, allez dans _Paramètres > Appareils et Services > Ajouter une intégration_ et cherchez **"Mawaqit"**. Entrez le login et mot de passe de votre compte **mawaqit.net** et cliquez sur **Valider**. Choisissez ensuite comment trouver votre mosquée : autour des coordonnées GPS (latitude/longitude) enregistrées dans Home Assistant, ou par mot-clé (comme le nom de la mosquée ou sa ville, avec 10 résultats par page et une option pour lancer une nouvelle recherche). S'il n'y a aucune mosquée autour de vous, le composant vous propose la recherche par mot-clé. Sélectionnez enfin votre mosquée préférée. Une seule mosquée peut être configurée : pour en changer, supprimez l'intégration puis ajoutez-la à nouveau.
 
 L'intégration ajoute des composants de type ```sensor``` : les 5 horaires des prières, le Shuruq, les iqamas associées (si votre mosquée les publie), les horaires de Jumu'a, ainsi que ```sensor.next_salat_name``` et ```sensor.next_salat_time``` pour la prochaine prière (voir le tableau ci-dessus).
 
