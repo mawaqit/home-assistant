@@ -54,7 +54,7 @@ The integration adds the following ```sensor``` entities (all times are timestam
 | `sensor.shuruq` | Today's sunrise (Shuruq) |
 | `sensor.fajr_iqama` ... `sensor.isha_iqama` | Iqama of the 5 prayers, only if your mosque publishes them |
 | `sensor.jumua_prayer`, `sensor.second_jumua_prayer`, `sensor.third_jumua_prayer` | Next Jumu'a times, only those your mosque has |
-| `sensor.next_salat_name` | Next prayer: `fajr`, `shuruq`, `dhuhr`, `asr`, `maghrib` or `isha` |
+| `sensor.next_salat_name` | Next prayer: `fajr`, `shuruq`, `dhuhr`, `asr`, `maghrib` or `isha`, shown translated in the UI |
 | `sensor.next_salat_time` | Time of the next prayer |
 
 ### Upgrading from version 3.x
@@ -125,7 +125,7 @@ Le composant est rajouté à Home Assistant (version **2025.3** minimum) sous fo
 
 Après le redémarrage de Home Assistant, allez dans _Paramètres > Appareils et Services > Ajouter une intégration_ et cherchez **"Mawaqit"**. Entrez le login et mot de passe de votre compte **mawaqit.net** et cliquez sur **Valider**. Choisissez ensuite comment trouver votre mosquée : autour des coordonnées GPS (latitude/longitude) enregistrées dans Home Assistant, ou par mot-clé (comme le nom de la mosquée ou sa ville, avec 5 résultats par page et une option pour lancer une nouvelle recherche). S'il n'y a aucune mosquée autour de vous, le composant vous propose la recherche par mot-clé. Laissez le mot-clé vide pour revenir au choix de la recherche. Sélectionnez enfin votre mosquée préférée. Une seule mosquée peut être configurée : pour en changer, ouvrez _Paramètres > Appareils et Services > MAWAQIT_ et choisissez **Reconfigurer**. Vos sensors gardent leurs identifiants, donc vos automatisations continuent de fonctionner.
 
-L'intégration ajoute des composants de type ```sensor``` : les 5 horaires des prières, le Shuruq, les iqamas associées (si votre mosquée les publie), les horaires de Jumu'a, ainsi que ```sensor.next_salat_name``` et ```sensor.next_salat_time``` pour la prochaine prière (voir le tableau ci-dessus).
+L'intégration ajoute des composants de type ```sensor``` : les 5 horaires des prières, le Shuruq, les iqamas associées (si votre mosquée les publie), les horaires de Jumu'a, ainsi que ```sensor.next_salat_name``` et ```sensor.next_salat_time``` pour la prochaine prière (voir le tableau ci-dessus). Le nom de la prochaine prière s'affiche traduit (par ex. « Dhohr »), mais vos automatisations utilisent toujours la valeur `dhuhr`.
 
 **Mise à jour depuis la version 3.x** : la configuration est migrée automatiquement au redémarrage. Les sensors existants gardent leurs identifiants (par ex. `sensor.fajr_adhan`), donc vos automatisations continuent de fonctionner. `sensor.my_mosque` et `sensor.next_salat_preparation` sont supprimés, et `sensor.next_salat_name` renvoie désormais des valeurs en minuscules (`fajr`, `shuruq`, `dhuhr`, ...).
 

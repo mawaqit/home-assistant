@@ -2,6 +2,8 @@
 
 from collections.abc import Generator
 from datetime import datetime
+import json
+from pathlib import Path
 import time
 from unittest.mock import MagicMock
 
@@ -13,6 +15,7 @@ from pytest_homeassistant_custom_component.common import (
     async_fire_time_changed,
 )
 
+from custom_components.mawaqit.const import PRAYER_NAMES
 from custom_components.mawaqit.coordinator import PrayerTimeCoordinator
 from custom_components.mawaqit.sensor import (
     PRAYER_TIME_SENSOR_DESCRIPTIONS,
@@ -20,7 +23,12 @@ from custom_components.mawaqit.sensor import (
     MawaqitPrayerTimeSensorEntityDescription,
     NextPrayerSensor,
 )
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
+from homeassistant.components.sensor import (
+    ATTR_OPTIONS,
+    SensorDeviceClass,
+    SensorEntityDescription,
+)
+from homeassistant.const import ATTR_DEVICE_CLASS
 from homeassistant.core import HomeAssistant
 
 from .conftest import MOCK_UUID, PRAYER_TIMES_ROW, build_prayer_data, make_month_data
@@ -147,6 +155,8 @@ async def test_next_prayer_sensors(
     name_state = hass.states.get("sensor.next_salat_name")
     assert name_state is not None
     assert name_state.state == "dhuhr"
+    assert name_state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENUM
+    assert name_state.attributes[ATTR_OPTIONS] == PRAYER_NAMES
 
     time_state = hass.states.get("sensor.next_salat_time")
     assert time_state is not None
@@ -373,3 +383,19 @@ def test_next_prayer_sensor_native_value_unhandled_key() -> None:
     sensor._next_prayer_index = 2
     sensor._next_prayer_time = datetime(2025, 4, 10, 12, 30)
     assert sensor.native_value is None
+
+
+@pytest.mark.parametrize(
+    "translation_file",
+    sorted(
+        (Path(__file__).parents[1] / "custom_components/mawaqit/translations").glob(
+            "*.json"
+        )
+    ),
+    ids=lambda path: path.stem,
+)
+def test_next_salat_name_states_translated(translation_file: Path) -> None:
+    """Test every translation file translates every next prayer name."""
+    translations = json.loads(translation_file.read_text(encoding="utf-8"))
+    states = translations["entity"]["sensor"]["next_salat_name"]["state"]
+    assert sorted(states) == sorted(PRAYER_NAMES)

@@ -153,6 +153,8 @@ NEXT_SALAT_SENSOR_DESCRIPTION = [
     SensorEntityDescription(
         key="next_salat_name",
         translation_key="next_salat_name",
+        device_class=SensorDeviceClass.ENUM,
+        options=PRAYER_NAMES,
     ),
     SensorEntityDescription(
         key="next_salat_time",
