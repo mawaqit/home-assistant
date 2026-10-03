@@ -1,5 +1,6 @@
 """Config flow for the Mawaqit integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
@@ -9,7 +10,7 @@ from mawaqit.exceptions import BadCredentialsException, MawaqitException, NoMosq
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_UUID
+from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME, CONF_UUID
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -18,6 +19,17 @@ from .const import CANNOT_CONNECT_TO_SERVER, DOMAIN, MAWAQIT_URL, WRONG_CREDENTI
 from .types import MawaqitMosqueData
 
 _LOGGER = logging.getLogger(__name__)
+
+CREDENTIALS_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_USERNAME): selector.TextSelector(
+            selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
+        ),
+        vol.Required(CONF_PASSWORD): selector.TextSelector(
+            selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+        ),
+    }
+)
 
 
 class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -39,18 +51,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by the user."""
-
-        errors = {}
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): selector.TextSelector(
-                    selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
-                ),
-                vol.Required(CONF_PASSWORD): selector.TextSelector(
-                    selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
-                ),
-            }
-        )
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             client = AsyncMawaqitClient(
@@ -60,30 +61,67 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 password=user_input[CONF_PASSWORD],
                 session=async_get_clientsession(self.hass),
             )
-
-            try:
-                token = await client.get_api_token()
-            except BadCredentialsException:
-                errors["base"] = WRONG_CREDENTIAL
-            except (
-                ClientConnectorError,
-                ConnectionError,
-                TimeoutError,
-                MawaqitException,
-            ):
-                errors["base"] = CANNOT_CONNECT_TO_SERVER
-            else:
-                if token:
-                    self.client = client
-                    return await self.async_step_mosques_coordinates()
-                errors["base"] = CANNOT_CONNECT_TO_SERVER
+            if not (errors := await self._async_login(client)):
+                self.client = client
+                return await self.async_step_mosques_coordinates()
 
         return self.async_show_form(
             step_id="user",
-            data_schema=self.add_suggested_values_to_schema(schema, user_input),
+            data_schema=self.add_suggested_values_to_schema(
+                CREDENTIALS_SCHEMA, user_input
+            ),
             errors=errors,
             description_placeholders={"mawaqit_url": MAWAQIT_URL},
         )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> config_entries.ConfigFlowResult:
+        """Handle a reauthentication request when the API token is rejected."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Ask for the credentials again and store the new API token."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            client = AsyncMawaqitClient(
+                username=user_input[CONF_USERNAME],
+                password=user_input[CONF_PASSWORD],
+                session=async_get_clientsession(self.hass),
+            )
+            if not (errors := await self._async_login(client)):
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates={CONF_API_KEY: client.token},
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=self.add_suggested_values_to_schema(
+                CREDENTIALS_SCHEMA, user_input
+            ),
+            errors=errors,
+        )
+
+    async def _async_login(self, client: AsyncMawaqitClient) -> dict[str, str]:
+        """Log in to MAWAQIT and return the form errors, empty on success."""
+        try:
+            token = await client.get_api_token()
+        except BadCredentialsException:
+            return {"base": WRONG_CREDENTIAL}
+        except (
+            ClientConnectorError,
+            ConnectionError,
+            TimeoutError,
+            MawaqitException,
+        ):
+            return {"base": CANNOT_CONNECT_TO_SERVER}
+        if not token:
+            return {"base": CANNOT_CONNECT_TO_SERVER}
+        return {}
 
     async def async_step_mosques_coordinates(
         self, user_input: dict[str, Any] | None = None

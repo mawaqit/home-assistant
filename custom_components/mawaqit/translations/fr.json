@@ -2,7 +2,8 @@
   "config": {
     "abort": {
       "cannot_connect": "Impossible de se connecter au serveur MAWAQIT. Vérifiez votre connexion internet et réessayez.",
-      "no_mosque": "Aucune mosquée MAWAQIT n'a été trouvée près de la position de votre Home Assistant. Vérifiez que votre position est définie près d'une mosquée. La recherche par mot-clé n'est pas encore disponible mais est prévue dans une prochaine version."
+      "no_mosque": "Aucune mosquée MAWAQIT n'a été trouvée près de la position de votre Home Assistant. Vérifiez que votre position est définie près d'une mosquée. La recherche par mot-clé n'est pas encore disponible mais est prévue dans une prochaine version.",
+      "reauth_successful": "La ré-authentification a réussi."
     },
     "error": {
       "cannot_connect_to_server": "Impossible de se connecter au serveur, veuillez réessayer plus tard.",
@@ -19,6 +20,18 @@
           "uuid": "Sélectionnez la mosquée la plus proche de chez vous."
         },
         "title": "Votre mosquée préférée"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "Mot de passe",
+          "username": "E-mail"
+        },
+        "data_description": {
+          "password": "Le mot de passe de votre compte MAWAQIT.",
+          "username": "L'adresse e-mail de votre compte MAWAQIT."
+        },
+        "description": "Votre connexion à MAWAQIT n'est plus valide, par exemple après un changement de mot de passe. Reconnectez-vous pour garder vos horaires de prière à jour.",
+        "title": "Reconnexion à MAWAQIT"
       },
       "user": {
         "data": {

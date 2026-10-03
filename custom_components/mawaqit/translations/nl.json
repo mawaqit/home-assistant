@@ -2,7 +2,8 @@
   "config": {
     "abort": {
       "cannot_connect": "Kan geen verbinding maken met de MAWAQIT-server. Controleer je internetverbinding en probeer het opnieuw.",
-      "no_mosque": "Er zijn geen MAWAQIT-moskeeën gevonden in de buurt van je Home Assistant-locatie. Zorg ervoor dat je locatie in de buurt van een moskee is ingesteld. Zoeken op trefwoord wordt nog niet ondersteund, maar is gepland voor een toekomstige versie."
+      "no_mosque": "Er zijn geen MAWAQIT-moskeeën gevonden in de buurt van je Home Assistant-locatie. Zorg ervoor dat je locatie in de buurt van een moskee is ingesteld. Zoeken op trefwoord wordt nog niet ondersteund, maar is gepland voor een toekomstige versie.",
+      "reauth_successful": "Opnieuw authenticeren is gelukt."
     },
     "error": {
       "cannot_connect_to_server": "Kan geen verbinding maken met de server, probeer het later opnieuw.",
@@ -19,6 +20,18 @@
           "uuid": "Kies de moskee die het dichtst bij je locatie ligt."
         },
         "title": "Je favoriete moskee"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "Wachtwoord",
+          "username": "E-mail"
+        },
+        "data_description": {
+          "password": "Het wachtwoord van je MAWAQIT-account.",
+          "username": "Het e-mailadres van je MAWAQIT-account."
+        },
+        "description": "Je MAWAQIT-login is niet meer geldig, bijvoorbeeld na een wachtwoordwijziging. Log opnieuw in om je gebedstijden up-to-date te houden.",
+        "title": "Opnieuw inloggen bij MAWAQIT"
       },
       "user": {
         "data": {

@@ -11,7 +11,7 @@ from pytest_homeassistant_custom_component.common import (
     async_fire_time_changed,
 )
 
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 # All shared data and setup are provided by conftest:
@@ -93,14 +93,19 @@ async def test_prayer_time_coordinator_errors_cause_setup_retry(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_prayer_time_coordinator_auth_error_causes_setup_retry(
+async def test_prayer_time_coordinator_auth_error_starts_reauth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     setup_mawaqit_integration,
 ) -> None:
-    """Test auth errors cause setup retry."""
+    """Test a rejected token fails the setup and starts a reauth flow."""
     await setup_mawaqit_integration(prayer_side_effect=BadCredentialsException)
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
 
 
 async def test_prayer_time_coordinator_empty_data(
