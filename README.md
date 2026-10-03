@@ -1,172 +1,273 @@
-# A MAWAQIT component for Home Assistant
-
-## Smart home, Smart mosque : automate things based on prayer times
+# MAWAQIT for Home Assistant
 
 ٱلسَّلَامُ عَلَيْكُمْ وَرَحْمَةُ ٱللَّٰهِ وَبَرَكَاتُهُ
 
-Essalāmu ʿalaykum wa rahmatu Allahi wa barakatuh
+**English** | [Français](README.fr.md) | [Deutsch](README.de.md) | [Nederlands](README.nl.md)
 
-## English
+This integration brings the prayer times of your [MAWAQIT](https://mawaqit.net) mosque into Home Assistant: the five prayers, Shuruq, the iqamas, Jumu'a and the times of the night, as sensors and as a calendar. Use them to play the adhan, send a reminder before the iqama, warm up the house before Fajr or open the shutters at Shuruq.
 
-This component allows you to integrate the data of your mawaqit mosque into Home Assistant. To do this, a Mawaqit account from **https://mawaqit.net** is required.
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Setup](#setup)
+- [Entities](#entities)
+- [Adhans](#adhans)
+- [Automation examples](#automation-examples)
+- [Data updates](#data-updates)
+- [Known limitations](#known-limitations)
+- [Troubleshooting](#troubleshooting)
+- [Upgrading from version 3](#upgrading-from-version-3)
+- [Removal](#removal)
+- [Reporting a bug](#reporting-a-bug)
 
-### Integration installation options
+## Prerequisites
 
-The component is added to Home Assistant in the form of an integration. There are two methods to install the integration as mentioned below.
+- A MAWAQIT account. It is free: create one on [mawaqit.net](https://mawaqit.net) if you do not have one.
+- Home Assistant **2025.3** or newer.
+- [HACS](https://www.hacs.xyz/), unless you install the integration manually.
+- To list the mosques around you during setup, the location of your home set in [**Settings** > **System** > **General**](https://my.home-assistant.io/redirect/general/). You can also find your mosque by name instead.
 
-Home Assistant **2025.3** or newer is required.
+## Installation
 
-#### With [HACS](https://www.hacs.xyz/)
+### With HACS
 
-If you have HACS installed on your Home Assistant then you can use it to install Mawaqit integration.
+[![Open your Home Assistant instance and open the MAWAQIT repository in HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=mawaqit&repository=home-assistant&category=integration)
 
-* Go to your HACS dashboard, then open the settings (3 dots at the top right corner) and select **Custom Repositories**.
-* Now in **Repository** text field put the URL of this repo: https://github.com/mawaqit/home-assistant
-* In the type field select **Integration**
-* Click **Add** button to finish the setup
+The button above opens the repository in HACS directly. Otherwise:
 
-#### Manual installation
+1. In Home Assistant, open **HACS**, then the ⋮ menu at the top right, and select **Custom repositories**.
+2. In **Repository**, enter `https://github.com/mawaqit/home-assistant`. In **Type**, select **Integration**, then select **Add**.
+3. Search for **MAWAQIT** in HACS, open it and select **Download**.
+4. Restart Home Assistant.
 
-Download **[mawaqit.zip](https://github.com/mawaqit/home-assistant/releases/latest/download/mawaqit.zip)** from the latest release and extract it into `custom_components/mawaqit` in your Home Assistant configuration directory (create the folders if they do not exist), then restart Home Assistant.
+HACS then notifies you when a new version is available.
 
-Do not download the repository itself: the `main` branch contains unreleased changes.
+### Manually
 
-### Setup Mawaqit integration
+1. Download **[mawaqit.zip](https://github.com/mawaqit/home-assistant/releases/latest/download/mawaqit.zip)** from the latest release.
+2. Extract it into `custom_components/mawaqit` in your Home Assistant configuration directory, the one containing `configuration.yaml`. Create the folders if they do not exist.
+3. Restart Home Assistant.
 
-* Restart Home Assistant installation (e.g. From UI go to _Settings > System > Hardware > Power button at top right_)
-* After restarting Home Assistant, go to _Settings > Devices & Services > Add Integration_ and search for **"Mawaqit"**.
-* Enter the login and password of your **mawaqit.net** account and click on **Submit**.
-* Choose how to find your mosque, then select your **preferred** mosque:
-  * **Mosques around my location**: the mosques around the GPS coordinates (latitude/longitude) stored in Home Assistant. If there are none, the component asks for a keyword instead.
-  * **Search by keyword**: for example the name of the mosque or its city. Results come 5 at a time, use _Next page_ and _Previous page_ to browse them, or _New search_ to change the keyword. Leave the keyword empty to go back to the search methods.
+Do not download the repository itself: the `main` branch contains unreleased changes. To update, repeat these steps with the new release.
 
-Only one mosque can be configured. To change it, open _Settings > Devices & Services > MAWAQIT_ and choose **Reconfigure**. Your sensors keep their entity IDs, so your automations keep working.
+## Setup
 
-If your MAWAQIT password changes or your login stops working, Home Assistant asks you to log in again from _Settings > Devices & Services_. Your sensors and their settings are kept.
+[![Open your Home Assistant instance and start setting up MAWAQIT.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=mawaqit)
 
-### Components of Mawaqit Integration
+1. Go to [**Settings** > **Devices & services**](https://my.home-assistant.io/redirect/integrations/), select **Add integration** and search for **MAWAQIT**.
+2. Enter the email address and password of your MAWAQIT account.
+3. Choose how to find your mosque:
+   - **Mosques around my location**: the mosques around the location of your home in Home Assistant. If there are none, you are asked for a keyword instead.
+   - **Search by keyword**: the name of the mosque or of its city. Results come 5 at a time: select **Next page** or **Previous page** to browse them, or **New search** to change the keyword. Leave the keyword empty to go back to the search methods.
+4. Select your mosque.
 
-The integration adds a device named after your mosque, linked to its MAWAQIT page, with the following ```sensor``` entities (all times are timestamps). Their entity IDs start with the name of the mosque, shown as `<mosque>` below: for a mosque named "My Mosque", the Fajr sensor is `sensor.my_mosque_fajr_prayer`. They also depend on the language of Home Assistant, e.g. `sensor.<mosque>_priere_fajr` in French.
+Your MAWAQIT password is not stored: Home Assistant keeps a token from MAWAQIT instead.
 
-| Entity | Description |
-| --- | --- |
-| `sensor.<mosque>_fajr_prayer` ... `sensor.<mosque>_isha_prayer` | Today's prayer times, until the middle of the night |
-| `sensor.<mosque>_shuruq` | Today's sunrise (Shuruq) |
-| `sensor.<mosque>_fajr_iqama` ... `sensor.<mosque>_isha_iqama` | Iqama of the 5 prayers, only if your mosque publishes them |
-| `sensor.<mosque>_jumua_prayer`, `sensor.<mosque>_second_jumua_prayer`, `sensor.<mosque>_third_jumua_prayer` | Next Jumu'a times, only those your mosque has |
-| `sensor.<mosque>_end_of_the_first_third`, `sensor.<mosque>_middle_of_the_night`, `sensor.<mosque>_start_of_the_last_third` | Times of the night, from Maghrib to the next Fajr: end of its first third, its middle and start of its last third. They move to the next night at Fajr |
-| `sensor.<mosque>_next_salat_name` | Next prayer: `fajr`, `shuruq`, `dhuhr`, `asr`, `maghrib` or `isha`, shown translated in the UI |
-| `sensor.<mosque>_next_salat_time` | Time of the next prayer |
+### Changing the mosque
 
-It also adds a `calendar.<mosque>_prayer_times` calendar (`calendar.<mosque>_horaires_des_prieres` in French) with the prayers of the current and the next month. Each prayer is an event named `Fajr`, `Shuruq`, `Dhuhr`, `Asr`, `Maghrib` or `Isha` (and `Jumua`, `Jumua 2`, `Jumua 3` on Fridays) whatever your language. It starts at the adhan and ends at the iqama if your mosque publishes it, otherwise when it starts. The times of the night are events named `End of the first third`, `Middle of the night` and `Start of the last third`, which end when they start. Use it with a `calendar` trigger, see the examples below.
+Only one mosque can be set up. To follow another one, go to **Settings** > **Devices & services** > **MAWAQIT**, open the ⋮ menu of the entry and select **Reconfigure**. Your entities keep their entity IDs, so your automations and dashboards keep working.
 
-The adhans of the MAWAQIT mosque screens (Makkah, Madinah, Al-Quds, Al-Afassy, Algeria, Egypt, each with its Fajr version) are available in the media browser. Listen to them in _Media > MAWAQIT_, selecting _This browser_ as the player, then pick one in the **Play media** action of your automation. They are streamed from the MAWAQIT servers.
+### Logging in again
 
-### Upgrading from version 3.x
+If MAWAQIT no longer accepts your login, for example after a password change, Home Assistant asks you to log in again: in **Settings** > **Devices & services**, select **Reconfigure** on the MAWAQIT card and enter your email address and new password. Your entities and their settings are kept.
 
-Version 4 is a rewrite based on the code submitted to Home Assistant core. Your configuration is migrated automatically when Home Assistant restarts:
+## Entities
 
-* Existing sensors keep their entity IDs (e.g. `sensor.fajr_adhan`), so your automations and dashboards keep working. Only new installations use the names listed above.
-* Sensors now belong to a device named after your mosque, and their names start with it (e.g. _My Mosque Fajr Prayer_).
-* `sensor.my_mosque` and `sensor.next_salat_preparation` no longer exist.
-* `sensor.next_salat_name` now uses lowercase values (`fajr`, `dhuhr`, ...) and also includes `shuruq`. Update automations comparing it to `Fajr`, `Dhuhr`, etc.
-* The mosque is changed with **Reconfigure** instead of the integration options.
+The integration adds a device named after your mosque, linked to its page on MAWAQIT, with the entities below. All the sensors except **Next Salat Name** are timestamps: Home Assistant shows them as a time, and you can use them directly in a time trigger.
 
-## Automation Examples
+| Entity                                                           | Description                                                                                                                                         |
+| ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Fajr Prayer, Dhuhr Prayer, Asr Prayer, Maghrib Prayer, Isha Prayer | The adhan of the five prayers of the day.                                                                                                          |
+| Shuruq                                                           | Sunrise, as published by the mosque.                                                                                                                |
+| Fajr Iqama, Dhuhr Iqama, Asr Iqama, Maghrib Iqama, Isha Iqama    | The iqama of the five prayers. Only created if your mosque publishes its iqamas on MAWAQIT.                                                         |
+| Jumua Prayer, Second Jumua Prayer, Third Jumua Prayer            | Jumu'a of the coming Friday, or of today on Fridays. Only the ones your mosque has are created.                                                     |
+| End of the First Third, Middle of the Night, Start of the Last Third | The night from Maghrib to the next Fajr: the end of its first third, its middle and the start of its last third.                                |
+| Next Salat Name                                                  | The next prayer: `fajr`, `shuruq`, `dhuhr`, `asr`, `maghrib` or `isha`. The UI shows it translated, but automations always see these values. Jumu'a is not included: on Fridays it is `dhuhr`. |
+| Next Salat Time                                                  | The time of the next prayer.                                                                                                                        |
+| Prayer Times (calendar)                                          | All the prayers of the current and the next month, see below.                                                                                       |
 
-Prayer sensors are timestamps, so they can be used directly in a `time` trigger, with an optional offset. Below are examples to launch the athan at the time of prayer or to launch specific actions (read the Quran, increase the heating 10 minutes before Al-Fajr, open the shutters during shuruq, etc...).
-**NOTE**: The actions are to be adapted according to your Home Assistant installation.
+### The prayer times calendar
 
-* ```/config/automations.yaml```
+Each prayer is an event named `Fajr`, `Shuruq`, `Dhuhr`, `Asr`, `Maghrib` or `Isha`, and on Fridays `Jumua`, `Jumua 2` and `Jumua 3`. It starts at the adhan and ends at the iqama if your mosque publishes it, otherwise it ends when it starts. The times of the night are events named `End of the first third`, `Middle of the night` and `Start of the last third`, which end when they start.
+
+These names are in English whatever your language, so an automation filtering on them works for everyone. Use the calendar with a `calendar` trigger, as in the [iqama reminder example](#automation-examples).
+
+### Entity IDs
+
+Entity IDs are made of the name of the mosque and the name of the entity, **in the language Home Assistant had when you set up the integration**. For a mosque named "My Mosque":
+
+| Language | Fajr                            | Next prayer                                      | Calendar                               |
+| -------- | ------------------------------- | ------------------------------------------------ | -------------------------------------- |
+| English  | `sensor.my_mosque_fajr_prayer`  | `sensor.my_mosque_next_salat_name`               | `calendar.my_mosque_prayer_times`      |
+| French   | `sensor.my_mosque_priere_fajr`  | `sensor.my_mosque_nom_de_la_prochaine_priere`    | `calendar.my_mosque_horaires_des_prieres` |
+
+So an entity ID copied from an example or from another user may not exist in your installation. To find yours, go to **Settings** > **Devices & services** > **MAWAQIT** and open the device of your mosque: select an entity, then the ⚙️ icon, to see its entity ID. You can rename it there too. In the automation editor, you can also pick the entities by their name instead of typing their ID.
+
+Changing the language of Home Assistant later does not change the entity IDs, only the names shown in the UI.
+
+## Adhans
+
+The adhans of the MAWAQIT mosque screens are available in the media browser. Listen to them in **Media** > **MAWAQIT**, with **This browser** as the player, and play them on a speaker with the **Play media** action. They are streamed from the MAWAQIT servers, so your speaker needs internet access.
+
+| Adhan                  | Media ID                                      | Fajr version                                       |
+| ---------------------- | --------------------------------------------- | -------------------------------------------------- |
+| Makkah                 | `media-source://mawaqit/adhan-maquah`         | `media-source://mawaqit/adhan-maquah-fajr`         |
+| Madinah                | `media-source://mawaqit/adhan-madina`         | `media-source://mawaqit/adhan-madina-fajr`         |
+| Al-Quds                | `media-source://mawaqit/adhan-quds`           | `media-source://mawaqit/adhan-quds-fajr`           |
+| Al-Afassy              | `media-source://mawaqit/adhan-afassy`         | `media-source://mawaqit/adhan-afassy-fajr`         |
+| Algeria                | `media-source://mawaqit/adhan-algeria`        | `media-source://mawaqit/adhan-algeria-fajr`        |
+| Egypt                  | `media-source://mawaqit/adhan-egypt`          | `media-source://mawaqit/adhan-egypt-fajr`          |
+| Beep                   | `media-source://mawaqit/bip`                  |                                                    |
+
+## Automation examples
+
+Replace the entity IDs below with yours, see [Entity IDs](#entity-ids). To use an example, create an automation, open its ⋮ menu, select **Edit in YAML** and paste it.
+
+Play the adhan of Makkah on a speaker at Isha:
 
 ```yaml
-- id: 'fajr_wakeup'
-  alias: Turn on bedroom light and Alexa routine, 20 min before Fajr Athan
-  triggers:
-    - trigger: time
-      at:
-        entity_id: sensor.my_mosque_fajr_prayer # the ID shown in your installation
-        offset: "-00:20:00"
-  actions:
-    # turn on the light of the bedroom
-    - action: switch.turn_on
-      target:
-        entity_id: switch.sonoff_1000814ec9 # the entity id of the sonoff switch, can be an other entity
-    # play a routine on Alexa
-    - action: media_player.play_media
-      target:
-        entity_id: media_player.zehhaf_s_echo_dot # the entity id of your alexa device
-      data:
-        media_content_id: bonjour # the routine name configured on Alexa mobile app, it can be a sequence of actions, like flash info, weather ...etc
-        media_content_type: routine
-  mode: single
-
-# Play the adhan of Makkah on a speaker
-- id: 'isha_adhan'
-  alias: Isha adhan
-  triggers:
-    - trigger: time
-      at: sensor.my_mosque_isha_prayer
-  actions:
-    - action: media_player.play_media
-      target:
-        entity_id: media_player.living_room
-      data:
-        media_content_id: media-source://mawaqit/adhan-maquah # adhan-maquah-fajr for Fajr
-        media_content_type: audio/mpeg
-  mode: single
-
-# Wake up for Qiyam al-Layl
-- id: 'last_third'
-  alias: Turn on the bedroom light at the start of the last third of the night
-  triggers:
-    - trigger: time
-      at: sensor.my_mosque_start_of_the_last_third
-  actions:
-    - action: light.turn_on
-      target:
-        entity_id: light.bedroom
-  mode: single
-
-# Works the same in every language: filter on the event name, not on an entity ID
-- id: 'iqama_reminder'
-  alias: Notify 5 minutes before each iqama
-  triggers:
-    - trigger: calendar
-      event: end # use start for the adhan
-      entity_id: calendar.my_mosque_prayer_times
-      offset: "-00:05:00"
-  conditions:
-    # Prayers without iqama end when they start
-    - condition: template
-      value_template: "{{ trigger.calendar_event.end != trigger.calendar_event.start }}"
-  actions:
-    - action: notify.notify
-      data:
-        message: "Iqama of {{ trigger.calendar_event.summary }} in 5 minutes"
-  mode: queued
+alias: Isha adhan
+triggers:
+  - trigger: time
+    at: sensor.my_mosque_isha_prayer
+actions:
+  - action: media_player.play_media
+    target:
+      entity_id: media_player.living_room
+    data:
+      media_content_id: media-source://mawaqit/adhan-maquah
+      media_content_type: audio/mpeg
 ```
+
+Turn on the heating 20 minutes before Fajr, with an offset:
+
+```yaml
+alias: Heating before Fajr
+triggers:
+  - trigger: time
+    at:
+      entity_id: sensor.my_mosque_fajr_prayer
+      offset: "-00:20:00"
+actions:
+  - action: climate.turn_on
+    target:
+      entity_id: climate.bedroom
+```
+
+Turn on the bedroom light at the start of the last third of the night:
+
+```yaml
+alias: Last third of the night
+triggers:
+  - trigger: time
+    at: sensor.my_mosque_start_of_the_last_third
+actions:
+  - action: light.turn_on
+    target:
+      entity_id: light.bedroom
+```
+
+Get a notification 5 minutes before each iqama. It uses the calendar and filters on the event names, so it works in every language:
+
+```yaml
+alias: Iqama reminder
+triggers:
+  - trigger: calendar
+    event: end # start for the adhan
+    entity_id: calendar.my_mosque_prayer_times
+    offset: "-00:05:00"
+conditions:
+  # Prayers without iqama end when they start.
+  - condition: template
+    value_template: "{{ trigger.calendar_event.end != trigger.calendar_event.start }}"
+actions:
+  - action: notify.notify
+    data:
+      message: "Iqama of {{ trigger.calendar_event.summary }} in 5 minutes"
+mode: queued
+```
+
+## Data updates
+
+- The integration fetches the prayer times of the whole year from MAWAQIT when it starts, then every 12 hours. Changes made by your mosque appear within 12 hours, or right away if you reload the integration: **Settings** > **Devices & services** > **MAWAQIT**, ⋮ menu of the entry, **Reload**.
+- The prayer, iqama and Jumu'a sensors move to the next day at the middle of the night, not at midnight: after Isha, they still show the times of the day that is ending.
+- The times of the night move to the next night at Fajr.
+- **Next Salat Name** and **Next Salat Time** change at the time of each prayer.
+
+Times are published by the mosque in its own time zone, and Home Assistant shows them in yours. They are the same moment: a mosque in another time zone is shown with your local time.
+
+## Known limitations
+
+- Only one mosque per Home Assistant instance ([#143](https://github.com/mawaqit/home-assistant/issues/143)).
+- The iqama and Jumu'a sensors are created when the integration starts, from what your mosque publishes at that time. If your mosque adds them later, reload the integration ([#144](https://github.com/mawaqit/home-assistant/issues/144)).
+- The calendar only shows the current and the next month: MAWAQIT gives the times of each day of the year, without the year.
+- If MAWAQIT has an invalid time, only that time is skipped: its sensor and its calendar event are unknown, as well as what is computed from it, such as the times of the night for an invalid Maghrib or Fajr. A warning is written in the logs.
+- For mosques that display Sabah and Imsak, Sabah is used as Fajr, like in the MAWAQIT app. Imsak is not available.
+- The integration needs internet access. If MAWAQIT cannot be reached, the sensors become unavailable until the next successful update ([#142](https://github.com/mawaqit/home-assistant/issues/142)).
+
+## Troubleshooting
+
+### MAWAQIT is not in the list of integrations
+
+Restart Home Assistant after installing the integration, then refresh the page of your browser. With a manual installation, check that the files are in `custom_components/mawaqit` and not in a sub-folder, such as `custom_components/mawaqit/mawaqit`.
+
+### Wrong login or password
+
+Use the email address and password you use on [mawaqit.net](https://mawaqit.net). Check that you can log in there. If you forgot your password, reset it on mawaqit.net.
+
+### No mosque found around my location
+
+Check the location of your home in **Settings** > **System** > **General**, or search your mosque by keyword. Only mosques registered on MAWAQIT can be found.
+
+### Cannot connect to the server
+
+Home Assistant could not reach MAWAQIT. Check that Home Assistant has internet access and that [mawaqit.net](https://mawaqit.net) opens in your browser, then try again a few minutes later.
+
+### The times do not match my mosque
+
+Compare them with the page of your mosque on [mawaqit.net](https://mawaqit.net). If they differ, reload the integration to fetch them again. If the page itself is wrong, contact your mosque: the integration shows what it publishes.
+
+If all the times are shifted by the same amount, for example one hour, check the time zone in **Settings** > **System** > **General**, and in your user profile the **Time zone** setting, which can show times in the time zone of your browser instead of the one of the server.
+
+### The sensors are unavailable or unknown
+
+Open **Settings** > **System** > **Logs** and search for `mawaqit`. Unavailable sensors usually mean that MAWAQIT could not be reached: they come back with the next successful update, or when you reload the integration.
+
+### Debug logs
+
+To capture what the integration does, go to **Settings** > **Devices & services** > **MAWAQIT**, open the ⋮ menu of the entry and select **Enable debug logging**. Reproduce the problem, then select **Disable debug logging**: Home Assistant downloads the log file. Attach it to your bug report.
+
+To log from the start of Home Assistant, add this to `configuration.yaml` and restart:
+
+```yaml
+logger:
+  logs:
+    custom_components.mawaqit: debug
+```
+
+## Upgrading from version 3
+
+Version 4 is a rewrite of the integration. Before updating, [make a backup](https://my.home-assistant.io/redirect/backup/): going back to version 3 afterwards is not supported, because the update deletes the data version 3 stored.
+
+Update with HACS, then restart Home Assistant. Your configuration is migrated during the restart:
+
+- Existing sensors keep their entity IDs, such as `sensor.fajr_adhan`, so your automations and dashboards keep working. New entities, such as the times of the night and the calendar, use the naming described in [Entity IDs](#entity-ids).
+- The sensors belong to a device named after your mosque, and their names start with it, for example "My Mosque Fajr Prayer".
+- `sensor.my_mosque` and `sensor.next_salat_preparation` no longer exist.
+- **Next Salat Name** now uses lowercase values (`fajr`, `dhuhr`, ...) and includes `shuruq`. Update the automations and templates comparing it to `Fajr`, `Dhuhr`, etc.
+- The mosque is changed with **Reconfigure** instead of the options of the integration.
+
+## Removal
+
+1. Go to **Settings** > **Devices & services** > **MAWAQIT**, open the ⋮ menu of the entry and select **Delete**. Its entities are removed.
+2. To remove the files, open **HACS**, then **MAWAQIT**, and select **Remove** in its ⋮ menu. With a manual installation, delete the `custom_components/mawaqit` folder.
+3. Restart Home Assistant.
+
+Your MAWAQIT account is not deleted. Manage it on [mawaqit.net](https://mawaqit.net).
 
 ## Reporting a bug
 
-Open an [issue](https://github.com/mawaqit/home-assistant/issues/new?template=bug_report.yml) and attach the diagnostics file: go to _Settings > Devices & Services > MAWAQIT_, open the ⋮ menu of the entry and select **Download diagnostics**. The file contains the prayer times received from MAWAQIT for your mosque. Your MAWAQIT token, your home location and everything identifying your mosque are removed from it.
+Open an [issue](https://github.com/mawaqit/home-assistant/issues/new?template=bug_report.yml) and attach the diagnostics: go to **Settings** > **Devices & services** > **MAWAQIT**, open the ⋮ menu of the entry and select **Download diagnostics**. The file contains the prayer times received from MAWAQIT for your mosque. Your MAWAQIT token, the location of your home and everything identifying your mosque are removed from it.
 
 ## Contributing
 
 Contributions are welcome, see [CONTRIBUTING.md](CONTRIBUTING.md).
-
-## Français
-
-Ce composant permet d'intégrer les données de votre mosquée Mawaqit dans Home Assistant. Pour ce faire, Un compte Mawaqit **https://mawaqit.net** est nécessaire.
-
-Le composant est rajouté à Home Assistant (version **2025.3** minimum) sous forme d'une intégration, à installer via [HACS](https://www.hacs.xyz/) en ajoutant ce dépôt comme dépôt personnalisé (catégorie **Intégration**). Pour une installation manuelle, téléchargez **[mawaqit.zip](https://github.com/mawaqit/home-assistant/releases/latest/download/mawaqit.zip)** depuis la dernière release et extrayez-le dans `custom_components/mawaqit` de votre configuration Home Assistant (créez les dossiers s'ils n'existent pas). Ne téléchargez pas le dépôt lui-même : la branche `main` contient des changements pas encore publiés.
-
-Après le redémarrage de Home Assistant, allez dans _Paramètres > Appareils et Services > Ajouter une intégration_ et cherchez **"Mawaqit"**. Entrez le login et mot de passe de votre compte **mawaqit.net** et cliquez sur **Valider**. Choisissez ensuite comment trouver votre mosquée : autour des coordonnées GPS (latitude/longitude) enregistrées dans Home Assistant, ou par mot-clé (comme le nom de la mosquée ou sa ville, avec 5 résultats par page et une option pour lancer une nouvelle recherche). S'il n'y a aucune mosquée autour de vous, le composant vous propose la recherche par mot-clé. Laissez le mot-clé vide pour revenir au choix de la recherche. Sélectionnez enfin votre mosquée préférée. Une seule mosquée peut être configurée : pour en changer, ouvrez _Paramètres > Appareils et Services > MAWAQIT_ et choisissez **Reconfigurer**. Vos sensors gardent leurs identifiants, donc vos automatisations continuent de fonctionner.
-
-L'intégration ajoute un appareil au nom de votre mosquée, avec un lien vers sa page MAWAQIT, et des composants de type ```sensor``` : les 5 horaires des prières, le Shuruq, les iqamas associées (si votre mosquée les publie), les horaires de Jumu'a, ainsi que le nom et l'heure de la prochaine prière (voir le tableau ci-dessus). Leurs identifiants commencent par le nom de la mosquée et suivent la langue de Home Assistant : pour une mosquée nommée « Ma Mosquée », la prière de Fajr est `sensor.ma_mosquee_priere_fajr` et la prochaine prière `sensor.ma_mosquee_nom_de_la_prochaine_priere`. Les sensors de la nuit donnent la fin du premier tiers, le milieu de la nuit et le début du dernier tiers, la nuit allant du Maghrib au Fajr suivant : ils passent à la nuit suivante au Fajr. Les horaires des prières passent au jour suivant au milieu de la nuit. Le nom de la prochaine prière s'affiche traduit (par ex. « Dhohr »), mais vos automatisations utilisent toujours la valeur `dhuhr`. Un calendrier `calendar.ma_mosquee_horaires_des_prieres` contient aussi les prières du mois en cours et du mois suivant : chaque prière est un événement nommé `Fajr`, `Shuruq`, `Dhuhr`, `Asr`, `Maghrib` ou `Isha` (et `Jumua` le vendredi) quelle que soit la langue, de l'adhan jusqu'à l'iqama si votre mosquée la publie, ainsi que les moments de la nuit (`End of the first third`, `Middle of the night`, `Start of the last third`). Utilisez-le avec un déclencheur `calendar`, comme un rappel 5 minutes avant la fin de l'événement, donc avant l'iqama.
-
-Les adhans des écrans MAWAQIT (La Mecque, Médine, Al-Qods, Al-Afassy, Algérie, Égypte, chacun avec sa version Fajr) sont disponibles dans le navigateur de médias. Écoutez-les dans _Médias > MAWAQIT_ en choisissant _Ce navigateur_ comme lecteur, puis choisissez-en un dans l'action **Lire un média** de votre automatisation. Ils sont lus depuis les serveurs MAWAQIT.
-
-**Mise à jour depuis la version 3.x** : la configuration est migrée automatiquement au redémarrage. Les sensors existants gardent leurs identifiants (par ex. `sensor.fajr_adhan`), donc vos automatisations continuent de fonctionner. Ils sont regroupés dans un appareil au nom de votre mosquée, et leurs noms commencent par celui-ci (par ex. « Ma Mosquée Prière Fajr »). `sensor.my_mosque` et `sensor.next_salat_preparation` sont supprimés, et `sensor.next_salat_name` renvoie désormais des valeurs en minuscules (`fajr`, `shuruq`, `dhuhr`, ...).
-
-Dans la section ci-dessus, vous avez des exemples de code pour créer des automatismes dans Home Assistant avec les sensors Mawaqit notamment pour lancer l'athan à l'heure de la prière ou encore pour lancer des actions spécifiques (lire le Coran, augmenter le chauffage 10 minutes avant Al-Fajr, ouvrir les volets lors du Shuruq etc...). Les actions sont à adapter en fonction de vote installation Home Assistant.
