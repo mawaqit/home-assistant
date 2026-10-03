@@ -50,7 +50,7 @@ CREDENTIALS_SCHEMA = vol.Schema(
 
 KEYWORD_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_KEYWORD): selector.TextSelector(
+        vol.Optional(CONF_KEYWORD): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
         ),
     }
@@ -73,6 +73,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.keyword = ""
         self.page = 1
         self.pages: dict[int, list[MawaqitMosqueData]] = {}
+        self.no_mosque_around = False
 
     @override
     async def async_step_user(
@@ -155,10 +156,10 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Let the user search the mosques around their location or by keyword."""
-        return self.async_show_menu(
-            step_id="search_method",
-            menu_options=["mosques_coordinates", "keyword_search"],
-        )
+        menu_options = ["keyword_search"]
+        if not self.no_mosque_around:
+            menu_options.insert(0, "mosques_coordinates")
+        return self.async_show_menu(step_id="search_method", menu_options=menu_options)
 
     async def async_step_mosques_coordinates(
         self, user_input: dict[str, Any] | None = None
@@ -170,27 +171,25 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return self._create_mosque_entry(user_input[CONF_UUID])
 
-        if not self.mosques:
-            try:
-                neighborhood_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
-                    self.client
-                )
-                if neighborhood_mosques:
-                    self.mosques = {
-                        mosque.uuid: mosque for mosque in neighborhood_mosques
-                    }
-            except NoMosqueAround:
-                return self._show_keyword_search_form({"base": NO_MOSQUE_AROUND})
-            except (
-                BadCredentialsException,
-                ClientConnectorError,
-                ConnectionError,
-                TimeoutError,
-            ):
-                return self.async_abort(reason="cannot_connect")
+        # Always fetched: self.mosques may hold keyword results by now.
+        try:
+            neighborhood_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
+                self.client
+            )
+        except NoMosqueAround:
+            neighborhood_mosques = []
+        except (
+            BadCredentialsException,
+            ClientConnectorError,
+            ConnectionError,
+            TimeoutError,
+        ):
+            return self.async_abort(reason="cannot_connect")
 
-        if len(self.mosques) == 0:
+        if not neighborhood_mosques:
+            self.no_mosque_around = True
             return self._show_keyword_search_form({"base": NO_MOSQUE_AROUND})
+        self.mosques = {mosque.uuid: mosque for mosque in neighborhood_mosques}
 
         return self.async_show_form(
             step_id="mosques_coordinates",
@@ -214,18 +213,17 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            keyword = user_input[CONF_KEYWORD].strip()
+            keyword = user_input.get(CONF_KEYWORD, "").strip()
             if not keyword:
+                return await self.async_step_search_method()
+            self.keyword = keyword
+            self.pages = {}
+            errors = await self._async_load_page(1)
+            if not errors and not self.pages[1]:
                 errors["base"] = NO_MOSQUE_FOUND
-            else:
-                self.keyword = keyword
-                self.pages = {}
-                errors = await self._async_load_page(1)
-                if not errors and not self.pages[1]:
-                    errors["base"] = NO_MOSQUE_FOUND
-                if not errors:
-                    self.page = 1
-                    return await self.async_step_keyword_results()
+            if not errors:
+                self.page = 1
+                return await self.async_step_keyword_results()
 
         return self._show_keyword_search_form(errors, user_input)
 

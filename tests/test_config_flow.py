@@ -302,6 +302,14 @@ async def test_no_mosque_around_redirects_to_keyword_search(
     assert result.get("step_id") == "keyword_search"
     assert result.get("errors") == {"base": NO_MOSQUE_AROUND}
 
+    # Back to the menu, without the location search that found nothing.
+    result = await hass.config_entries.flow.async_configure(flow_id, {})
+    assert result.get("type") == data_entry_flow.FlowResultType.MENU
+    assert result.get("menu_options") == ["keyword_search"]
+
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, {"next_step_id": "keyword_search"}
+    )
     result = await hass.config_entries.flow.async_configure(
         flow_id, {CONF_KEYWORD: "Paris"}
     )
@@ -422,15 +430,48 @@ async def test_keyword_search_errors(
     assert result.get("step_id") == "keyword_results"
 
 
-async def test_keyword_search_blank_keyword(
-    hass: HomeAssistant, mock_client: MagicMock
+@pytest.mark.parametrize(
+    "user_input", [{CONF_KEYWORD: "   "}, {}], ids=["blank", "missing"]
+)
+async def test_keyword_search_empty_keyword_goes_back(
+    hass: HomeAssistant, mock_client: MagicMock, user_input: dict
 ) -> None:
-    """Test a blank keyword is rejected without calling the API."""
-    result = await _search_keyword(hass, mock_client, "   ")
+    """Test an empty keyword goes back to the search menu without calling the API."""
+    flow_id = await _login(hass, mock_client)
+    await hass.config_entries.flow.async_configure(
+        flow_id, {"next_step_id": "keyword_search"}
+    )
 
-    assert result.get("step_id") == "keyword_search"
-    assert result.get("errors") == {"base": NO_MOSQUE_FOUND}
+    result = await hass.config_entries.flow.async_configure(flow_id, user_input)
+
+    assert result.get("type") == data_entry_flow.FlowResultType.MENU
+    assert result.get("menu_options") == ["mosques_coordinates", "keyword_search"]
     mock_client.fetch_mosques_by_keyword.assert_not_awaited()
+
+
+async def test_location_search_after_keyword_search(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_mosques_search_api_raw: list[dict],
+) -> None:
+    """Test the location search lists nearby mosques, not the keyword results."""
+    mock_client.fetch_mosques_by_keyword.return_value = _keyword_mosques(1)
+    mock_client.all_mosques_neighborhood.return_value = mock_mosques_search_api_raw
+
+    result = await _search_keyword(hass, mock_client)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_UUID: NEW_SEARCH}
+    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "mosques_coordinates"}
+    )
+
+    assert result.get("step_id") == "mosques_coordinates"
+    assert "data_schema" in result and result["data_schema"] is not None
+    assert list(result["data_schema"].schema[CONF_UUID].container) == [
+        mosque["uuid"] for mosque in mock_mosques_search_api_raw
+    ]
 
 
 async def test_keyword_results_pagination(

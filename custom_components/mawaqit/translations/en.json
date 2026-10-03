@@ -26,7 +26,7 @@
           "keyword": "Keyword"
         },
         "data_description": {
-          "keyword": "Name of the mosque or of its city."
+          "keyword": "Name of the mosque or of its city. Leave empty to go back to the search methods."
         },
         "title": "Search for your mosque"
       },

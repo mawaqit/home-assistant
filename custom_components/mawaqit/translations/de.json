@@ -26,7 +26,7 @@
           "keyword": "Stichwort"
         },
         "data_description": {
-          "keyword": "Name der Moschee oder ihrer Stadt."
+          "keyword": "Name der Moschee oder ihrer Stadt. Leer lassen, um zur Auswahl der Suche zurückzukehren."
         },
         "title": "Suche deine Moschee"
       },

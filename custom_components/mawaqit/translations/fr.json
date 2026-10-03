@@ -26,7 +26,7 @@
           "keyword": "Mot-clé"
         },
         "data_description": {
-          "keyword": "Nom de la mosquée ou de sa ville."
+          "keyword": "Nom de la mosquée ou de sa ville. Laissez vide pour revenir au choix de la recherche."
         },
         "title": "Rechercher votre mosquée"
       },
