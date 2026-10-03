@@ -189,6 +189,7 @@ mode: queued
 ## Gegevensupdates
 
 - De integratie haalt de gebedstijden van het hele jaar op bij MAWAQIT wanneer ze start, en daarna elke 12 uur. Wijzigingen van je moskee verschijnen binnen 12 uur, of meteen als je de integratie herlaadt: **Instellingen** > **Apparaten & diensten** > **MAWAQIT**, menu ⋮ van de vermelding, **Herladen**. Mislukt een update, dan houden de sensoren de al opgehaalde tijden en probeert de integratie het elke 15 minuten opnieuw.
+- De iqama- en Jumu'a-sensoren worden aangemaakt zodra je moskee ze publiceert, dus ook binnen 12 uur. Stopt ze daarmee, dan blijven ze bestaan en worden ze onbekend. Na het herladen of herstarten toont Home Assistant ze als niet meer geleverd, en kun je ze verwijderen.
 - De gebeds-, iqama- en Jumu'a-sensoren gaan midden in de nacht naar de volgende dag, niet om middernacht: na Isha tonen ze nog de tijden van de dag die eindigt.
 - De tijden van de nacht gaan bij Fajr naar de volgende nacht.
 - **Naam volgend gebed** en **Tijd volgend gebed** veranderen op het tijdstip van elk gebed.
@@ -198,7 +199,6 @@ De tijden worden door de moskee in haar tijdzone gepubliceerd, en Home Assistant
 ## Bekende beperkingen
 
 - Maar één moskee per Home Assistant-instantie ([#143](https://github.com/mawaqit/home-assistant/issues/143)).
-- De iqama- en Jumu'a-sensoren worden aangemaakt wanneer de integratie start, op basis van wat je moskee op dat moment publiceert. Voegt je moskee ze later toe, herlaad dan de integratie ([#144](https://github.com/mawaqit/home-assistant/issues/144)).
 - De agenda toont alleen de huidige en de volgende maand: MAWAQIT geeft de tijden van elke dag van het jaar, zonder het jaar.
 - Als MAWAQIT een ongeldige tijd heeft, wordt alleen die tijd overgeslagen: de sensor en de agenda-afspraak ervan zijn onbekend, net als wat ervan wordt berekend, zoals de tijden van de nacht bij een ongeldige Maghrib of Fajr. Er wordt een waarschuwing in de logboeken geschreven.
 - Voor moskeeën die Sabah en Imsak tonen, wordt Sabah als Fajr gebruikt, zoals in de MAWAQIT-app. Imsak is niet beschikbaar.

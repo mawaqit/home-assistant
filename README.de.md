@@ -189,6 +189,7 @@ mode: queued
 ## Datenaktualisierung
 
 - Die Integration ruft die Gebetszeiten des ganzen Jahres beim Start von MAWAQIT ab, danach alle 12 Stunden. Änderungen deiner Moschee erscheinen innerhalb von 12 Stunden, oder sofort, wenn du die Integration neu lädst: **Einstellungen** > **Geräte & Dienste** > **MAWAQIT**, Menü ⋮ des Eintrags, **Neu laden**. Schlägt eine Aktualisierung fehl, behalten die Sensoren die bereits abgerufenen Zeiten, und die Integration versucht es alle 15 Minuten erneut.
+- Die Iqama- und Jumu'a-Sensoren werden angelegt, sobald deine Moschee sie veröffentlicht, also ebenfalls innerhalb von 12 Stunden. Hört sie damit auf, bleiben sie erhalten und werden unbekannt. Nach einem Neuladen oder Neustart zeigt Home Assistant sie als nicht mehr bereitgestellt an, und du kannst sie löschen.
 - Die Gebets-, Iqama- und Jumu'a-Sensoren wechseln in der Mitte der Nacht auf den nächsten Tag, nicht um Mitternacht: Nach Isha zeigen sie noch die Zeiten des zu Ende gehenden Tages.
 - Die Zeiten der Nacht wechseln bei Fajr auf die nächste Nacht.
 - **Name des nächsten Gebets** und **Zeit des nächsten Gebets** ändern sich zur Zeit jedes Gebets.
@@ -198,7 +199,6 @@ Die Zeiten werden von der Moschee in ihrer Zeitzone veröffentlicht, und Home As
 ## Bekannte Einschränkungen
 
 - Nur eine Moschee pro Home Assistant-Instanz ([#143](https://github.com/mawaqit/home-assistant/issues/143)).
-- Die Iqama- und Jumu'a-Sensoren werden beim Start der Integration angelegt, je nachdem, was deine Moschee zu diesem Zeitpunkt veröffentlicht. Fügt deine Moschee sie später hinzu, lade die Integration neu ([#144](https://github.com/mawaqit/home-assistant/issues/144)).
 - Der Kalender zeigt nur den aktuellen und den nächsten Monat: MAWAQIT liefert die Zeiten jedes Tages des Jahres, ohne das Jahr.
 - Hat MAWAQIT eine ungültige Zeit, wird nur diese Zeit übersprungen: Ihr Sensor und ihr Kalenderereignis sind unbekannt, ebenso was daraus berechnet wird, etwa die Zeiten der Nacht bei einem ungültigen Maghrib oder Fajr. Eine Warnung wird ins Protokoll geschrieben.
 - Bei Moscheen, die Sabah und Imsak anzeigen, wird Sabah als Fajr verwendet, wie in der MAWAQIT-App. Imsak ist nicht verfügbar.

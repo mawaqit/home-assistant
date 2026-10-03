@@ -96,6 +96,78 @@ async def test_conditional_sensor_creation(
     assert (hass.states.get(entity_id) is not None) == should_exist
 
 
+PUBLISHED_SENSORS = [
+    "sensor.test_mosque_fajr_iqama",
+    "sensor.test_mosque_isha_iqama",
+    "sensor.test_mosque_jumua_prayer",
+    "sensor.test_mosque_second_jumua_prayer",
+]
+
+
+@freeze_time("2025-04-10 12:00:00+02:00")
+async def test_published_sensors_added_at_refresh(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    setup_mawaqit_integration,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the iqama and Jumua sensors appear when the mosque starts publishing them."""
+    await setup_mawaqit_integration(
+        prayer_data=build_prayer_data(
+            fill_all_months=False, iqama_enabled=False, jumua=None, jumua2=None
+        )
+    )
+    assert len(hass.states.async_all("sensor")) == 11
+    for entity_id in PUBLISHED_SENSORS:
+        assert hass.states.get(entity_id) is None
+
+    coordinator = mock_config_entry.runtime_data.prayer_time_coordinator
+    coordinator.client.fetch_prayer_times.return_value = build_prayer_data(
+        fill_all_months=False
+    )
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all("sensor")) == 18
+    for entity_id in PUBLISHED_SENSORS:
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state not in ("unavailable", "unknown")
+
+    # Later refreshes do not add them twice.
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all("sensor")) == 18
+    assert "does not generate unique IDs" not in caplog.text
+
+
+@freeze_time("2025-04-10 12:00:00+02:00")
+async def test_published_sensors_kept_unknown_when_no_longer_published(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    setup_mawaqit_integration,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the iqama and Jumua sensors stay, as unknown, when the mosque stops publishing them."""
+    await setup_mawaqit_integration(
+        prayer_data=build_prayer_data(fill_all_months=False)
+    )
+
+    coordinator = mock_config_entry.runtime_data.prayer_time_coordinator
+    coordinator.client.fetch_prayer_times.return_value = build_prayer_data(
+        fill_all_months=False, iqama_enabled=False, jumua=None, jumua2=None
+    )
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all("sensor")) == 18
+    for entity_id in PUBLISHED_SENSORS:
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == "unknown"
+    assert "Missing calendar data" not in caplog.text
+
+
 @freeze_time("2025-04-10 12:00:00+02:00")
 @pytest.mark.parametrize(
     ("coordinator_attr", "entity_id"),

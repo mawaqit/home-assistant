@@ -6,7 +6,7 @@ It includes the following sensor entities:
 - Night sensors: middle and thirds of the night
 - Next prayer sensors
 
-The sensors are set up using the `async_setup_entry` function, which initializes the necessary coordinators and adds the entities to the platform.
+The sensors are set up using the `async_setup_entry` function, which adds the entities to the platform. The Jumua and iqama sensors are added when the mosque publishes them, at setup or at a later refresh.
 
 Classes:
     MawaqitPrayerTimeSensor: Represents a prayer time sensor.
@@ -175,60 +175,45 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Mawaqit sensor platform."""
-    prayer_time_coordinator = config_entry.runtime_data.prayer_time_coordinator
-
-    prayer_data = prayer_time_coordinator.data
+    coordinator = config_entry.runtime_data.prayer_time_coordinator
     mosque_uuid = config_entry.data[CONF_UUID]
 
-    entities: list[SensorEntity] = []
-
-    # Prayer Time Sensors
+    entities: list[SensorEntity] = [
+        MawaqitPrayerTimeSensor(coordinator, desc, mosque_uuid)
+        for desc in (*PRAYER_TIME_SENSOR_DESCRIPTIONS, *NIGHT_SENSOR_DESCRIPTIONS)
+    ]
     entities.extend(
-        [
-            MawaqitPrayerTimeSensor(prayer_time_coordinator, desc, mosque_uuid)
-            for desc in PRAYER_TIME_SENSOR_DESCRIPTIONS
-        ]
+        NextPrayerSensor(coordinator, desc, mosque_uuid)
+        for desc in NEXT_SALAT_SENSOR_DESCRIPTION
     )
+    async_add_entities(entities)
 
-    # Register Jumua Prayer Time Sensors
-    entities.extend(
-        [
-            MawaqitPrayerTimeSensor(prayer_time_coordinator, desc, mosque_uuid)
+    added_keys: set[str] = set()
+
+    @callback
+    def _async_add_published_sensors() -> None:
+        """Add the Jumua and iqama sensors the mosque has started publishing."""
+        if not (prayer_data := coordinator.data):
+            return
+        descriptions = [
+            desc
             for desc in JUMUA_PRAYER_TIME_SENSOR_DESCRIPTIONS
-            if prayer_data and desc.get_value(prayer_data) is not None
+            if desc.get_value(prayer_data) is not None
         ]
+        if utils.has_iqamas(prayer_data):
+            descriptions.extend(IQAMA_PRAYER_TIME_SENSOR_DESCRIPTIONS)
+        # Sensors the mosque stops publishing are kept, as unknown.
+        if new_descriptions := [d for d in descriptions if d.key not in added_keys]:
+            added_keys.update(desc.key for desc in new_descriptions)
+            async_add_entities(
+                MawaqitPrayerTimeSensor(coordinator, desc, mosque_uuid)
+                for desc in new_descriptions
+            )
+
+    _async_add_published_sensors()
+    config_entry.async_on_unload(
+        coordinator.async_add_listener(_async_add_published_sensors)
     )
-
-    # Register Iqama Prayer Time Sensors
-    if (
-        prayer_data
-        and prayer_data.get("iqamaEnabled")
-        and prayer_data.get("iqamaCalendar")
-    ):
-        entities.extend(
-            [
-                MawaqitPrayerTimeSensor(prayer_time_coordinator, desc, mosque_uuid)
-                for desc in IQAMA_PRAYER_TIME_SENSOR_DESCRIPTIONS
-            ]
-        )
-
-    entities.extend(
-        [
-            MawaqitPrayerTimeSensor(prayer_time_coordinator, desc, mosque_uuid)
-            for desc in NIGHT_SENSOR_DESCRIPTIONS
-        ]
-    )
-
-    # Register Next Prayer Sensors
-    entities.extend(
-        [
-            NextPrayerSensor(prayer_time_coordinator, desc, mosque_uuid)
-            for desc in NEXT_SALAT_SENSOR_DESCRIPTION
-        ]
-    )
-
-    # Register the Sensors
-    async_add_entities(new_entities=entities)
 
     _LOGGER.info("Mawaqit sensors successfully initialized")
 
