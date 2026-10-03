@@ -17,7 +17,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME, CONF_UUID
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er, selector
+from homeassistant.helpers import device_registry as dr, entity_registry as er, selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import mawaqit_wrapper, utils
@@ -59,13 +59,17 @@ KEYWORD_SCHEMA = vol.Schema(
 
 
 @callback
-def _async_move_entities(
+def _async_move_to_mosque(
     hass: HomeAssistant, entry_id: str, old_uuid: str, new_uuid: str
 ) -> None:
-    """Move the entities to the unique_ids of the new mosque, keeping their IDs."""
+    """Move the device and entities to the new mosque, keeping their IDs."""
     if old_uuid == new_uuid:
         # Otherwise each entity would be removed as its own stale duplicate.
         return
+    dev_reg = dr.async_get(hass)
+    for device in dr.async_entries_for_config_entry(dev_reg, entry_id):
+        if (DOMAIN, old_uuid) in device.identifiers:
+            dev_reg.async_update_device(device.id, new_identifiers={(DOMAIN, new_uuid)})
     ent_reg = er.async_get(hass)
     for entity in er.async_entries_for_config_entry(ent_reg, entry_id):
         if not entity.unique_id.startswith(f"{old_uuid}_"):
@@ -355,7 +359,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self.source == config_entries.SOURCE_RECONFIGURE:
             entry = self._get_reconfigure_entry()
             # Before the reload, so the sensors find their entities.
-            _async_move_entities(
+            _async_move_to_mosque(
                 self.hass, entry.entry_id, entry.data[CONF_UUID], mosque_uuid
             )
             return self.async_update_reload_and_abort(

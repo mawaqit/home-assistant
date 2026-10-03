@@ -23,6 +23,7 @@ MOCK_UUID = "aaaaa-bbbbb-cccccc-0000"
 MOCK_TOKEN = "test-api-token"
 MOCK_LATITUDE = 48.8566
 MOCK_LONGITUDE = 2.3522
+MOCK_MOSQUE_URL = "https://mawaqit.net/en/test-mosque"
 
 #: Six standard daily prayer times used throughout all calendar builders.
 PRAYER_TIMES_ROW = ["05:30", "06:45", "12:30", "15:45", "18:30", "20:00"]
@@ -110,6 +111,7 @@ def build_prayer_data(
     data: dict[str, Any] = {
         "uuid": MOCK_UUID,
         "name": "Test Mosque",
+        "url": MOCK_MOSQUE_URL,
         "calendar": calendar,
         "iqamaCalendar": iqama_calendar if with_iqama_calendar else [],
         "iqamaEnabled": iqama_enabled,

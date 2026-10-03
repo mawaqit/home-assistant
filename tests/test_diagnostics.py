@@ -41,6 +41,7 @@ async def test_diagnostics(
             **build_prayer_data(),
             "uuid": "**REDACTED**",
             "name": "**REDACTED**",
+            "url": "**REDACTED**",
             "announcements": "**REDACTED**",
         },
     }

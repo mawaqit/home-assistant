@@ -36,7 +36,7 @@ from homeassistant.const import (
     CONF_UUID,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import MOCK_TOKEN, MOCK_UUID
 
@@ -683,17 +683,22 @@ async def test_reconfigure_changes_mosque_and_keeps_entities(
     mock_client: MagicMock,
     mock_mosques_search_api_raw: list[dict],
 ) -> None:
-    """Test reconfiguring moves the entities to the new mosque, without a login."""
+    """Test reconfiguring moves the device and entities to the new mosque, without a login."""
     mock_config_entry.add_to_hass(hass)
     # Otherwise the reload runs the legacy migration, which drops unknown entities.
     hass.config_entries.async_update_entry(mock_config_entry, minor_version=2)
     mock_client.all_mosques_neighborhood.return_value = mock_mosques_search_api_raw
+    dev_reg = dr.async_get(hass)
+    device = dev_reg.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id, identifiers={(DOMAIN, MOCK_UUID)}
+    )
     ent_reg = er.async_get(hass)
     fajr = ent_reg.async_get_or_create(
         "sensor",
         DOMAIN,
         f"{MOCK_UUID}_prayer_fajr",
         config_entry=mock_config_entry,
+        device_id=device.id,
         suggested_object_id="fajr_prayer",
     )
     other = ent_reg.async_get_or_create(
@@ -732,7 +737,13 @@ async def test_reconfigure_changes_mosque_and_keeps_entities(
     assert moved is not None
     assert moved.entity_id == "sensor.fajr_prayer"
     assert moved.unique_id == f"{NEW_MOSQUE_UUID}_prayer_fajr"
+    assert moved.device_id == device.id
     assert ent_reg.async_get(other.entity_id) is not None
+    [moved_device] = dr.async_entries_for_config_entry(
+        dev_reg, mock_config_entry.entry_id
+    )
+    assert moved_device.id == device.id
+    assert moved_device.identifiers == {(DOMAIN, NEW_MOSQUE_UUID)}
     assert ent_reg.async_get(stale.entity_id) is None
 
 
@@ -775,10 +786,14 @@ async def test_reconfigure_same_mosque_keeps_entities(
     mock_client: MagicMock,
     mock_mosques_search_api_raw: list[dict],
 ) -> None:
-    """Test choosing the current mosque again leaves the entities untouched."""
+    """Test choosing the current mosque again leaves the device and entities untouched."""
     mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(mock_config_entry, minor_version=2)
     mock_client.all_mosques_neighborhood.return_value = mock_mosques_search_api_raw
+    dev_reg = dr.async_get(hass)
+    device = dev_reg.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id, identifiers={(DOMAIN, MOCK_UUID)}
+    )
     ent_reg = er.async_get(hass)
     fajr = ent_reg.async_get_or_create(
         "sensor", DOMAIN, f"{MOCK_UUID}_prayer_fajr", config_entry=mock_config_entry
@@ -801,3 +816,4 @@ async def test_reconfigure_same_mosque_keeps_entities(
     entity = ent_reg.async_get(fajr.entity_id)
     assert entity is not None
     assert entity.unique_id == f"{MOCK_UUID}_prayer_fajr"
+    assert dev_reg.async_get(device.id).identifiers == {(DOMAIN, MOCK_UUID)}

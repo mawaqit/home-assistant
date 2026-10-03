@@ -8,9 +8,15 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from custom_components.mawaqit.const import DOMAIN
 from custom_components.mawaqit.migration import LEGACY_STORAGE_KEY
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_UUID
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_UUID,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import (
     MOCK_LATITUDE,
@@ -50,9 +56,11 @@ async def _setup(hass: HomeAssistant, entry: MockConfigEntry) -> None:
 
 
 async def test_migrate_legacy_entities(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test legacy entities keep their entity_id and get the new unique_id."""
+    """Test legacy entities keep their entity_id, get the new unique_id and the device."""
     entry = _legacy_entry()
     entry.add_to_hass(hass)
     for unique_id, object_id in (
@@ -75,6 +83,7 @@ async def test_migrate_legacy_entities(
     assert entry.state is ConfigEntryState.LOADED
     assert entry.minor_version == 2
     assert entry.options == {}
+    [device] = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
     for object_id, suffix in (
         ("fajr_adhan", "fajr"),
         ("jumua_2_adhan", "jumua 2"),
@@ -84,8 +93,12 @@ async def test_migrate_legacy_entities(
         entity = entity_registry.async_get(f"sensor.{object_id}")
         assert entity is not None
         assert entity.unique_id == f"{MOCK_UUID}_{suffix}"
+        assert entity.device_id == device.id
         assert hass.states.get(f"sensor.{object_id}") is not None
     assert entity_registry.async_get("sensor.next_salat_preparation") is None
+    state = hass.states.get("sensor.fajr_adhan")
+    assert state is not None
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Test Mosque Fajr Prayer"
 
 
 async def test_migrate_drops_duplicate_legacy_entity(

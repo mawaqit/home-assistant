@@ -16,7 +16,7 @@ import homeassistant.util.dt as dt_util
 
 from .conftest import build_prayer_data
 
-ENTITY_ID = "calendar.prayer_times"
+ENTITY_ID = "calendar.test_mosque_prayer_times"
 
 
 @pytest.fixture(autouse=True)
