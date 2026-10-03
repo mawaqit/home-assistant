@@ -1,6 +1,6 @@
 # Oldest Home Assistant release supported (hacs.json), on Python 3.13.
 # Kept out of the repository root so Dependabot does not bump it.
 mawaqit==1.0.13
-pytest-homeassistant-custom-component==0.13.221
+pytest-homeassistant-custom-component==0.13.366
 # Newer aiohttp releases break Home Assistant 2025.3.
-aiohttp==3.11.13
+aiohttp==3.14.3

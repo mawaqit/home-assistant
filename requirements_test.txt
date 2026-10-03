@@ -1,2 +1,2 @@
 mawaqit==1.0.13
-pytest-homeassistant-custom-component==0.13.367
+pytest-homeassistant-custom-component==0.13.366
