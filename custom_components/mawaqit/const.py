@@ -8,7 +8,7 @@ MAWAQIT_URL = "https://mawaqit.net/"
 DOMAIN = "mawaqit"
 
 CONF_KEYWORD = "keyword"
-MOSQUES_PER_PAGE = 10
+MOSQUES_PER_PAGE = 5
 NEW_SEARCH = "new_search"
 NEXT_PAGE = "next_page"
 PREVIOUS_PAGE = "previous_page"
