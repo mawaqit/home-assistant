@@ -11,6 +11,7 @@
   },
   "config": {
     "abort": {
+      "already_configured": "تمت إضافة هذا المسجد مسبقًا.",
       "cannot_connect": "تعذّر الاتصال بخادم MAWAQIT. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.",
       "reauth_successful": "تمت إعادة المصادقة بنجاح.",
       "reconfigure_successful": "تم تغيير المسجد بنجاح."

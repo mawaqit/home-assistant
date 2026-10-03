@@ -275,12 +275,12 @@ def test_get_night_time_missing_data(prayer_data: dict) -> None:
 def test_save_mosque(kwargs: dict, expected_data: dict) -> None:
     """Test saving mosque data with and without coordinates."""
     title, data = utils.save_mosque(
-        mosque_display_name="My Mosque",
+        mosque_name="My Mosque",
         mosque_id="uuid1",
         mawaqit_token="token",
         **kwargs,
     )
-    assert title == "MAWAQIT - My Mosque"
+    assert title == "My Mosque"
     assert data == expected_data
 
 
@@ -288,7 +288,7 @@ def test_save_mosque_no_token() -> None:
     """Test saving mosque data with no token raises ValueError."""
     with pytest.raises(ValueError):
         utils.save_mosque(
-            mosque_display_name="My Mosque",
+            mosque_name="My Mosque",
             mosque_id="uuid1",
             mawaqit_token=None,
         )

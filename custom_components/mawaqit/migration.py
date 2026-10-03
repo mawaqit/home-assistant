@@ -3,6 +3,7 @@
 from functools import partial
 import logging
 from pathlib import Path
+import re
 import shutil
 
 from homeassistant.const import CONF_API_KEY, CONF_UUID
@@ -20,6 +21,10 @@ LEGACY_STORAGE_VERSION = 1
 LEGACY_STORAGE_MOSQUE_KEY = "my_mosque_NN"
 LEGACY_STORAGE_TOKEN_KEY = "MAWAQIT_API_KEY"
 LEGACY_DATA_DIR = Path(__file__).parent / "data"
+
+# Titles of entries created before minor version 3: "MAWAQIT - <name> (<distance> km)",
+# or "MAWAQIT - <name> - <address>" from a keyword search, whose address stays.
+GENERATED_TITLE_RE = re.compile(r"^MAWAQIT - (?P<name>.+?)(?: \(\d+\.\d{2} km\))?$")
 
 # Legacy unique_id (the sensor type) -> suffix of the new "<mosque uuid>_<suffix>" unique_id.
 # Legacy sensors missing from this map no longer exist and are removed.
@@ -79,3 +84,10 @@ async def async_migrate_legacy_entry(
     await hass.async_add_executor_job(
         partial(shutil.rmtree, LEGACY_DATA_DIR, ignore_errors=True)
     )
+
+
+def migrate_title(title: str) -> str:
+    """Return the title without the prefix and the distance added by older versions."""
+    if match := GENERATED_TITLE_RE.match(title):
+        return match["name"]
+    return title

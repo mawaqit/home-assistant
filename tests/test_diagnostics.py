@@ -24,7 +24,7 @@ async def test_diagnostics(
     assert diagnostics == {
         "entry": {
             "version": 1,
-            "minor_version": 2,
+            "minor_version": 3,
             "data": {
                 CONF_API_KEY: "**REDACTED**",
                 "uuid": "**REDACTED**",

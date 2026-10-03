@@ -11,6 +11,7 @@
   },
   "config": {
     "abort": {
+      "already_configured": "Bu cami zaten yapılandırılmış.",
       "cannot_connect": "MAWAQIT sunucusuna bağlanılamadı. Lütfen internet bağlantınızı kontrol edip tekrar deneyin.",
       "reauth_successful": "Yeniden kimlik doğrulama başarılı oldu.",
       "reconfigure_successful": "Cami başarıyla değiştirildi."

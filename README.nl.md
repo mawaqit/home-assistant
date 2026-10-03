@@ -62,13 +62,17 @@ Download niet de repository zelf: de branch `main` bevat nog niet uitgebrachte w
 
 Je MAWAQIT-wachtwoord wordt niet opgeslagen: Home Assistant bewaart in plaats daarvan een token van MAWAQIT.
 
+### Meerdere moskeeën volgen
+
+Om ook een andere moskee te volgen, bijvoorbeeld die bij je werk, voeg je de integratie opnieuw toe zoals hierboven beschreven en kies je die moskee. Is er al een andere moskee ingesteld die werkt, dan wordt haar login hergebruikt: je wordt er niet opnieuw om gevraagd. Elke moskee heeft haar eigen apparaat en entiteiten, waarvan de entiteit-ID's met de naam van de moskee beginnen. Dezelfde moskee kan niet twee keer worden ingesteld.
+
 ### Van moskee wisselen
 
-Er kan maar één moskee worden ingesteld. Om een andere te volgen, ga naar **Instellingen** > **Apparaten & diensten** > **MAWAQIT**, open het menu ⋮ van de vermelding en kies **Opnieuw configureren**. Je entiteiten behouden hun entiteit-ID's, dus je automatiseringen en dashboards blijven werken.
+Om een andere moskee te volgen in plaats van een moskee die al is ingesteld, ga naar **Instellingen** > **Apparaten & diensten** > **MAWAQIT**, open het menu ⋮ van haar vermelding en kies **Opnieuw configureren**. Haar entiteiten behouden hun entiteit-ID's, dus je automatiseringen en dashboards blijven werken.
 
 ### Opnieuw inloggen
 
-Als MAWAQIT je login niet meer accepteert, bijvoorbeeld na een wachtwoordwijziging, vraagt Home Assistant je opnieuw in te loggen: kies in **Instellingen** > **Apparaten & diensten** **Opnieuw configureren** op de MAWAQIT-kaart en vul je e-mailadres en nieuwe wachtwoord in. Je entiteiten en hun instellingen blijven behouden.
+Als MAWAQIT je login niet meer accepteert, bijvoorbeeld na een wachtwoordwijziging, vraagt Home Assistant je opnieuw in te loggen: kies in **Instellingen** > **Apparaten & diensten** **Opnieuw configureren** op de MAWAQIT-kaart en vul je e-mailadres en nieuwe wachtwoord in. Je entiteiten en hun instellingen blijven behouden. De andere moskeeën met dezelfde login worden tegelijk opnieuw ingelogd.
 
 ## Entiteiten
 
@@ -198,7 +202,6 @@ De tijden worden door de moskee in haar tijdzone gepubliceerd, en Home Assistant
 
 ## Bekende beperkingen
 
-- Maar één moskee per Home Assistant-instantie ([#143](https://github.com/mawaqit/home-assistant/issues/143)).
 - De agenda toont alleen de huidige en de volgende maand: MAWAQIT geeft de tijden van elke dag van het jaar, zonder het jaar.
 - Als MAWAQIT een ongeldige tijd heeft, wordt alleen die tijd overgeslagen: de sensor en de agenda-afspraak ervan zijn onbekend, net als wat ervan wordt berekend, zoals de tijden van de nacht bij een ongeldige Maghrib of Fajr. Er wordt een waarschuwing in de logboeken geschreven.
 - Voor moskeeën die Sabah en Imsak tonen, wordt Sabah als Fajr gebruikt, zoals in de MAWAQIT-app. Imsak is niet beschikbaar.
@@ -257,7 +260,7 @@ Werk bij met HACS en herstart daarna Home Assistant. Je configuratie wordt tijde
 
 ## Verwijderen
 
-1. Ga naar **Instellingen** > **Apparaten & diensten** > **MAWAQIT**, open het menu ⋮ van de vermelding en kies **Verwijderen**. De entiteiten worden verwijderd.
+1. Ga naar **Instellingen** > **Apparaten & diensten** > **MAWAQIT**, open het menu ⋮ van de vermelding en kies **Verwijderen**. De entiteiten worden verwijderd. Herhaal dit voor elke moskee.
 2. Om de bestanden te verwijderen, open **HACS**, dan **MAWAQIT**, en kies **Verwijderen** in het menu ⋮. Verwijder bij een handmatige installatie de map `custom_components/mawaqit`.
 3. Herstart Home Assistant.
 

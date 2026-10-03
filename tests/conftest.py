@@ -12,7 +12,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from custom_components.mawaqit.const import DOMAIN
 from custom_components.mawaqit.types import MawaqitMosqueData
 from homeassistant import config_entries
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_UUID
 from homeassistant.core import HomeAssistant
 
 # ---------------------------------------------------------------------------
@@ -142,20 +142,35 @@ def auto_enable_custom_integrations(enable_custom_integrations: None) -> None:
     """Allow Home Assistant to load the custom integration in every test."""
 
 
+def make_config_entry(
+    mosque_uuid: str = MOCK_UUID,
+    title: str = "Test Mosque",
+    token: str = MOCK_TOKEN,
+    **kwargs: Any,
+) -> MockConfigEntry:
+    """Return a config entry of a mosque, as created by the current version."""
+    return MockConfigEntry(
+        **{
+            "domain": DOMAIN,
+            "version": 1,
+            "minor_version": 3,
+            "title": title,
+            "data": {
+                CONF_API_KEY: token,
+                CONF_UUID: mosque_uuid,
+                CONF_LATITUDE: MOCK_LATITUDE,
+                CONF_LONGITUDE: MOCK_LONGITUDE,
+            },
+            "unique_id": mosque_uuid,
+            **kwargs,
+        }
+    )
+
+
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry for Mawaqit."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        title="MAWAQIT - Test Mosque",
-        data={
-            CONF_API_KEY: MOCK_TOKEN,
-            "uuid": MOCK_UUID,
-            CONF_LATITUDE: MOCK_LATITUDE,
-            CONF_LONGITUDE: MOCK_LONGITUDE,
-        },
-        unique_id="mawaqit_unique",
-    )
+    return make_config_entry()
 
 
 @pytest.fixture

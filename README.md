@@ -62,13 +62,17 @@ Do not download the repository itself: the `main` branch contains unreleased cha
 
 Your MAWAQIT password is not stored: Home Assistant keeps a token from MAWAQIT instead.
 
+### Following several mosques
+
+To also follow another mosque, for example the one near your work, add the integration again as described above and choose that mosque. If another mosque is already set up and working, its login is reused: you are not asked for it again. Each mosque has its own device and entities, whose entity IDs start with the name of the mosque. The same mosque cannot be set up twice.
+
 ### Changing the mosque
 
-Only one mosque can be set up. To follow another one, go to **Settings** > **Devices & services** > **MAWAQIT**, open the ⋮ menu of the entry and select **Reconfigure**. Your entities keep their entity IDs, so your automations and dashboards keep working.
+To follow another mosque instead of one already set up, go to **Settings** > **Devices & services** > **MAWAQIT**, open the ⋮ menu of its entry and select **Reconfigure**. Its entities keep their entity IDs, so your automations and dashboards keep working.
 
 ### Logging in again
 
-If MAWAQIT no longer accepts your login, for example after a password change, Home Assistant asks you to log in again: in **Settings** > **Devices & services**, select **Reconfigure** on the MAWAQIT card and enter your email address and new password. Your entities and their settings are kept.
+If MAWAQIT no longer accepts your login, for example after a password change, Home Assistant asks you to log in again: in **Settings** > **Devices & services**, select **Reconfigure** on the MAWAQIT card and enter your email address and new password. Your entities and their settings are kept. The other mosques set up with the same login are logged in again at the same time.
 
 ## Entities
 
@@ -198,7 +202,6 @@ Times are published by the mosque in its own time zone, and Home Assistant shows
 
 ## Known limitations
 
-- Only one mosque per Home Assistant instance ([#143](https://github.com/mawaqit/home-assistant/issues/143)).
 - The calendar only shows the current and the next month: MAWAQIT gives the times of each day of the year, without the year.
 - If MAWAQIT has an invalid time, only that time is skipped: its sensor and its calendar event are unknown, as well as what is computed from it, such as the times of the night for an invalid Maghrib or Fajr. A warning is written in the logs.
 - For mosques that display Sabah and Imsak, Sabah is used as Fajr, like in the MAWAQIT app. Imsak is not available.
@@ -257,7 +260,7 @@ Update with HACS, then restart Home Assistant. Your configuration is migrated du
 
 ## Removal
 
-1. Go to **Settings** > **Devices & services** > **MAWAQIT**, open the ⋮ menu of the entry and select **Delete**. Its entities are removed.
+1. Go to **Settings** > **Devices & services** > **MAWAQIT**, open the ⋮ menu of the entry and select **Delete**. Its entities are removed. Repeat for each mosque.
 2. To remove the files, open **HACS**, then **MAWAQIT**, and select **Remove** in its ⋮ menu. With a manual installation, delete the `custom_components/mawaqit` folder.
 3. Restart Home Assistant.
 

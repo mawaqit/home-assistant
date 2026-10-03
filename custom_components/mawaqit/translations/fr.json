@@ -11,6 +11,7 @@
   },
   "config": {
     "abort": {
+      "already_configured": "Cette mosquée est déjà configurée.",
       "cannot_connect": "Impossible de se connecter au serveur MAWAQIT. Vérifiez votre connexion internet et réessayez.",
       "reauth_successful": "La ré-authentification a réussi.",
       "reconfigure_successful": "La mosquée a bien été changée."
