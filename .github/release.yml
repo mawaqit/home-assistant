@@ -13,6 +13,12 @@ changelog:
     - title: Bug fixes
       labels:
         - bug
+    - title: Translations
+      labels:
+        - translations
+    - title: Documentation
+      labels:
+        - documentation
     - title: Dependencies
       labels:
         - dependencies
