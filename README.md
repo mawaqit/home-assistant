@@ -57,7 +57,7 @@ The integration adds the following ```sensor``` entities (all times are timestam
 | `sensor.next_salat_name` | Next prayer: `fajr`, `shuruq`, `dhuhr`, `asr`, `maghrib` or `isha`, shown translated in the UI |
 | `sensor.next_salat_time` | Time of the next prayer |
 
-It also adds a `calendar.prayer_times` calendar with the prayers of the current and the next month. Each prayer is an event named `Fajr`, `Shuruq`, `Dhuhr`, `Asr`, `Maghrib` or `Isha` (and `Jumua`, `Jumua 2`, `Jumua 3` on Fridays) whatever your language. It starts at the adhan and ends at the iqama if your mosque publishes it, otherwise when it starts. Use it with a `calendar` trigger, see the examples below.
+It also adds a `calendar.prayer_times` calendar (its entity ID depends on your language, e.g. `calendar.horaires_des_prieres` in French) with the prayers of the current and the next month. Each prayer is an event named `Fajr`, `Shuruq`, `Dhuhr`, `Asr`, `Maghrib` or `Isha` (and `Jumua`, `Jumua 2`, `Jumua 3` on Fridays) whatever your language. It starts at the adhan and ends at the iqama if your mosque publishes it, otherwise when it starts. Use it with a `calendar` trigger, see the examples below.
 
 ### Upgrading from version 3.x
 
@@ -116,7 +116,7 @@ Prayer sensors are timestamps, so they can be used directly in a `time` trigger,
   triggers:
     - trigger: calendar
       event: end # use start for the adhan
-      entity_id: calendar.prayer_times
+      entity_id: calendar.prayer_times # the ID shown in your installation
       offset: "-00:05:00"
   conditions:
     # Prayers without iqama end when they start

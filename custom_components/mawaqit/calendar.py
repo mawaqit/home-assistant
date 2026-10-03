@@ -1,6 +1,6 @@
 """Calendar of the mosque prayer times for the Mawaqit integration."""
 
-from datetime import date, datetime, timedelta, tzinfo
+from datetime import date, datetime, time, timedelta, tzinfo
 import logging
 from typing import override
 
@@ -88,8 +88,8 @@ def _day_events(prayer_data: dict, day: date, tz: tzinfo) -> list[CalendarEvent]
         iqamas = []
 
     starts: list[tuple[str, str, str | None]] = [
-        (name, PRAYER_SUMMARIES[name], time)
-        for name, time in zip(PRAYER_NAMES, times, strict=True)
+        (name, PRAYER_SUMMARIES[name], time_str)
+        for name, time_str in zip(PRAYER_NAMES, times, strict=True)
     ]
     if day.weekday() == 4:
         starts += [
@@ -110,8 +110,10 @@ def _day_events(prayer_data: dict, day: date, tz: tzinfo) -> list[CalendarEvent]
             except ValueError:
                 iqama = None
             if (iqama_dt := _at(day, iqama, tz)) is not None:
-                # An Isha iqama can be after midnight.
-                end = iqama_dt if iqama_dt >= start else iqama_dt + timedelta(days=1)
+                if iqama_dt >= start:
+                    end = iqama_dt
+                elif key == "isha":  # An Isha iqama can be after midnight.
+                    end = iqama_dt + timedelta(days=1)
         events.append(
             CalendarEvent(
                 start=start, end=end, summary=summary, uid=f"{day.isoformat()}_{key}"
@@ -154,10 +156,16 @@ class MawaqitPrayerCalendar(CalendarEntity, CoordinatorEntity[PrayerTimeCoordina
         window_start = dt_util.now(tz).date().replace(day=1)
         window_end = (window_start + timedelta(days=62)).replace(day=1)
 
-        day = max(first_day, window_start)
+        # The day before only for an Isha whose iqama is after midnight.
+        window_start_time = datetime.combine(window_start, time.min, tz)
+        day = max(first_day, window_start - timedelta(days=1))
         events: list[CalendarEvent] = []
         while day < min(end_day, window_end):
-            events.extend(_day_events(data, day, tz))
+            events.extend(
+                event
+                for event in _day_events(data, day, tz)
+                if event.end > window_start_time
+            )
             day += timedelta(days=1)
         return events
 

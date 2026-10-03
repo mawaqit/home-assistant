@@ -274,3 +274,41 @@ async def test_calendar_in_december_shows_january(
     assert events[0]["start"] == "2026-01-05T07:00:00+01:00"
     assert len(events) == 6
     assert await get_events(hass, "2026-02-01 00:00:00", "2026-02-02 00:00:00") == []
+
+
+async def test_calendar_iqama_before_adhan(
+    hass: HomeAssistant,
+    setup_mawaqit_integration,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an iqama before the adhan does not end the event on the next day."""
+    prayer_data = build_prayer_data(fill_all_months=False)
+    prayer_data["iqamaCalendar"][3]["10"][0] = "05:00"
+    freezer.move_to("2025-04-10 00:00:00+02:00")
+    await setup_mawaqit_integration(prayer_data=prayer_data)
+
+    events = await get_events(hass, "2025-04-10 05:00:00", "2025-04-10 06:00:00")
+
+    assert [(event["summary"], event["end"]) for event in events] == [
+        ("Fajr", "2025-04-10T05:30:00+02:00")
+    ]
+
+
+async def test_calendar_isha_of_the_previous_month(
+    hass: HomeAssistant,
+    setup_mawaqit_integration,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an Isha ending after midnight on the 1st is shown, not the rest of its day."""
+    prayer_data = build_prayer_data()
+    prayer_data["calendar"][2]["31"][5] = "23:55"
+    freezer.move_to("2025-04-01 00:01:00+02:00")
+    await setup_mawaqit_integration(prayer_data=prayer_data)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_ON
+    assert state.attributes["message"] == "Isha"
+    events = await get_events(hass, "2025-03-31 00:00:00", "2025-04-01 01:00:00")
+    assert [(event["summary"], event["start"]) for event in events] == [
+        ("Isha", "2025-03-31T23:55:00+02:00")
+    ]
