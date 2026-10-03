@@ -36,6 +36,9 @@ jobs:
           path: ~/.cache/prek
           key: prek-${{ hashFiles('.pre-commit-config.yaml') }}
       - run: prek run --all-files --show-diff-on-failure
+        env:
+          # Fails on pushes to main; it only guards local commits.
+          SKIP: no-commit-to-branch
 
   pytest:
     name: pytest (${{ matrix.name }})
