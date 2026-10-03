@@ -4,6 +4,6 @@
 
 ## Checklist
 
-- [ ] Label set for the release notes: `breaking-change`, `enhancement`, `bug`, `dependencies` or `skip-changelog`
+- [ ] Label set for the release notes: `breaking-change`, `feat`, `bug`, `dependencies` or `skip-changelog`
 - [ ] Tests added or updated, coverage stays at 100%
 - [ ] New strings added to every file of `translations/`
