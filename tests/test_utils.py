@@ -1,6 +1,6 @@
 """Tests for the Mawaqit utility functions."""
 
-from datetime import date, datetime
+from datetime import date, datetime, time
 from unittest.mock import MagicMock, patch
 from zoneinfo import ZoneInfo
 
@@ -15,6 +15,7 @@ from .conftest import (
     IQAMA_ABSOLUTE_TIMES_ROW,
     IQAMA_OFFSET_TIMES_ROW,
     PRAYER_TIMES_ROW,
+    build_prayer_data,
     make_iqama_month_data,
     make_month_data,
 )
@@ -22,6 +23,8 @@ from .conftest import (
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+PARIS = ZoneInfo("Europe/Paris")
 
 
 def _calendar_with_april(extra_days: dict | None = None) -> list[dict]:
@@ -244,22 +247,38 @@ def test_add_minutes_to_time_internal_error() -> None:
 
 
 # ---------------------------------------------------------------------------
-# get_next_friday
+# get_next_islamic_midnight
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(
-    ("frozen_date", "expected_date"),
+    ("now", "expected"),
     [
-        ("2025-04-07 12:00:00", date(2025, 4, 11)),  # Monday -> upcoming Friday
-        ("2025-04-11 12:00:00", date(2025, 4, 18)),  # Friday -> next week's Friday
-        ("2025-04-12 12:00:00", date(2025, 4, 18)),  # Saturday -> upcoming Friday
+        ("2025-04-10 12:00:00+02:00", datetime(2025, 4, 11, 0, 45, tzinfo=PARIS)),
+        ("2025-04-11 00:30:00+02:00", datetime(2025, 4, 11, 0, 45, tzinfo=PARIS)),
+        ("2025-04-11 00:45:00+02:00", datetime(2025, 4, 12, 0, 45, tzinfo=PARIS)),
     ],
+    ids=["afternoon", "before_islamic_midnight", "at_islamic_midnight"],
 )
-def test_get_next_friday(frozen_date: str, expected_date: date) -> None:
-    """Test getting next Friday from various weekdays."""
-    with freeze_time(frozen_date):
-        assert utils.get_next_friday() == expected_date
+def test_get_next_islamic_midnight(now: str, expected: datetime) -> None:
+    """Test the next Islamic midnight is halfway between Isha (20:00) and Fajr (05:30)."""
+    with freeze_time(now):
+        assert utils.get_next_islamic_midnight(build_prayer_data()) == expected
+
+
+@freeze_time("2025-04-10 12:00:00+02:00")
+@pytest.mark.parametrize(
+    "prayer_data",
+    [
+        {"calendar": [make_month_data() for _ in range(12)]},
+        {"calendar": [make_month_data() for _ in range(12)], "timezone": "Invalid/Tz"},
+        {"calendar": [{} for _ in range(12)], "timezone": "Europe/Paris"},
+    ],
+    ids=["no_timezone", "invalid_timezone", "empty_calendar"],
+)
+def test_get_next_islamic_midnight_missing_data(prayer_data: dict) -> None:
+    """Test get_next_islamic_midnight returns None without usable data."""
+    assert utils.get_next_islamic_midnight(prayer_data) is None
 
 
 # ---------------------------------------------------------------------------
@@ -361,40 +380,6 @@ def test_get_regular_prayer_time_invalid_timezone() -> None:
 
 
 # ---------------------------------------------------------------------------
-# get_shuruq_time
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.parametrize(
-    ("prayer_data", "expected_none"),
-    [
-        ({"timezone": "Europe/Paris", "shuruq": "06:45"}, False),
-        ({"shuruq": "06:45"}, True),
-        ({"timezone": "Europe/Paris"}, True),
-    ],
-)
-@freeze_time("2025-04-10 12:00:00+02:00")
-def test_get_shuruq_time(prayer_data, expected_none) -> None:
-    """Test get_shuruq_time with valid data and missing fields."""
-    result = utils.get_shuruq_time(prayer_data)
-    if expected_none:
-        assert result is None
-    else:
-        assert isinstance(result, datetime)
-
-
-@freeze_time("2025-04-10 12:00:00+02:00")
-def test_get_shuruq_time_invalid_localization() -> None:
-    """Test get_shuruq_time when localization fails."""
-    prayer_data = {"timezone": "Europe/Paris", "shuruq": "06:45"}
-    with patch(
-        "custom_components.mawaqit.utils.time_with_timezone",
-        return_value=None,
-    ):
-        assert utils.get_shuruq_time(prayer_data) is None
-
-
-# ---------------------------------------------------------------------------
 # get_jumua_time
 # ---------------------------------------------------------------------------
 
@@ -405,6 +390,24 @@ def test_get_jumua_time_success() -> None:
         {"timezone": "Europe/Paris", "jumua": "13:00"}, "jumua"
     )
     assert isinstance(result, datetime)
+
+
+@pytest.mark.parametrize(
+    ("now", "expected"),
+    [
+        ("2025-04-10 12:00:00+02:00", date(2025, 4, 11)),  # Thursday
+        ("2025-04-11 14:00:00+02:00", date(2025, 4, 11)),  # Friday, after Jumua
+        ("2025-04-12 00:30:00+02:00", date(2025, 4, 11)),  # before Islamic midnight
+        ("2025-04-12 12:00:00+02:00", date(2025, 4, 18)),  # Saturday
+    ],
+)
+def test_get_jumua_time_keeps_friday_until_islamic_midnight(
+    now: str, expected: date
+) -> None:
+    """Test Jumua stays on Friday until Islamic midnight, then moves a week ahead."""
+    with freeze_time(now):
+        result = utils.get_jumua_time(build_prayer_data(), "jumua")
+    assert result == datetime.combine(expected, time(13), PARIS)
 
 
 def test_get_jumua_time_no_timezone() -> None:

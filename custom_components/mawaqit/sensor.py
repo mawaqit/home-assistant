@@ -67,7 +67,7 @@ PRAYER_TIME_SENSOR_DESCRIPTIONS = [
         key="shuruq",
         translation_key="prayer_shuruq",
         device_class=SensorDeviceClass.TIMESTAMP,
-        get_value=utils.get_shuruq_time,
+        get_value=lambda data: utils.get_regular_prayer_time(data, "shuruq"),
     ),
     MawaqitPrayerTimeSensorEntityDescription(
         key="Dhuhr",

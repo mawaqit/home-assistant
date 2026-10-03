@@ -173,6 +173,39 @@ async def test_next_prayer_sensor_moves_on_at_prayer_time(
     assert hass.states.get("sensor.next_salat_name").state == "asr"
 
 
+async def test_prayer_sensors_move_to_next_day_at_islamic_midnight(
+    hass: HomeAssistant,
+    setup_mawaqit_integration,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test prayer times switch day at Islamic midnight, not at the next API refresh."""
+    prayer_data = build_prayer_data()
+    prayer_data["calendar"][3]["11"][1] = "06:43"  # Shuruq, 06:45 the day before
+    entity_ids = ("sensor.fajr_prayer", "sensor.shuruq", "sensor.fajr_iqama")
+
+    # Isha at 20:00 and Fajr at 05:30: Islamic midnight is at 00:45.
+    freezer.move_to("2025-04-10 20:30:00+02:00")
+    await setup_mawaqit_integration(prayer_data=prayer_data)
+
+    freezer.move_to("2025-04-11 00:44:59+02:00")
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert [hass.states.get(entity_id).state for entity_id in entity_ids] == [
+        "2025-04-10T03:30:00+00:00",
+        "2025-04-10T04:45:00+00:00",
+        "2025-04-10T03:40:00+00:00",
+    ]
+
+    freezer.move_to("2025-04-11 00:45:00+02:00")
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert [hass.states.get(entity_id).state for entity_id in entity_ids] == [
+        "2025-04-11T03:30:00+00:00",
+        "2025-04-11T04:43:00+00:00",
+        "2025-04-11T03:40:00+00:00",
+    ]
+
+
 @freeze_time("2025-04-10 12:00:00+02:00")
 async def test_next_prayer_sensor_no_calendar(
     hass: HomeAssistant,

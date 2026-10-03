@@ -283,23 +283,18 @@ def get_islamic_date(prayer_data: dict, timezone: str) -> date:
     return today if now >= islamic_midnight else yesterday
 
 
-def get_next_friday() -> date:
-    """Return the date of the next Friday after today.
+def get_next_islamic_midnight(prayer_data: dict) -> datetime | None:
+    """Return the next Islamic midnight, when prayer times move to the next day."""
+    timezone = prayer_data.get("timezone")
+    if not timezone or not (tz := dt_util.get_time_zone(timezone)):
+        return None
 
-    This function always returns the Friday of the following week if today is Friday,
-    i.e., it never returns today's date. If today is any other day, it returns the upcoming Friday.
-
-    :return: A datetime.date object representing the next Friday (never today).
-    """
-    today = dt_util.now().date()
-    days_until_friday = (
-        4 - today.weekday()
-    ) % 7  # 4 represents Friday (Monday=0, ..., Sunday=6)
-
-    if days_until_friday == 0:  # If today is Friday, move to next week
-        days_until_friday = 7
-
-    return today + timedelta(days=days_until_friday)
+    now = dt_util.now(tz)
+    for day in (now.date() - timedelta(days=1), now.date()):
+        islamic_midnight = compute_islamic_midnight(prayer_data, day, timezone)
+        if islamic_midnight and islamic_midnight > now:
+            return islamic_midnight
+    return None
 
 
 def get_prayer_times_for_two_days(
@@ -394,7 +389,7 @@ def find_next_prayer(
 
 
 def get_regular_prayer_time(prayer_data: dict, prayer_name: str) -> datetime | None:
-    """Get regular prayer time (Fajr, Dhuhr, Asr, Maghrib, Isha)."""
+    """Get a prayer time from the calendar (Fajr, Shuruq, Dhuhr, Asr, Maghrib, Isha)."""
     calendar = prayer_data.get("calendar")
     timezone = prayer_data.get("timezone")
 
@@ -408,21 +403,8 @@ def get_regular_prayer_time(prayer_data: dict, prayer_name: str) -> datetime | N
     return _to_utc(timezone, day, prayer_time) if prayer_time else None
 
 
-def get_shuruq_time(prayer_data: dict) -> datetime | None:
-    """Get Shuruq time."""
-    timezone = prayer_data.get("timezone")
-    shuruq_time = prayer_data.get("shuruq")
-
-    if not timezone:
-        _LOGGER.warning("Missing timezone data")
-        return None
-
-    day = get_islamic_date(prayer_data, timezone)
-    return _to_utc(timezone, day, shuruq_time) if shuruq_time else None
-
-
 def get_jumua_time(prayer_data: dict, jumua_name: str) -> datetime | None:
-    """Get Jumua prayer time."""
+    """Get the Jumua prayer time of the coming Friday, today included."""
     jumua_time = prayer_data.get(jumua_name)
     timezone = prayer_data.get("timezone")
 
@@ -430,7 +412,13 @@ def get_jumua_time(prayer_data: dict, jumua_name: str) -> datetime | None:
         _LOGGER.warning("Missing timezone data")
         return None
 
-    return _to_utc(timezone, get_next_friday(), jumua_time) if jumua_time else None
+    if not jumua_time:
+        return None
+
+    # Like the other prayers, today's Jumua is kept until Islamic midnight.
+    day = get_islamic_date(prayer_data, timezone)
+    friday = day + timedelta(days=(4 - day.weekday()) % 7)
+    return _to_utc(timezone, friday, jumua_time)
 
 
 def get_iqama_time(prayer_data: dict, prayer_name: str) -> datetime | None:
