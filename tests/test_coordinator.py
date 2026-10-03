@@ -1,10 +1,15 @@
 """Tests for the Mawaqit coordinators."""
 
 from datetime import timedelta
+from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 from mawaqit.exceptions import BadCredentialsException, MawaqitException
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant_custom_component.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+)
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -30,6 +35,28 @@ async def test_prayer_time_coordinator_update_interval_is_12_hours(
     )
     coordinator = mock_config_entry.runtime_data.prayer_time_coordinator
     assert coordinator.update_interval == timedelta(hours=12)
+
+
+async def test_prayer_time_coordinator_unload_cancels_day_change(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    setup_mawaqit_integration,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the Islamic midnight update does not run after the entry is unloaded."""
+    freezer.move_to("2025-04-10 20:30:00+02:00")
+    await setup_mawaqit_integration()
+    coordinator = mock_config_entry.runtime_data.prayer_time_coordinator
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with patch.object(coordinator, "async_update_listeners") as update_listeners:
+        freezer.move_to("2025-04-11 00:45:00+02:00")
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    update_listeners.assert_not_called()
 
 
 async def test_prayer_time_coordinator_success(
