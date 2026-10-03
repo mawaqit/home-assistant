@@ -99,7 +99,15 @@
         "name": "Maghrib Iqama"
       },
       "next_salat_name": {
-        "name": "Next Salat Name"
+        "name": "Next Salat Name",
+        "state": {
+          "asr": "Asr",
+          "dhuhr": "Dhuhr",
+          "fajr": "Fajr",
+          "isha": "Isha",
+          "maghrib": "Maghrib",
+          "shuruq": "Shuruq"
+        }
       },
       "next_salat_time": {
         "name": "Next Salat Time"

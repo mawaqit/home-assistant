@@ -99,7 +99,15 @@
         "name": "Akşam Kameti"
       },
       "next_salat_name": {
-        "name": "Sonraki namaz adı"
+        "name": "Sonraki namaz adı",
+        "state": {
+          "asr": "İkindi",
+          "dhuhr": "Öğle",
+          "fajr": "Sabah",
+          "isha": "Yatsı",
+          "maghrib": "Akşam",
+          "shuruq": "Güneş"
+        }
       },
       "next_salat_time": {
         "name": "Sonraki namaz vakti"
