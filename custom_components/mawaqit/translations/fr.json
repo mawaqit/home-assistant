@@ -94,7 +94,15 @@
         "name": "Iqama Maghrib"
       },
       "next_salat_name": {
-        "name": "Nom de la prochaine prière"
+        "name": "Nom de la prochaine prière",
+        "state": {
+          "asr": "Asr",
+          "dhuhr": "Dhohr",
+          "fajr": "Fajr",
+          "isha": "Icha",
+          "maghrib": "Maghreb",
+          "shuruq": "Chourouk"
+        }
       },
       "next_salat_time": {
         "name": "Heure de la prochaine prière"
