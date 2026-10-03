@@ -2,14 +2,34 @@
   "config": {
     "abort": {
       "cannot_connect": "Impossible de se connecter au serveur MAWAQIT. Vérifiez votre connexion internet et réessayez.",
-      "no_mosque": "Aucune mosquée MAWAQIT n'a été trouvée près de la position de votre Home Assistant. Vérifiez que votre position est définie près d'une mosquée. La recherche par mot-clé n'est pas encore disponible mais est prévue dans une prochaine version.",
       "reauth_successful": "La ré-authentification a réussi."
     },
     "error": {
       "cannot_connect_to_server": "Impossible de se connecter au serveur, veuillez réessayer plus tard.",
+      "no_mosque_around": "Aucune mosquée MAWAQIT n'a été trouvée près de la position de votre Home Assistant. Cherchez plutôt votre mosquée par mot-clé.",
+      "no_mosque_found": "Aucune mosquée trouvée avec ce mot-clé.",
       "wrong_credential": "Identifiant ou mot de passe incorrect, veuillez réessayer."
     },
     "step": {
+      "keyword_results": {
+        "data": {
+          "uuid": "Mosquée"
+        },
+        "data_description": {
+          "uuid": "Sélectionnez votre mosquée, une autre page de résultats ou une nouvelle recherche."
+        },
+        "description": "Mosquées correspondant à « {keyword} », page {page}.",
+        "title": "Votre mosquée préférée"
+      },
+      "keyword_search": {
+        "data": {
+          "keyword": "Mot-clé"
+        },
+        "data_description": {
+          "keyword": "Nom de la mosquée ou de sa ville. Laissez vide pour revenir au choix de la recherche."
+        },
+        "title": "Rechercher votre mosquée"
+      },
       "mosques_coordinates": {
         "data": {
           "mosques": "Plusieurs mosquées sont disponibles autour de vous, sélectionnez-en une :",
@@ -32,6 +52,14 @@
         },
         "description": "Votre connexion à MAWAQIT n'est plus valide, par exemple après un changement de mot de passe. Reconnectez-vous pour garder vos horaires de prière à jour.",
         "title": "Reconnexion à MAWAQIT"
+      },
+      "search_method": {
+        "description": "Comment voulez-vous trouver votre mosquée ?",
+        "menu_options": {
+          "keyword_search": "Rechercher par mot-clé",
+          "mosques_coordinates": "Mosquées autour de ma position"
+        },
+        "title": "Trouver votre mosquée"
       },
       "user": {
         "data": {
@@ -114,6 +142,15 @@
     },
     "no_prayer_times_data": {
       "message": "Aucun horaire de prière n'a été renvoyé par MAWAQIT."
+    }
+  },
+  "selector": {
+    "keyword_results": {
+      "options": {
+        "new_search": "Nouvelle recherche",
+        "next_page": "Page suivante",
+        "previous_page": "Page précédente"
+      }
     }
   },
   "title": "Horaires de prière MAWAQIT"
