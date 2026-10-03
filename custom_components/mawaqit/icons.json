@@ -1,5 +1,10 @@
 {
   "entity": {
+    "calendar": {
+      "prayer_times": {
+        "default": "mdi:calendar-clock"
+      }
+    },
     "sensor": {
       "iqama_asr": {
         "default": "mdi:weather-sunny"

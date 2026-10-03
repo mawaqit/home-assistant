@@ -77,6 +77,11 @@
     }
   },
   "entity": {
+    "calendar": {
+      "prayer_times": {
+        "name": "Namaz Vakitleri"
+      }
+    },
     "sensor": {
       "iqama_asr": {
         "name": "İkindi Kameti"
