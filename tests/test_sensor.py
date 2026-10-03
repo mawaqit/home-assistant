@@ -1,6 +1,8 @@
 """Tests for the Mawaqit sensor platform."""
 
+from collections.abc import Generator
 from datetime import datetime
+import time
 from unittest.mock import MagicMock
 
 from freezegun import freeze_time
@@ -209,6 +211,59 @@ async def test_prayer_sensors_return_valid_state(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state not in ("unavailable", "unknown")
+
+
+@pytest.fixture
+def system_time_zone_utc(monkeypatch: pytest.MonkeyPatch) -> Generator[None]:
+    """Run the system clock in UTC, like the Home Assistant container in #82."""
+    monkeypatch.setenv("TZ", "UTC")
+    time.tzset()
+    yield
+    monkeypatch.undo()
+    time.tzset()
+
+
+@pytest.mark.usefixtures("system_time_zone_utc")
+@pytest.mark.parametrize(
+    ("now", "expected"),
+    [
+        (
+            "2025-01-15 11:00:00+01:00",
+            {
+                "sensor.fajr_prayer": "2025-01-15T04:30:00+00:00",
+                "sensor.shuruq": "2025-01-15T05:45:00+00:00",
+                "sensor.asr_iqama": "2025-01-15T14:55:00+00:00",
+                "sensor.jumua_prayer": "2025-01-17T12:00:00+00:00",
+                "sensor.next_salat_time": "2025-01-15T11:30:00+00:00",
+            },
+        ),
+        (
+            "2025-07-15 11:00:00+02:00",
+            {
+                "sensor.fajr_prayer": "2025-07-15T03:30:00+00:00",
+                "sensor.shuruq": "2025-07-15T04:45:00+00:00",
+                "sensor.asr_iqama": "2025-07-15T13:55:00+00:00",
+                "sensor.jumua_prayer": "2025-07-18T11:00:00+00:00",
+                "sensor.next_salat_time": "2025-07-15T10:30:00+00:00",
+            },
+        ),
+    ],
+    ids=["winter", "summer"],
+)
+async def test_prayer_sensors_use_mosque_time_zone(
+    hass: HomeAssistant,
+    setup_mawaqit_integration,
+    freezer: FrozenDateTimeFactory,
+    now: str,
+    expected: dict[str, str],
+) -> None:
+    """Test times follow the mosque time zone, not the system or Home Assistant one."""
+    freezer.move_to(now)
+    await setup_mawaqit_integration()
+
+    assert {entity_id: hass.states.get(entity_id).state for entity_id in expected} == (
+        expected
+    )
 
 
 # ---------------------------------------------------------------------------
