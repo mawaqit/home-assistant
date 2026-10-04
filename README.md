@@ -32,7 +32,7 @@ This integration brings the prayer times of your [MAWAQIT](https://mawaqit.net) 
 
 - A MAWAQIT account. It is free: create one on [mawaqit.net](https://mawaqit.net) if you do not have one.
 - Home Assistant **2025.3** or newer.
-- [HACS](https://www.hacs.xyz/), unless you install the integration manually.
+- [HACS](https://www.hacs.xyz/docs/use/download/download/#to-download-hacs), unless you install the integration manually.
 - To list the mosques around you during setup, the location of your home set in [**Settings** > **System** > **General**](https://my.home-assistant.io/redirect/general/). You can also find your mosque by name instead.
 
 ## Installation

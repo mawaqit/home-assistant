@@ -32,7 +32,7 @@ Cette intégration ajoute à Home Assistant les horaires de prière de votre mos
 
 - Un compte MAWAQIT. Il est gratuit : créez-en un sur [mawaqit.net](https://mawaqit.net) si vous n'en avez pas.
 - Home Assistant **2025.3** ou plus récent.
-- [HACS](https://www.hacs.xyz/), sauf si vous installez l'intégration manuellement.
+- [HACS](https://www.hacs.xyz/docs/use/download/download/#to-download-hacs), sauf si vous installez l'intégration manuellement.
 - Pour lister les mosquées autour de vous pendant la configuration, l'emplacement de votre domicile renseigné dans [**Paramètres** > **Système** > **Général**](https://my.home-assistant.io/redirect/general/). Vous pouvez aussi chercher votre mosquée par son nom.
 
 ## Installation

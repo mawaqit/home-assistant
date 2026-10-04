@@ -32,7 +32,7 @@ Deze integratie brengt de gebedstijden van je [MAWAQIT](https://mawaqit.net)-mos
 
 - Een MAWAQIT-account. Het is gratis: maak er een aan op [mawaqit.net](https://mawaqit.net) als je er nog geen hebt.
 - Home Assistant **2025.3** of nieuwer.
-- [HACS](https://www.hacs.xyz/), tenzij je de integratie handmatig installeert.
+- [HACS](https://www.hacs.xyz/docs/use/download/download/#to-download-hacs), tenzij je de integratie handmatig installeert.
 - Om tijdens het instellen de moskeeën in je buurt te tonen, de locatie van je huis in [**Instellingen** > **Systeem** > **Algemeen**](https://my.home-assistant.io/redirect/general/). Je kunt je moskee ook op naam zoeken.
 
 ## Installatie

@@ -32,7 +32,7 @@ Diese Integration bringt die Gebetszeiten deiner [MAWAQIT](https://mawaqit.net)-
 
 - Ein MAWAQIT-Konto. Es ist kostenlos: Erstelle eines auf [mawaqit.net](https://mawaqit.net), falls du noch keines hast.
 - Home Assistant **2025.3** oder neuer.
-- [HACS](https://www.hacs.xyz/), außer du installierst die Integration manuell.
+- [HACS](https://www.hacs.xyz/docs/use/download/download/#to-download-hacs), außer du installierst die Integration manuell.
 - Um während der Einrichtung die Moscheen in deiner Nähe aufzulisten, den Standort deines Zuhauses unter [**Einstellungen** > **System** > **Allgemein**](https://my.home-assistant.io/redirect/general/). Du kannst deine Moschee auch über ihren Namen suchen.
 
 ## Installation
