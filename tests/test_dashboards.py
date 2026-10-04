@@ -19,8 +19,6 @@ TRANSLATIONS = json.loads(
 TRANSLATION_KEYS = {
     key for platform in TRANSLATIONS["entity"].values() for key in platform
 }
-# Read by the mosque display once the flash message sensor of #154 exists.
-UPCOMING_KEYS = {"flash_message"}
 
 
 def _yaml_blocks(page: Path) -> list[str]:
@@ -87,7 +85,7 @@ def test_mosque_display_translation_keys_exist(page: Path) -> None:
         }
 
     assert "prayer_fajr" in keys
-    assert keys - TRANSLATION_KEYS == UPCOMING_KEYS
+    assert keys <= TRANSLATION_KEYS
 
 
 def test_mosque_display_is_the_same_in_every_language() -> None:
