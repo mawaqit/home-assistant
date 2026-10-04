@@ -35,8 +35,8 @@ class MawaqitMosqueData:
     uuid: str
     label: str
     name: str
-    latitude: float
-    longitude: float
+    latitude: float | None = None
+    longitude: float | None = None
     proximity: int | None = None
     localisation: str | None = None
 

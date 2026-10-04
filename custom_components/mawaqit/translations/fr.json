@@ -18,6 +18,7 @@
     },
     "error": {
       "cannot_connect_to_server": "Impossible de se connecter au serveur, veuillez réessayer plus tard.",
+      "mosque_id_not_found": "Aucune mosquée ni maison n'a cet ID.",
       "no_mosque_around": "Aucune mosquée MAWAQIT n'a été trouvée près de la position de votre Home Assistant. Cherchez plutôt votre mosquée par mot-clé.",
       "no_mosque_found": "Aucune mosquée trouvée avec ce mot-clé.",
       "wrong_credential": "Identifiant ou mot de passe incorrect, veuillez réessayer."
@@ -41,6 +42,16 @@
           "keyword": "Nom de la mosquée ou de sa ville. Laissez vide pour revenir au choix de la recherche."
         },
         "title": "Rechercher votre mosquée"
+      },
+      "mosque_id": {
+        "data": {
+          "mosque_id": "ID MAWAQIT"
+        },
+        "data_description": {
+          "mosque_id": "Un nombre, comme 12345. Laissez vide pour revenir au choix de la recherche."
+        },
+        "description": "Les maisons ne sont pas dans la recherche : trouvez-les par leur ID. Connectez-vous sur [mawaqit.net]({mawaqit_url}) : l'ID est affiché à côté de chacune de vos mosquées et maisons.",
+        "title": "Saisir l'ID MAWAQIT"
       },
       "mosques_coordinates": {
         "data": {
@@ -69,6 +80,7 @@
         "description": "Comment voulez-vous trouver votre mosquée ?",
         "menu_options": {
           "keyword_search": "Rechercher par mot-clé",
+          "mosque_id": "Saisir l'ID d'une mosquée ou d'une maison",
           "mosques_coordinates": "Mosquées autour de ma position"
         },
         "title": "Trouver votre mosquée"

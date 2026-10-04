@@ -18,6 +18,7 @@
     },
     "error": {
       "cannot_connect_to_server": "Verbindung zum Server nicht möglich, bitte versuche es später erneut.",
+      "mosque_id_not_found": "Keine Moschee und kein Zuhause hat diese ID.",
       "no_mosque_around": "In der Nähe deines Home-Assistant-Standorts wurden keine MAWAQIT-Moscheen gefunden. Suche deine Moschee stattdessen per Stichwort.",
       "no_mosque_found": "Keine Moschee mit diesem Stichwort gefunden.",
       "wrong_credential": "Falscher Benutzername oder falsches Passwort, bitte versuche es erneut."
@@ -41,6 +42,16 @@
           "keyword": "Name der Moschee oder ihrer Stadt. Leer lassen, um zur Auswahl der Suche zurückzukehren."
         },
         "title": "Suche deine Moschee"
+      },
+      "mosque_id": {
+        "data": {
+          "mosque_id": "MAWAQIT-ID"
+        },
+        "data_description": {
+          "mosque_id": "Eine Zahl, z. B. 12345. Leer lassen, um zur Auswahl der Suche zurückzukehren."
+        },
+        "description": "Ein Zuhause erscheint nicht in der Suche: Finde es über seine ID. Melde dich auf [mawaqit.net]({mawaqit_url}) an: Die ID steht neben jeder deiner Moscheen und jedem deiner Zuhause.",
+        "title": "MAWAQIT-ID eingeben"
       },
       "mosques_coordinates": {
         "data": {
@@ -69,6 +80,7 @@
         "description": "Wie möchtest du deine Moschee finden?",
         "menu_options": {
           "keyword_search": "Per Stichwort suchen",
+          "mosque_id": "ID einer Moschee oder eines Zuhauses eingeben",
           "mosques_coordinates": "Moscheen in meiner Nähe"
         },
         "title": "Finde deine Moschee"

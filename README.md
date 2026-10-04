@@ -60,7 +60,8 @@ Do not download the repository itself: the `main` branch contains unreleased cha
 3. Choose how to find your mosque:
    - **Mosques around my location**: the mosques around the location of your home in Home Assistant. If there are none, you are asked for a keyword instead.
    - **Search by keyword**: the name of the mosque or of its city. Results come 5 at a time: select **Next page** or **Previous page** to browse them, or **New search** to change the keyword. Leave the keyword empty to go back to the search methods.
-4. Select your mosque.
+   - **Enter the ID of a mosque or home**: homes are not in the search, so enter their MAWAQIT ID instead. Log in to [mawaqit.net](https://mawaqit.net): the ID is shown next to each of your mosques and homes. Leave the ID empty to go back to the search methods.
+4. Select your mosque, unless you entered its ID.
 
 Your MAWAQIT password is not stored: Home Assistant keeps a token from MAWAQIT instead.
 
@@ -315,6 +316,10 @@ Use the email address and password you use on [mawaqit.net](https://mawaqit.net)
 ### No mosque found around my location
 
 Check the location of your home in **Settings** > **System** > **General**, or search your mosque by keyword. Only mosques registered on MAWAQIT can be found.
+
+### My home is not found
+
+Homes registered on MAWAQIT are not in the search: choose **Enter the ID of a mosque or home** and enter the ID shown next to your home on [mawaqit.net](https://mawaqit.net). If the times of a home have no Jumu'a or Eid prayer, those sensors are unknown.
 
 ### Cannot connect to the server
 

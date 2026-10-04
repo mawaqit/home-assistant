@@ -3,8 +3,8 @@
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from mawaqit import AuthenticationError, InternalServerError
-from mawaqit.types import Account, Mosque
+from mawaqit import AuthenticationError, InternalServerError, NotFoundError
+from mawaqit.types import Account, Mosque, MosqueSummary
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -12,7 +12,9 @@ from custom_components.mawaqit import config_flow
 from custom_components.mawaqit.const import (
     CANNOT_CONNECT_TO_SERVER,
     CONF_KEYWORD,
+    CONF_MOSQUE_ID,
     DOMAIN,
+    MOSQUE_ID_NOT_FOUND,
     MOSQUES_PER_PAGE,
     NEW_SEARCH,
     NEXT_PAGE,
@@ -54,6 +56,16 @@ NEW_TOKEN = "new-api-token"
 
 AUTH_ERROR = status_error(AuthenticationError, 401)
 SERVER_ERROR = status_error(InternalServerError, 500)
+NOT_FOUND_ERROR = status_error(NotFoundError, 404)
+HOME_ID = 1234
+HOME = MosqueSummary(
+    id=HOME_ID,
+    uuid="home-uuid",
+    name="My home",
+    type="HOME",
+    localisation=" 75005 Paris France",
+    image="https://mawaqit.net/default.jpg",
+)
 
 
 def _account(token: str) -> Account:
@@ -85,6 +97,7 @@ def mock_client() -> MagicMock:
         return search_response(await found(**kwargs))
 
     client.mosques.search = AsyncMock(side_effect=search)
+    client.mosques.get = AsyncMock(return_value=HOME)
     return client
 
 
@@ -137,6 +150,20 @@ async def _login(hass: HomeAssistant, mock_client: MagicMock) -> str:
         )
     assert result.get("type") == data_entry_flow.FlowResultType.MENU
     return result["flow_id"]
+
+
+async def _enter_mosque_id(
+    hass: HomeAssistant, mock_client: MagicMock, mosque_id: float = HOME_ID
+) -> data_entry_flow.FlowResult:
+    """Log in, choose the ID entry and submit the ID."""
+    flow_id = await _login(hass, mock_client)
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, {"next_step_id": "mosque_id"}
+    )
+    assert result.get("step_id") == "mosque_id"
+    return await hass.config_entries.flow.async_configure(
+        flow_id, {CONF_MOSQUE_ID: mosque_id}
+    )
 
 
 async def _search_keyword(
@@ -214,7 +241,11 @@ async def test_async_step_user_valid_credentials(
 
     assert result.get("type") == data_entry_flow.FlowResultType.MENU
     assert result.get("step_id") == "search_method"
-    assert result.get("menu_options") == ["mosques_coordinates", "keyword_search"]
+    assert result.get("menu_options") == [
+        "mosques_coordinates",
+        "keyword_search",
+        "mosque_id",
+    ]
     mock_client.search_around.assert_not_awaited()
 
 
@@ -307,7 +338,7 @@ async def test_no_mosque_around_redirects_to_keyword_search(
     # Back to the menu, without the location search that found nothing.
     result = await hass.config_entries.flow.async_configure(flow_id, {})
     assert result.get("type") == data_entry_flow.FlowResultType.MENU
-    assert result.get("menu_options") == ["keyword_search"]
+    assert result.get("menu_options") == ["keyword_search", "mosque_id"]
 
     result = await hass.config_entries.flow.async_configure(
         flow_id, {"next_step_id": "keyword_search"}
@@ -443,7 +474,11 @@ async def test_keyword_search_empty_keyword_goes_back(
     result = await hass.config_entries.flow.async_configure(flow_id, user_input)
 
     assert result.get("type") == data_entry_flow.FlowResultType.MENU
-    assert result.get("menu_options") == ["mosques_coordinates", "keyword_search"]
+    assert result.get("menu_options") == [
+        "mosques_coordinates",
+        "keyword_search",
+        "mosque_id",
+    ]
     mock_client.search_by_keyword.assert_not_awaited()
 
 
@@ -582,6 +617,93 @@ async def test_keyword_results_new_search(
     mock_client.search_by_keyword.assert_awaited_with(
         word="Lyon", page=2, items_per_page=MOSQUES_PER_PAGE
     )
+
+
+# ---------------------------------------------------------------------------
+# MOSQUE ID
+# ---------------------------------------------------------------------------
+
+
+async def test_mosque_id_creates_entry(
+    hass: HomeAssistant, mock_client: MagicMock
+) -> None:
+    """Test entering the ID of a home creates its entry."""
+    result = await _enter_mosque_id(hass, mock_client, float(HOME_ID))
+
+    assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result.get("title") == "My home"
+    assert result["result"].unique_id == "home-uuid"
+    assert result.get("data") == {
+        CONF_API_KEY: MOCK_TOKEN,
+        CONF_UUID: "home-uuid",
+        CONF_LATITUDE: hass.config.latitude,
+        CONF_LONGITUDE: hass.config.longitude,
+    }
+    mock_client.mosques.get.assert_awaited_once_with(HOME_ID)
+    # The selector gives a float, which the API path must not get as "1234.0".
+    assert type(mock_client.mosques.get.await_args.args[0]) is int
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (NOT_FOUND_ERROR, MOSQUE_ID_NOT_FOUND),
+        (AUTH_ERROR, CANNOT_CONNECT_TO_SERVER),
+        (SERVER_ERROR, CANNOT_CONNECT_TO_SERVER),
+        (CONNECTION_ERROR, CANNOT_CONNECT_TO_SERVER),
+        (TIMEOUT_ERROR, CANNOT_CONNECT_TO_SERVER),
+    ],
+    ids=["not_found", "bad_token", "mawaqit_error", "connection_error", "timeout"],
+)
+async def test_mosque_id_errors(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    side_effect: Exception,
+    expected_error: str,
+) -> None:
+    """Test ID failures are shown on the ID form, which can be retried."""
+    mock_client.mosques.get.side_effect = side_effect
+
+    result = await _enter_mosque_id(hass, mock_client)
+
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("step_id") == "mosque_id"
+    assert result.get("errors") == {"base": expected_error}
+
+    mock_client.mosques.get.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_MOSQUE_ID: HOME_ID}
+    )
+    assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
+
+
+async def test_mosque_id_empty_goes_back(
+    hass: HomeAssistant, mock_client: MagicMock
+) -> None:
+    """Test an empty ID goes back to the search menu without calling the API."""
+    flow_id = await _login(hass, mock_client)
+    await hass.config_entries.flow.async_configure(
+        flow_id, {"next_step_id": "mosque_id"}
+    )
+
+    result = await hass.config_entries.flow.async_configure(flow_id, {})
+
+    assert result.get("type") == data_entry_flow.FlowResultType.MENU
+    mock_client.mosques.get.assert_not_awaited()
+
+
+async def test_mosque_id_already_configured(
+    hass: HomeAssistant, mock_client: MagicMock
+) -> None:
+    """Test a home found by its ID cannot be added twice."""
+    entry = make_config_entry("home-uuid", "My home")
+    entry.add_to_hass(hass)
+
+    result = await _enter_mosque_id(hass, mock_client)
+
+    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"
+    assert hass.config_entries.async_entries(DOMAIN) == [entry]
 
 
 # ---------------------------------------------------------------------------
@@ -772,6 +894,34 @@ async def test_reconfigure_with_keyword_search(
     assert mock_config_entry.title == "Mosque0-label"
     assert mock_config_entry.data[CONF_UUID] == "mosque-0"
     assert mock_config_entry.unique_id == "mosque-0"
+
+
+async def test_reconfigure_with_mosque_id(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test the ID entry can pick the new mosque when reconfiguring."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "custom_components.mawaqit.config_flow.AsyncMawaqitClient",
+        return_value=mock_client,
+    ):
+        result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "mosque_id"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_MOSQUE_ID: HOME_ID}
+    )
+    await hass.async_block_till_done()
+
+    assert result.get("reason") == "reconfigure_successful"
+    assert mock_config_entry.title == "My home"
+    assert mock_config_entry.data[CONF_UUID] == "home-uuid"
+    assert mock_config_entry.unique_id == "home-uuid"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

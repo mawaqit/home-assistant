@@ -4,7 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
-from mawaqit import AsyncMawaqitClient, AuthenticationError, MawaqitError
+from mawaqit import AsyncMawaqitClient, AuthenticationError, MawaqitError, NotFoundError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -17,8 +17,10 @@ from . import mawaqit_wrapper, utils
 from .const import (
     CANNOT_CONNECT_TO_SERVER,
     CONF_KEYWORD,
+    CONF_MOSQUE_ID,
     DOMAIN,
     MAWAQIT_URL,
+    MOSQUE_ID_NOT_FOUND,
     MOSQUES_PER_PAGE,
     NEW_SEARCH,
     NEXT_PAGE,
@@ -46,6 +48,16 @@ KEYWORD_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_KEYWORD): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
+        ),
+    }
+)
+
+MOSQUE_ID_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_MOSQUE_ID): selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                min=1, step=1, mode=selector.NumberSelectorMode.BOX
+            )
         ),
     }
 )
@@ -198,7 +210,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Let the user search the mosques around their location or by keyword."""
-        menu_options = ["keyword_search"]
+        menu_options = ["keyword_search", "mosque_id"]
         if not self.no_mosque_around:
             menu_options.insert(0, "mosques_coordinates")
         return self.async_show_menu(step_id="search_method", menu_options=menu_options)
@@ -314,6 +326,38 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
             description_placeholders={"keyword": self.keyword, "page": str(self.page)},
+        )
+
+    async def async_step_mosque_id(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Ask for the MAWAQIT ID of a mosque or home, which the search omits."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            if CONF_MOSQUE_ID not in user_input:
+                return await self.async_step_search_method()
+            # The number selector gives a float.
+            mosque_id = int(user_input[CONF_MOSQUE_ID])
+            try:
+                mosque = await mawaqit_wrapper.fetch_mosque_by_id(
+                    self.client, mosque_id
+                )
+            except NotFoundError:
+                errors["base"] = MOSQUE_ID_NOT_FOUND
+            except MawaqitError:
+                errors["base"] = CANNOT_CONNECT_TO_SERVER
+            else:
+                self.mosques = {mosque.uuid: mosque}
+                return await self._async_create_mosque_entry(mosque.uuid)
+
+        return self.async_show_form(
+            step_id="mosque_id",
+            data_schema=self.add_suggested_values_to_schema(
+                MOSQUE_ID_SCHEMA, user_input
+            ),
+            errors=errors,
+            description_placeholders={"mawaqit_url": MAWAQIT_URL},
         )
 
     async def _async_load_page(self, page: int) -> dict[str, str]:

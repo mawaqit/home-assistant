@@ -26,3 +26,16 @@ async def fetch_mosques_by_keyword(
         word=keyword, page=page, items_per_page=MOSQUES_PER_PAGE
     )
     return _to_mosque_data(mosques)
+
+
+async def fetch_mosque_by_id(
+    client: AsyncMawaqitClient, mosque_id: int
+) -> MawaqitMosqueData:
+    """Return the mosque or home with this MAWAQIT ID."""
+    mosque = await client.mosques.get(mosque_id)
+    return MawaqitMosqueData(
+        uuid=mosque.uuid,
+        label=mosque.name,
+        name=mosque.name,
+        localisation=mosque.localisation,
+    )

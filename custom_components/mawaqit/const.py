@@ -8,6 +8,7 @@ MAWAQIT_URL = "https://mawaqit.net/"
 DOMAIN = "mawaqit"
 
 CONF_KEYWORD = "keyword"
+CONF_MOSQUE_ID = "mosque_id"
 MOSQUES_PER_PAGE = 5
 NEW_SEARCH = "new_search"
 NEXT_PAGE = "next_page"
@@ -17,6 +18,7 @@ PREVIOUS_PAGE = "previous_page"
 # Error messages
 
 CANNOT_CONNECT_TO_SERVER = "cannot_connect_to_server"
+MOSQUE_ID_NOT_FOUND = "mosque_id_not_found"
 NO_MOSQUE_AROUND = "no_mosque_around"
 NO_MOSQUE_FOUND = "no_mosque_found"
 WRONG_CREDENTIAL = "wrong_credential"
