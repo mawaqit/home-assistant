@@ -18,6 +18,7 @@
     },
     "error": {
       "cannot_connect_to_server": "Cannot connect to the server, please retry later.",
+      "mosque_id_not_found": "No mosque or home has this ID.",
       "no_mosque_around": "No MAWAQIT mosques were found near your Home Assistant location. Search for your mosque by keyword instead.",
       "no_mosque_found": "No mosque found with this keyword.",
       "wrong_credential": "Wrong login or password, please retry."
@@ -41,6 +42,16 @@
           "keyword": "Name of the mosque or of its city. Leave empty to go back to the search methods."
         },
         "title": "Search for your mosque"
+      },
+      "mosque_id": {
+        "data": {
+          "mosque_id": "MAWAQIT ID"
+        },
+        "data_description": {
+          "mosque_id": "A number, such as 12345. Leave empty to go back to the search methods."
+        },
+        "description": "Homes are not in the search: find them by their ID. Log in to [mawaqit.net]({mawaqit_url}): the ID is shown next to each of your mosques and homes.",
+        "title": "Enter the MAWAQIT ID"
       },
       "mosques_coordinates": {
         "data": {
@@ -69,6 +80,7 @@
         "description": "How do you want to find your mosque?",
         "menu_options": {
           "keyword_search": "Search by keyword",
+          "mosque_id": "Enter the ID of a mosque or home",
           "mosques_coordinates": "Mosques around my location"
         },
         "title": "Find your mosque"

@@ -18,6 +18,7 @@
     },
     "error": {
       "cannot_connect_to_server": "Kan geen verbinding maken met de server, probeer het later opnieuw.",
+      "mosque_id_not_found": "Geen moskee of woning heeft deze ID.",
       "no_mosque_around": "Er zijn geen MAWAQIT-moskeeën gevonden in de buurt van je Home Assistant-locatie. Zoek je moskee in plaats daarvan op trefwoord.",
       "no_mosque_found": "Geen moskee gevonden met dit trefwoord.",
       "wrong_credential": "Onjuiste gebruikersnaam of wachtwoord, probeer het opnieuw."
@@ -41,6 +42,16 @@
           "keyword": "Naam van de moskee of van haar stad. Laat leeg om terug te gaan naar de zoekmethoden."
         },
         "title": "Zoek je moskee"
+      },
+      "mosque_id": {
+        "data": {
+          "mosque_id": "MAWAQIT-ID"
+        },
+        "data_description": {
+          "mosque_id": "Een getal, zoals 12345. Laat leeg om terug te gaan naar de zoekmethoden."
+        },
+        "description": "Woningen staan niet in de zoekresultaten: vind ze via hun ID. Log in op [mawaqit.net]({mawaqit_url}): de ID staat naast elk van je moskeeën en woningen.",
+        "title": "MAWAQIT-ID invoeren"
       },
       "mosques_coordinates": {
         "data": {
@@ -69,6 +80,7 @@
         "description": "Hoe wil je je moskee vinden?",
         "menu_options": {
           "keyword_search": "Zoeken op trefwoord",
+          "mosque_id": "ID van een moskee of woning invoeren",
           "mosques_coordinates": "Moskeeën in de buurt van mijn locatie"
         },
         "title": "Vind je moskee"

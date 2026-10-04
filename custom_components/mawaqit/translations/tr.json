@@ -18,6 +18,7 @@
     },
     "error": {
       "cannot_connect_to_server": "Sunucuya bağlanılamıyor, lütfen daha sonra tekrar deneyin.",
+      "mosque_id_not_found": "Bu ID'ye sahip cami veya ev yok.",
       "no_mosque_around": "Home Assistant konumunuzun yakınında MAWAQIT camisi bulunamadı. Bunun yerine caminizi anahtar kelimeyle arayın.",
       "no_mosque_found": "Bu anahtar kelimeyle cami bulunamadı.",
       "wrong_credential": "Hatalı kullanıcı adı veya şifre, lütfen tekrar deneyin."
@@ -41,6 +42,16 @@
           "keyword": "Caminin veya bulunduğu şehrin adı. Arama yöntemlerine dönmek için boş bırakın."
         },
         "title": "Caminizi arayın"
+      },
+      "mosque_id": {
+        "data": {
+          "mosque_id": "MAWAQIT ID"
+        },
+        "data_description": {
+          "mosque_id": "12345 gibi bir sayı. Arama yöntemlerine dönmek için boş bırakın."
+        },
+        "description": "Evler aramada görünmez: onları ID'leriyle bulun. [mawaqit.net]({mawaqit_url}) adresinde oturum açın: ID, camilerinizin ve evlerinizin her birinin yanında gösterilir.",
+        "title": "MAWAQIT ID'sini girin"
       },
       "mosques_coordinates": {
         "data": {
@@ -69,6 +80,7 @@
         "description": "Caminizi nasıl bulmak istiyorsunuz?",
         "menu_options": {
           "keyword_search": "Anahtar kelimeyle ara",
+          "mosque_id": "Cami veya ev ID'sini girin",
           "mosques_coordinates": "Konumumun çevresindeki camiler"
         },
         "title": "Caminizi bulun"
