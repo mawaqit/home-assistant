@@ -4,7 +4,7 @@
 
 [English](README.md) | **Français** | [Deutsch](README.de.md) | [Nederlands](README.nl.md)
 
-Cette intégration ajoute à Home Assistant les horaires de prière de votre mosquée [MAWAQIT](https://mawaqit.net) : les cinq prières, le Shuruq, les iqamas, la Jumu'a et les moments de la nuit, sous forme de sensors et d'un calendrier. Utilisez-les pour lancer l'adhan, recevoir un rappel avant l'iqama, chauffer la maison avant Fajr ou ouvrir les volets au Shuruq.
+Cette intégration ajoute à Home Assistant les horaires de prière de votre mosquée [MAWAQIT](https://mawaqit.net) : les cinq prières, l'Imsak, le Shuruq, les iqamas, la Jumu'a et les moments de la nuit, sous forme de sensors et d'un calendrier. Utilisez-les pour lancer l'adhan, recevoir un rappel avant l'iqama, chauffer la maison avant Fajr ou ouvrir les volets au Shuruq.
 
 - [Prérequis](#prérequis)
 - [Installation](#installation)
@@ -82,6 +82,7 @@ L'intégration ajoute un appareil au nom de votre mosquée, avec un lien vers sa
 | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Prière Fajr, Prière Dhuhr, Prière Asr, Prière Maghrib, Prière Isha      | L'adhan des cinq prières du jour.                                                                                                                            |
 | Shuruq                                                                  | Le lever du soleil, tel que publié par la mosquée.                                                                                                           |
+| Imsak                                                                   | L'Imsak, tel qu'affiché par votre mosquée, avant Fajr. Créé seulement si votre mosquée le publie sur MAWAQIT.                                                |
 | Iqama Fajr, Iqama Dhuhr, Iqama Asr, Iqama Maghrib, Iqama Isha           | L'iqama des cinq prières. Créées seulement si votre mosquée publie ses iqamas sur MAWAQIT.                                                                    |
 | Prière Jumua, Deuxième prière Jumua, Troisième prière Jumua             | La Jumu'a du vendredi qui vient, ou du jour le vendredi. Seules celles de votre mosquée sont créées.                                                         |
 | Fin du premier tiers, Milieu de la nuit, Début du dernier tiers         | La nuit du Maghrib au Fajr suivant : la fin de son premier tiers, son milieu et le début de son dernier tiers.                                               |
@@ -193,8 +194,8 @@ mode: queued
 ## Mises à jour des données
 
 - L'intégration récupère les horaires de toute l'année auprès de MAWAQIT à son démarrage, puis toutes les 12 heures. Les changements faits par votre mosquée apparaissent dans les 12 heures, ou tout de suite si vous rechargez l'intégration : **Paramètres** > **Appareils et services** > **MAWAQIT**, menu ⋮ de l'entrée, **Recharger**. Si une mise à jour échoue, les sensors gardent les horaires déjà récupérés et l'intégration réessaie toutes les 15 minutes.
-- Les sensors des iqamas et de la Jumu'a sont ajoutés dès que votre mosquée les publie, donc eux aussi dans les 12 heures. Si elle arrête de les publier, ils restent et passent à inconnu. Après un rechargement ou un redémarrage, Home Assistant les indique comme n'étant plus fournis, et vous pouvez les supprimer.
-- Les sensors des prières, des iqamas et de la Jumu'a passent au jour suivant au milieu de la nuit, pas à minuit : après Isha, ils montrent encore les horaires de la journée qui se termine.
+- Les sensors de l'Imsak, des iqamas et de la Jumu'a sont ajoutés dès que votre mosquée les publie, donc eux aussi dans les 12 heures. Si elle arrête de les publier, ils restent et passent à inconnu. Après un rechargement ou un redémarrage, Home Assistant les indique comme n'étant plus fournis, et vous pouvez les supprimer.
+- Les sensors des prières, de l'Imsak, des iqamas et de la Jumu'a passent au jour suivant au milieu de la nuit, pas à minuit : après Isha, ils montrent encore les horaires de la journée qui se termine.
 - Les moments de la nuit passent à la nuit suivante au Fajr.
 - **Nom de la prochaine prière** et **Heure de la prochaine prière** changent à l'heure de chaque prière.
 
@@ -204,7 +205,7 @@ Les horaires sont publiés par la mosquée dans son fuseau horaire, et Home Assi
 
 - Le calendrier ne montre que le mois en cours et le mois suivant : MAWAQIT donne les horaires de chaque jour de l'année, sans l'année.
 - Si MAWAQIT a un horaire invalide, seul cet horaire est ignoré : son sensor et son événement du calendrier sont inconnus, ainsi que ce qui en est calculé, comme les moments de la nuit pour un Maghrib ou un Fajr invalide. Un avertissement est écrit dans les journaux.
-- Pour les mosquées qui affichent Sabah et Imsak, Sabah est utilisé comme Fajr, comme dans l'application MAWAQIT. L'Imsak n'est pas disponible.
+- Pour les mosquées qui affichent Sabah et Imsak, Sabah est utilisé comme Fajr, comme dans l'application MAWAQIT.
 
 ## Dépannage
 

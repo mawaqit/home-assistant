@@ -4,7 +4,7 @@
 
 [English](README.md) | [Français](README.fr.md) | **Deutsch** | [Nederlands](README.nl.md)
 
-Diese Integration bringt die Gebetszeiten deiner [MAWAQIT](https://mawaqit.net)-Moschee in Home Assistant: die fünf Gebete, Shuruq, die Iqamas, das Jumu'a-Gebet und die Zeiten der Nacht, als Sensoren und als Kalender. Nutze sie, um den Adhan abzuspielen, vor der Iqama erinnert zu werden, das Haus vor Fajr zu heizen oder die Rollläden bei Shuruq zu öffnen.
+Diese Integration bringt die Gebetszeiten deiner [MAWAQIT](https://mawaqit.net)-Moschee in Home Assistant: die fünf Gebete, Imsak, Shuruq, die Iqamas, das Jumu'a-Gebet und die Zeiten der Nacht, als Sensoren und als Kalender. Nutze sie, um den Adhan abzuspielen, vor der Iqama erinnert zu werden, das Haus vor Fajr zu heizen oder die Rollläden bei Shuruq zu öffnen.
 
 - [Voraussetzungen](#voraussetzungen)
 - [Installation](#installation)
@@ -82,6 +82,7 @@ Die Integration fügt ein Gerät mit dem Namen deiner Moschee hinzu, verlinkt mi
 | -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Fajr-Gebet, Dhuhr-Gebet, Asr-Gebet, Maghrib-Gebet, Isha-Gebet              | Der Adhan der fünf Gebete des Tages.                                                                                                                                  |
 | Shuruq                                                                     | Sonnenaufgang, wie von der Moschee veröffentlicht.                                                                                                                    |
+| Imsak                                                                      | Imsak, wie von deiner Moschee angezeigt, vor Fajr. Nur vorhanden, wenn deine Moschee Imsak auf MAWAQIT veröffentlicht.                                                |
 | Fajr Iqama, Dhuhr Iqama, Asr Iqama, Maghrib Iqama, Isha Iqama              | Die Iqama der fünf Gebete. Nur vorhanden, wenn deine Moschee ihre Iqamas auf MAWAQIT veröffentlicht.                                                                 |
 | Jumua-Gebet, Zweites Jumua-Gebet, Drittes Jumua-Gebet                      | Das Jumu'a-Gebet des kommenden Freitags, freitags des heutigen Tages. Nur die, die deine Moschee hat, werden angelegt.                                               |
 | Ende des ersten Drittels, Mitte der Nacht, Beginn des letzten Drittels     | Die Nacht von Maghrib bis zum nächsten Fajr: das Ende ihres ersten Drittels, ihre Mitte und der Beginn ihres letzten Drittels.                                        |
@@ -193,8 +194,8 @@ mode: queued
 ## Datenaktualisierung
 
 - Die Integration ruft die Gebetszeiten des ganzen Jahres beim Start von MAWAQIT ab, danach alle 12 Stunden. Änderungen deiner Moschee erscheinen innerhalb von 12 Stunden, oder sofort, wenn du die Integration neu lädst: **Einstellungen** > **Geräte & Dienste** > **MAWAQIT**, Menü ⋮ des Eintrags, **Neu laden**. Schlägt eine Aktualisierung fehl, behalten die Sensoren die bereits abgerufenen Zeiten, und die Integration versucht es alle 15 Minuten erneut.
-- Die Iqama- und Jumu'a-Sensoren werden angelegt, sobald deine Moschee sie veröffentlicht, also ebenfalls innerhalb von 12 Stunden. Hört sie damit auf, bleiben sie erhalten und werden unbekannt. Nach einem Neuladen oder Neustart zeigt Home Assistant sie als nicht mehr bereitgestellt an, und du kannst sie löschen.
-- Die Gebets-, Iqama- und Jumu'a-Sensoren wechseln in der Mitte der Nacht auf den nächsten Tag, nicht um Mitternacht: Nach Isha zeigen sie noch die Zeiten des zu Ende gehenden Tages.
+- Die Imsak-, Iqama- und Jumu'a-Sensoren werden angelegt, sobald deine Moschee sie veröffentlicht, also ebenfalls innerhalb von 12 Stunden. Hört sie damit auf, bleiben sie erhalten und werden unbekannt. Nach einem Neuladen oder Neustart zeigt Home Assistant sie als nicht mehr bereitgestellt an, und du kannst sie löschen.
+- Die Gebets-, Imsak-, Iqama- und Jumu'a-Sensoren wechseln in der Mitte der Nacht auf den nächsten Tag, nicht um Mitternacht: Nach Isha zeigen sie noch die Zeiten des zu Ende gehenden Tages.
 - Die Zeiten der Nacht wechseln bei Fajr auf die nächste Nacht.
 - **Name des nächsten Gebets** und **Zeit des nächsten Gebets** ändern sich zur Zeit jedes Gebets.
 
@@ -204,7 +205,7 @@ Die Zeiten werden von der Moschee in ihrer Zeitzone veröffentlicht, und Home As
 
 - Der Kalender zeigt nur den aktuellen und den nächsten Monat: MAWAQIT liefert die Zeiten jedes Tages des Jahres, ohne das Jahr.
 - Hat MAWAQIT eine ungültige Zeit, wird nur diese Zeit übersprungen: Ihr Sensor und ihr Kalenderereignis sind unbekannt, ebenso was daraus berechnet wird, etwa die Zeiten der Nacht bei einem ungültigen Maghrib oder Fajr. Eine Warnung wird ins Protokoll geschrieben.
-- Bei Moscheen, die Sabah und Imsak anzeigen, wird Sabah als Fajr verwendet, wie in der MAWAQIT-App. Imsak ist nicht verfügbar.
+- Bei Moscheen, die Sabah und Imsak anzeigen, wird Sabah als Fajr verwendet, wie in der MAWAQIT-App.
 
 ## Fehlerbehebung
 

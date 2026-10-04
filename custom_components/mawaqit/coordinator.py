@@ -21,7 +21,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from . import utils
-from .const import DOMAIN
+from .const import DOMAIN, IMSAK_CALENDAR
 from .types import MawaqitConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -133,12 +133,14 @@ class PrayerTimeCoordinator(TimestampDataUpdateCoordinator[dict]):
             mode="json", by_alias=True, exclude_unset=True
         )
         if calendar := prayer_times.get("calendar"):
-            if config.displaying_sabah_imsak:
-                calendar = prayer_times["calendar"] = utils.drop_imsak_column(calendar)
             if invalid_days := utils.find_invalid_times(calendar):
                 _LOGGER.warning(
                     "Invalid prayer times from MAWAQIT, ignored on: %s",
                     ", ".join(invalid_days),
+                )
+            if config.displaying_sabah_imsak:
+                prayer_times[IMSAK_CALENDAR], prayer_times["calendar"] = (
+                    utils.split_imsak_column(calendar)
                 )
 
         # return fresh data when fetched

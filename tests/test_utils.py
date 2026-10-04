@@ -8,6 +8,7 @@ from freezegun import freeze_time
 import pytest
 
 from custom_components.mawaqit import utils
+from custom_components.mawaqit.const import IMSAK_CALENDAR
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_UUID
 
 # Shared calendar helpers from conftest — avoids re-defining month_data inline.
@@ -787,6 +788,84 @@ def test_get_iqama_time_invalid_localization() -> None:
     }
     with patch("custom_components.mawaqit.utils.time_with_timezone", return_value=None):
         assert utils.get_iqama_time(prayer_data, "Fajr") is None
+
+
+# ---------------------------------------------------------------------------
+# split_imsak_column / has_imsak / get_imsak_time
+# ---------------------------------------------------------------------------
+
+
+def test_split_imsak_column() -> None:
+    """Test the Imsak is split from the times of mosques displaying Sabah and Imsak."""
+    calendar = [{"1": ["05:00", *PRAYER_TIMES_ROW], "2": []}, {}]
+    assert utils.split_imsak_column(calendar) == (
+        [{"1": "05:00"}, {}],
+        [{"1": PRAYER_TIMES_ROW, "2": []}, {}],
+    )
+
+
+@pytest.mark.parametrize(
+    ("prayer_data", "expected"),
+    [
+        ({}, False),
+        ({"imsakNbMinBeforeFajr": None}, False),
+        ({"imsakNbMinBeforeFajr": 0}, False),
+        ({"imsakNbMinBeforeFajr": -10}, False),
+        ({"imsakNbMinBeforeFajr": 10}, True),
+        ({IMSAK_CALENDAR: []}, False),
+        ({IMSAK_CALENDAR: [{"1": "05:00"}]}, True),
+    ],
+)
+def test_has_imsak(prayer_data: dict, expected: bool) -> None:
+    """Test Imsak is published with the Imsak calendar or minutes before Fajr."""
+    assert utils.has_imsak(prayer_data) is expected
+
+
+@freeze_time("2025-04-10 12:00:00+02:00")
+@pytest.mark.parametrize(
+    ("extra_data", "expected"),
+    [
+        ({"imsakNbMinBeforeFajr": 10}, time(5, 20)),
+        ({IMSAK_CALENDAR: [{"10": "04:00"}] * 12}, time(4)),
+        # Like in the MAWAQIT app, the calendar comes first.
+        ({IMSAK_CALENDAR: [{"10": "04:00"}] * 12, "imsakNbMinBeforeFajr": 10}, time(4)),
+    ],
+    ids=["minutes_before_fajr", "calendar", "both"],
+)
+def test_get_imsak_time(extra_data: dict, expected: time) -> None:
+    """Test the Imsak of today, from the calendar or minutes before Fajr."""
+    prayer_data = {**build_prayer_data(), **extra_data}
+    assert utils.get_imsak_time(prayer_data) == datetime.combine(
+        date(2025, 4, 10), expected, PARIS
+    )
+
+
+@freeze_time("2025-04-10 12:00:00+02:00")
+@pytest.mark.parametrize(
+    "extra_data",
+    [
+        {"timezone": None, "imsakNbMinBeforeFajr": 10},
+        {"imsakNbMinBeforeFajr": 0},
+        {
+            "imsakNbMinBeforeFajr": 10,
+            "calendar": [make_month_data(["invalid", *PRAYER_TIMES_ROW[1:]])] * 12,
+        },
+        {IMSAK_CALENDAR: [{"10": "04:00"}] * 3},
+        {IMSAK_CALENDAR: [{"9": "04:00"}] * 12},
+        {IMSAK_CALENDAR: [{"10": "invalid"}] * 12},
+    ],
+    ids=[
+        "no_timezone",
+        "not_published",
+        "invalid_fajr",
+        "missing_month",
+        "missing_day",
+        "invalid_imsak",
+    ],
+)
+def test_get_imsak_time_returns_none(extra_data: dict) -> None:
+    """Test the Imsak is unknown when it cannot be computed."""
+    assert utils.get_imsak_time({**build_prayer_data(), **extra_data}) is None
 
 
 # ---------------------------------------------------------------------------

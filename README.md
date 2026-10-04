@@ -4,7 +4,7 @@
 
 **English** | [Français](README.fr.md) | [Deutsch](README.de.md) | [Nederlands](README.nl.md)
 
-This integration brings the prayer times of your [MAWAQIT](https://mawaqit.net) mosque into Home Assistant: the five prayers, Shuruq, the iqamas, Jumu'a and the times of the night, as sensors and as a calendar. Use them to play the adhan, send a reminder before the iqama, warm up the house before Fajr or open the shutters at Shuruq.
+This integration brings the prayer times of your [MAWAQIT](https://mawaqit.net) mosque into Home Assistant: the five prayers, Imsak, Shuruq, the iqamas, Jumu'a and the times of the night, as sensors and as a calendar. Use them to play the adhan, send a reminder before the iqama, warm up the house before Fajr or open the shutters at Shuruq.
 
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
@@ -82,6 +82,7 @@ The integration adds a device named after your mosque, linked to its page on MAW
 | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Fajr Prayer, Dhuhr Prayer, Asr Prayer, Maghrib Prayer, Isha Prayer | The adhan of the five prayers of the day.                                                                                                          |
 | Shuruq                                                           | Sunrise, as published by the mosque.                                                                                                                |
+| Imsak                                                            | Imsak, as shown by your mosque, before Fajr. Only created if your mosque publishes it on MAWAQIT.                                                   |
 | Fajr Iqama, Dhuhr Iqama, Asr Iqama, Maghrib Iqama, Isha Iqama    | The iqama of the five prayers. Only created if your mosque publishes its iqamas on MAWAQIT.                                                         |
 | Jumua Prayer, Second Jumua Prayer, Third Jumua Prayer            | Jumu'a of the coming Friday, or of today on Fridays. Only the ones your mosque has are created.                                                     |
 | End of the First Third, Middle of the Night, Start of the Last Third | The night from Maghrib to the next Fajr: the end of its first third, its middle and the start of its last third.                                |
@@ -193,8 +194,8 @@ mode: queued
 ## Data updates
 
 - The integration fetches the prayer times of the whole year from MAWAQIT when it starts, then every 12 hours. Changes made by your mosque appear within 12 hours, or right away if you reload the integration: **Settings** > **Devices & services** > **MAWAQIT**, ⋮ menu of the entry, **Reload**. If an update fails, the sensors keep the times already fetched and the integration tries again every 15 minutes.
-- The iqama and Jumu'a sensors are added as soon as your mosque publishes them, so within 12 hours too. If it stops publishing them, they stay and become unknown. After a reload or a restart, Home Assistant shows them as no longer provided, and you can delete them.
-- The prayer, iqama and Jumu'a sensors move to the next day at the middle of the night, not at midnight: after Isha, they still show the times of the day that is ending.
+- The Imsak, iqama and Jumu'a sensors are added as soon as your mosque publishes them, so within 12 hours too. If it stops publishing them, they stay and become unknown. After a reload or a restart, Home Assistant shows them as no longer provided, and you can delete them.
+- The prayer, Imsak, iqama and Jumu'a sensors move to the next day at the middle of the night, not at midnight: after Isha, they still show the times of the day that is ending.
 - The times of the night move to the next night at Fajr.
 - **Next Salat Name** and **Next Salat Time** change at the time of each prayer.
 
@@ -204,7 +205,7 @@ Times are published by the mosque in its own time zone, and Home Assistant shows
 
 - The calendar only shows the current and the next month: MAWAQIT gives the times of each day of the year, without the year.
 - If MAWAQIT has an invalid time, only that time is skipped: its sensor and its calendar event are unknown, as well as what is computed from it, such as the times of the night for an invalid Maghrib or Fajr. A warning is written in the logs.
-- For mosques that display Sabah and Imsak, Sabah is used as Fajr, like in the MAWAQIT app. Imsak is not available.
+- For mosques that display Sabah and Imsak, Sabah is used as Fajr, like in the MAWAQIT app.
 
 ## Troubleshooting
 

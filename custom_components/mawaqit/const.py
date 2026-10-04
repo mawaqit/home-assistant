@@ -24,6 +24,10 @@ WRONG_CREDENTIAL = "wrong_credential"
 PRAYER_NAMES = ["fajr", "shuruq", "dhuhr", "asr", "maghrib", "isha"]
 PRAYER_NAMES_IQAMA = ["fajr", "dhuhr", "asr", "maghrib", "isha"]
 
+# The Imsak of each day of mosques displaying Sabah and Imsak, added to the API
+# data by the coordinator. In snake case, so it cannot clash with an API field.
+IMSAK_CALENDAR = "imsak_calendar"
+
 # Times of the night, as fractions of the night from Maghrib to the next Fajr.
 NIGHT_TIMES = {
     "first_third_end": (1, 3),
