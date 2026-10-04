@@ -37,9 +37,25 @@ from .conftest import (
     MOCK_UUID,
     PRAYER_TIMES_ROW,
     build_prayer_data,
+    hijri_settings_response,
     make_month_data,
     prayer_times_response,
 )
+
+HIJRI_MONTHS = [
+    "muharram",
+    "safar",
+    "rabi_al_awwal",
+    "rabi_al_thani",
+    "jumada_al_ula",
+    "jumada_al_akhirah",
+    "rajab",
+    "shaban",
+    "ramadan",
+    "shawwal",
+    "dhu_al_qidah",
+    "dhu_al_hijjah",
+]
 
 # ---------------------------------------------------------------------------
 # Sensor setup tests
@@ -50,14 +66,14 @@ from .conftest import (
 @pytest.mark.parametrize(
     ("prayer_data_kwargs", "expected_count"),
     [
-        ({}, 18),  # 6 prayers + 2 jumua + 5 iqama + 3 night + 2 next = 18
-        ({"iqama_enabled": False}, 13),  # no iqama sensors
-        ({"with_iqama_calendar": False}, 13),  # no iqama sensors
-        ({"jumua2": None}, 17),  # only 1 Jumua
-        ({"jumua3": "15:00"}, 19),  # 3 Jumua prayers
-        ({"jumua2": None, "iqama_enabled": False}, 12),  # 1 Jumua, no iqama
-        ({"imsak_nb_min_before_fajr": 10}, 19),  # Imsak
-        ({"imsak_nb_min_before_fajr": 0}, 18),  # no Imsak
+        ({}, 21),  # 6 prayers + 2 jumua + 5 iqama + 3 night + 2 next + 3 hijri
+        ({"iqama_enabled": False}, 16),  # no iqama sensors
+        ({"with_iqama_calendar": False}, 16),  # no iqama sensors
+        ({"jumua2": None}, 20),  # only 1 Jumua
+        ({"jumua3": "15:00"}, 22),  # 3 Jumua prayers
+        ({"jumua2": None, "iqama_enabled": False}, 15),  # 1 Jumua, no iqama
+        ({"imsak_nb_min_before_fajr": 10}, 22),  # Imsak
+        ({"imsak_nb_min_before_fajr": 0}, 21),  # no Imsak
     ],
 )
 async def test_sensor_setup_creates_entities(
@@ -129,7 +145,7 @@ async def test_published_sensors_added_at_refresh(
             fill_all_months=False, iqama_enabled=False, jumua=None, jumua2=None
         )
     )
-    assert len(hass.states.async_all("sensor")) == 11
+    assert len(hass.states.async_all("sensor")) == 14
     for entity_id in PUBLISHED_SENSORS:
         assert hass.states.get(entity_id) is None
 
@@ -140,7 +156,7 @@ async def test_published_sensors_added_at_refresh(
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all("sensor")) == 19
+    assert len(hass.states.async_all("sensor")) == 22
     for entity_id in PUBLISHED_SENSORS:
         state = hass.states.get(entity_id)
         assert state is not None
@@ -149,7 +165,7 @@ async def test_published_sensors_added_at_refresh(
     # Later refreshes do not add them twice.
     await coordinator.async_refresh()
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 19
+    assert len(hass.states.async_all("sensor")) == 22
     assert "does not generate unique IDs" not in caplog.text
 
 
@@ -176,7 +192,7 @@ async def test_published_sensors_kept_unknown_when_no_longer_published(
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all("sensor")) == 19
+    assert len(hass.states.async_all("sensor")) == 22
     for entity_id in PUBLISHED_SENSORS:
         state = hass.states.get(entity_id)
         assert state is not None
@@ -190,6 +206,7 @@ async def test_published_sensors_kept_unknown_when_no_longer_published(
     [
         ("prayer_time_coordinator", "sensor.test_mosque_fajr_prayer"),
         ("prayer_time_coordinator", "sensor.test_mosque_next_salat_name"),
+        ("hijri_coordinator", "sensor.test_mosque_hijri_month"),
     ],
 )
 async def test_sensor_unavailable_when_no_coordinator_data(
@@ -558,6 +575,41 @@ async def test_prayer_sensors_with_sabah_and_imsak(
     )
 
 
+@pytest.mark.parametrize(
+    ("now", "adjustment", "force_30", "expected"),
+    [
+        ("2026-02-17 12:00:00+01:00", 0, False, ["1", "ramadan", "1447"]),
+        ("2026-02-17 12:00:00+01:00", -1, False, ["29", "shaban", "1447"]),
+        # 1 Shawwal forced to 30 is the 30th of Ramadan, not of Shawwal.
+        ("2026-03-19 12:00:00+01:00", 0, True, ["30", "ramadan", "1447"]),
+        ("2026-06-16 12:00:00+02:00", 0, True, ["30", "dhu_al_hijjah", "1447"]),
+    ],
+    ids=["ramadan", "adjusted", "forced_to_30", "forced_to_30_last_month"],
+)
+async def test_hijri_sensors(
+    hass: HomeAssistant,
+    setup_mawaqit_integration,
+    freezer: FrozenDateTimeFactory,
+    now: str,
+    adjustment: int,
+    force_30: bool,
+    expected: list[str],
+) -> None:
+    """Test the Hijri sensors show the date of the mosque, with its settings."""
+    freezer.move_to(now)
+    await setup_mawaqit_integration(
+        hijri_settings=hijri_settings_response(adjustment, force_30=force_30)
+    )
+
+    states = [
+        hass.states.get(f"sensor.test_mosque_hijri_{part}")
+        for part in ("day", "month", "year")
+    ]
+    assert [state.state for state in states] == expected
+    assert states[1].attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENUM
+    assert states[1].attributes[ATTR_OPTIONS] == HIJRI_MONTHS
+
+
 # ---------------------------------------------------------------------------
 # Direct unit tests for sensor class property branches
 # ---------------------------------------------------------------------------
@@ -611,6 +663,10 @@ def test_next_prayer_sensor_native_value_unhandled_key() -> None:
 
 
 @pytest.mark.parametrize(
+    ("translation_key", "options"),
+    [("next_salat_name", PRAYER_NAMES), ("hijri_month", HIJRI_MONTHS)],
+)
+@pytest.mark.parametrize(
     "translation_file",
     sorted(
         (Path(__file__).parents[1] / "custom_components/mawaqit/translations").glob(
@@ -619,8 +675,10 @@ def test_next_prayer_sensor_native_value_unhandled_key() -> None:
     ),
     ids=lambda path: path.stem,
 )
-def test_next_salat_name_states_translated(translation_file: Path) -> None:
-    """Test every translation file translates every next prayer name."""
+def test_enum_states_translated(
+    translation_file: Path, translation_key: str, options: list[str]
+) -> None:
+    """Test every translation file translates every state of the enum sensors."""
     translations = json.loads(translation_file.read_text(encoding="utf-8"))
-    states = translations["entity"]["sensor"]["next_salat_name"]["state"]
-    assert sorted(states) == sorted(PRAYER_NAMES)
+    states = translations["entity"]["sensor"][translation_key]["state"]
+    assert sorted(states) == sorted(options)

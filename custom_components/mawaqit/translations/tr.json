@@ -97,6 +97,29 @@
       "first_third_end": {
         "name": "İlk Üçte Birin Sonu"
       },
+      "hijri_day": {
+        "name": "Hicri Gün"
+      },
+      "hijri_month": {
+        "name": "Hicri Ay",
+        "state": {
+          "dhu_al_hijjah": "Zilhicce",
+          "dhu_al_qidah": "Zilkade",
+          "jumada_al_akhirah": "Cemaziyelahir",
+          "jumada_al_ula": "Cemaziyelevvel",
+          "muharram": "Muharrem",
+          "rabi_al_awwal": "Rebiülevvel",
+          "rabi_al_thani": "Rebiülahir",
+          "rajab": "Recep",
+          "ramadan": "Ramazan",
+          "safar": "Safer",
+          "shaban": "Şaban",
+          "shawwal": "Şevval"
+        }
+      },
+      "hijri_year": {
+        "name": "Hicri Yıl"
+      },
       "imsak": {
         "name": "İmsak"
       },

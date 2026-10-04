@@ -144,7 +144,7 @@ def _day_events(prayer_data: dict, day: date, tz: tzinfo) -> list[CalendarEvent]
     return sorted(events, key=lambda event: event.start)
 
 
-class MawaqitPrayerCalendar(MawaqitEntity, CalendarEntity):
+class MawaqitPrayerCalendar(MawaqitEntity[PrayerTimeCoordinator], CalendarEntity):
     """Calendar with one event per prayer of the current and next month.
 
     The API returns a calendar without year, so other months are not shown.
@@ -157,7 +157,7 @@ class MawaqitPrayerCalendar(MawaqitEntity, CalendarEntity):
         mosque_uuid: str,
     ) -> None:
         """Initialize the calendar."""
-        super().__init__(coordinator, mosque_uuid)
+        super().__init__(coordinator, mosque_uuid, coordinator.data)
         self.entity_description = description
         self._attr_unique_id = f"{mosque_uuid}_{description.key}"
 

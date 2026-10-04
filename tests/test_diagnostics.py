@@ -7,7 +7,7 @@ from custom_components.mawaqit.diagnostics import async_get_config_entry_diagnos
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 
-from .conftest import build_prayer_data, status_error
+from .conftest import CONNECTION_ERROR, build_prayer_data, status_error
 
 
 async def test_diagnostics(
@@ -18,6 +18,7 @@ async def test_diagnostics(
     """Test the diagnostics redact the token, the home and the mosque."""
     await setup_mawaqit_integration()
     coordinator = mock_config_entry.runtime_data.prayer_time_coordinator
+    hijri_coordinator = mock_config_entry.runtime_data.hijri_coordinator
 
     diagnostics = await async_get_config_entry_diagnostics(hass, mock_config_entry)
 
@@ -44,6 +45,12 @@ async def test_diagnostics(
             "url": "**REDACTED**",
             "announcements": "**REDACTED**",
         },
+        "hijri_coordinator": {
+            "last_update_success": True,
+            "last_update_success_time": hijri_coordinator.last_update_success_time,
+            "last_exception": None,
+        },
+        "hijri_settings": {"hijriAdjustment": 0, "hijriDateForceTo30": False},
     }
 
 
@@ -69,3 +76,23 @@ async def test_diagnostics_after_failed_update(
         "last_exception": "Error communicating with MAWAQIT: MAWAQIT error. (HTTP 503)",
     }
     assert diagnostics["prayer_times"]["calendar"] == build_prayer_data()["calendar"]
+
+
+async def test_diagnostics_without_hijri_settings(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    setup_mawaqit_integration,
+) -> None:
+    """Test the diagnostics when the Hijri settings could not be fetched."""
+    await setup_mawaqit_integration(hijri_side_effect=CONNECTION_ERROR)
+
+    diagnostics = await async_get_config_entry_diagnostics(hass, mock_config_entry)
+
+    assert diagnostics["hijri_coordinator"] == {
+        "last_update_success": False,
+        "last_update_success_time": None,
+        "last_exception": (
+            "Network error while connecting to MAWAQIT: Could not reach MAWAQIT."
+        ),
+    }
+    assert diagnostics["hijri_settings"] is None

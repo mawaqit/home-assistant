@@ -4,7 +4,7 @@
 
 [English](README.md) | **Français** | [Deutsch](README.de.md) | [Nederlands](README.nl.md)
 
-Cette intégration ajoute à Home Assistant les horaires de prière de votre mosquée [MAWAQIT](https://mawaqit.net) : les cinq prières, l'Imsak, le Shuruq, les iqamas, la Jumu'a et les moments de la nuit, sous forme de sensors et d'un calendrier. Utilisez-les pour lancer l'adhan, recevoir un rappel avant l'iqama, chauffer la maison avant Fajr ou ouvrir les volets au Shuruq.
+Cette intégration ajoute à Home Assistant les horaires de prière de votre mosquée [MAWAQIT](https://mawaqit.net) : les cinq prières, l'Imsak, le Shuruq, les iqamas, la Jumu'a, les moments de la nuit et la date hégirienne, sous forme de sensors et d'un calendrier. Utilisez-les pour lancer l'adhan, recevoir un rappel avant l'iqama, chauffer la maison avant Fajr, ouvrir les volets au Shuruq ou vous réveiller pour le souhour pendant le Ramadan.
 
 - [Prérequis](#prérequis)
 - [Installation](#installation)
@@ -76,7 +76,7 @@ Si MAWAQIT n'accepte plus votre connexion, par exemple après un changement de m
 
 ## Entités
 
-L'intégration ajoute un appareil au nom de votre mosquée, avec un lien vers sa page MAWAQIT, et les entités ci-dessous. Tous les sensors sauf **Nom de la prochaine prière** sont des horodatages : Home Assistant les affiche comme une heure, et vous pouvez les utiliser directement dans un déclencheur horaire.
+L'intégration ajoute un appareil au nom de votre mosquée, avec un lien vers sa page MAWAQIT, et les entités ci-dessous. Tous les sensors sauf **Nom de la prochaine prière** et la date hégirienne sont des horodatages : Home Assistant les affiche comme une heure, et vous pouvez les utiliser directement dans un déclencheur horaire.
 
 | Entité                                                                  | Description                                                                                                                                                  |
 | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -88,6 +88,8 @@ L'intégration ajoute un appareil au nom de votre mosquée, avec un lien vers sa
 | Fin du premier tiers, Milieu de la nuit, Début du dernier tiers         | La nuit du Maghrib au Fajr suivant : la fin de son premier tiers, son milieu et le début de son dernier tiers.                                               |
 | Nom de la prochaine prière                                              | La prochaine prière : `fajr`, `shuruq`, `dhuhr`, `asr`, `maghrib` ou `isha`. L'interface l'affiche traduite (par ex. « Dhohr »), mais les automatisations voient toujours ces valeurs. La Jumu'a n'en fait pas partie : le vendredi, c'est `dhuhr`. |
 | Heure de la prochaine prière                                            | L'heure de la prochaine prière.                                                                                                                              |
+| Mois hégirien                                                           | Le mois de la date hégirienne de votre mosquée : `muharram`, `safar`, `rabi_al_awwal`, `rabi_al_thani`, `jumada_al_ula`, `jumada_al_akhirah`, `rajab`, `shaban`, `ramadan`, `shawwal`, `dhu_al_qidah` ou `dhu_al_hijjah`. L'interface l'affiche traduit (par ex. « Chaabane »), mais les automatisations voient toujours ces valeurs. |
+| Jour hégirien, Année hégirienne                                         | Le jour, de 1 à 30, et l'année de la date hégirienne de votre mosquée.                                                                                       |
 | Horaires des prières (calendrier)                                       | Toutes les prières du mois en cours et du mois suivant, voir ci-dessous.                                                                                     |
 
 ### Le calendrier des horaires des prières
@@ -95,6 +97,12 @@ L'intégration ajoute un appareil au nom de votre mosquée, avec un lien vers sa
 Chaque prière est un événement nommé `Fajr`, `Shuruq`, `Dhuhr`, `Asr`, `Maghrib` ou `Isha`, et le vendredi `Jumua`, `Jumua 2` et `Jumua 3`. Il commence à l'adhan et se termine à l'iqama si votre mosquée la publie, sinon il se termine dès qu'il commence. Les moments de la nuit sont des événements nommés `End of the first third`, `Middle of the night` et `Start of the last third`, qui se terminent dès qu'ils commencent.
 
 Ces noms restent en anglais quelle que soit votre langue, pour qu'une automatisation qui les utilise fonctionne chez tout le monde. Utilisez le calendrier avec un déclencheur `calendar`, comme dans l'[exemple de rappel avant l'iqama](#exemples-dautomatisations).
+
+### La date hégirienne
+
+Les sensors de la date hégirienne montrent la date affichée sur les écrans de votre mosquée. MAWAQIT la calcule avec le calendrier islamique, décalé de l'ajustement que votre mosquée fixe après l'observation de la lune, ou que MAWAQIT fixe pour toutes les mosquées d'un pays. Elle change à minuit dans le fuseau horaire de la mosquée, pas au Maghrib.
+
+Seule la date du jour est connue : l'ajustement est décidé jour après jour, l'intégration ne peut donc pas savoir à l'avance quand le Ramadan commence ou se termine. Pour lancer une automatisation pendant le Ramadan, utilisez une condition sur **Mois hégirien**, comme dans l'[exemple du souhour](#exemples-dautomatisations).
 
 ### Identifiants des entités
 
@@ -191,6 +199,25 @@ actions:
 mode: queued
 ```
 
+Se réveiller pour le souhour 45 minutes avant Fajr, seulement pendant le Ramadan. La date hégirienne change à minuit : le réveil sonne donc aussi avant le premier jour de jeûne, et pas le matin de l'Aïd :
+
+```yaml
+alias: Souhour
+triggers:
+  - trigger: time
+    at:
+      entity_id: sensor.my_mosque_fajr_prayer
+      offset: "-00:45:00"
+conditions:
+  - condition: state
+    entity_id: sensor.my_mosque_hijri_month
+    state: ramadan
+actions:
+  - action: light.turn_on
+    target:
+      entity_id: light.bedroom
+```
+
 ## Mises à jour des données
 
 - L'intégration récupère les horaires de toute l'année auprès de MAWAQIT à son démarrage, puis toutes les 12 heures. Les changements faits par votre mosquée apparaissent dans les 12 heures, ou tout de suite si vous rechargez l'intégration : **Paramètres** > **Appareils et services** > **MAWAQIT**, menu ⋮ de l'entrée, **Recharger**. Si une mise à jour échoue, les sensors gardent les horaires déjà récupérés et l'intégration réessaie toutes les 15 minutes.
@@ -198,6 +225,7 @@ mode: queued
 - Les sensors des prières, de l'Imsak, des iqamas et de la Jumu'a passent au jour suivant au milieu de la nuit, pas à minuit : après Isha, ils montrent encore les horaires de la journée qui se termine.
 - Les moments de la nuit passent à la nuit suivante au Fajr.
 - **Nom de la prochaine prière** et **Heure de la prochaine prière** changent à l'heure de chaque prière.
+- Les réglages de la date hégirienne de votre mosquée sont récupérés toutes les heures : un changement après l'observation de la lune apparaît donc dans l'heure. Les sensors de la date hégirienne passent au jour suivant à minuit, dans le fuseau horaire de la mosquée. Si une mise à jour échoue, ils gardent les réglages déjà récupérés et l'intégration réessaie toutes les 15 minutes.
 
 Les horaires sont publiés par la mosquée dans son fuseau horaire, et Home Assistant les affiche dans le vôtre. C'est le même instant : une mosquée dans un autre fuseau horaire est affichée à votre heure locale.
 

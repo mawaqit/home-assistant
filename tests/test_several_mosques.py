@@ -18,6 +18,7 @@ from .conftest import (
     MOCK_UUID,
     build_prayer_data,
     config_response,
+    hijri_settings_response,
     make_config_entry,
     make_month_data,
     prayer_times_response,
@@ -47,6 +48,7 @@ def _client(prayer_data: dict | None = None, side_effect: Any = None) -> MagicMo
         side_effect=side_effect,
     )
     client.mosques.config = AsyncMock(return_value=config_response())
+    client.mosques.hijri_settings = AsyncMock(return_value=hijri_settings_response())
     return client
 
 
@@ -62,6 +64,9 @@ async def _set_up(hass: HomeAssistant, clients: dict[str, MagicMock]) -> MagicMo
         )
         mock_client_class.return_value.mosques.config = AsyncMock(
             return_value=config_response()
+        )
+        mock_client_class.return_value.mosques.hijri_settings = AsyncMock(
+            return_value=hijri_settings_response()
         )
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
@@ -119,7 +124,7 @@ async def test_two_mosques_side_by_side(
 
     entity_ids = _entity_ids(entity_registry, entry.entry_id)
     other_entity_ids = _entity_ids(entity_registry, other.entry_id)
-    assert len(entity_ids) == 19
+    assert len(entity_ids) == 22
     assert {
         entity_id.replace(".other_mosque_", ".test_mosque_")
         for entity_id in other_entity_ids
@@ -164,7 +169,7 @@ async def test_mosques_with_the_same_name(
 
     entity_ids = _entity_ids(entity_registry, entry.entry_id)
     other_entity_ids = _entity_ids(entity_registry, other.entry_id)
-    assert len(entity_ids) == len(other_entity_ids) == 19
+    assert len(entity_ids) == len(other_entity_ids) == 22
     assert not entity_ids & other_entity_ids
     assert {f"{entity_id}_2" for entity_id in entity_ids} == other_entity_ids
     for entity_id in entity_ids | other_entity_ids:
