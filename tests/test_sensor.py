@@ -30,7 +30,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_DEVICE_CLASS
+from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from .conftest import (
@@ -56,6 +56,8 @@ from .conftest import (
         ({"jumua2": None}, 17),  # only 1 Jumua
         ({"jumua3": "15:00"}, 19),  # 3 Jumua prayers
         ({"jumua2": None, "iqama_enabled": False}, 12),  # 1 Jumua, no iqama
+        ({"imsak_nb_min_before_fajr": 10}, 19),  # Imsak
+        ({"imsak_nb_min_before_fajr": 0}, 18),  # no Imsak
     ],
 )
 async def test_sensor_setup_creates_entities(
@@ -85,6 +87,9 @@ async def test_sensor_setup_creates_entities(
         ({"jumua2": None}, "sensor.test_mosque_second_jumua_prayer", False),
         ({"jumua3": "15:00"}, "sensor.test_mosque_third_jumua_prayer", True),
         ({"jumua3": None}, "sensor.test_mosque_third_jumua_prayer", False),
+        ({"imsak_nb_min_before_fajr": 10}, "sensor.test_mosque_imsak", True),
+        ({"imsak_nb_min_before_fajr": 0}, "sensor.test_mosque_imsak", False),
+        ({}, "sensor.test_mosque_imsak", False),
     ],
 )
 async def test_conditional_sensor_creation(
@@ -95,7 +100,7 @@ async def test_conditional_sensor_creation(
     entity_id: str,
     should_exist: bool,
 ) -> None:
-    """Test that Jumua and iqama sensors are created only when the API reports them."""
+    """Test the Imsak, Jumua and iqama sensors are created only when the API reports them."""
     await setup_mawaqit_integration(
         prayer_data=build_prayer_data(fill_all_months=False, **prayer_data_kwargs)
     )
@@ -103,6 +108,7 @@ async def test_conditional_sensor_creation(
 
 
 PUBLISHED_SENSORS = [
+    "sensor.test_mosque_imsak",
     "sensor.test_mosque_fajr_iqama",
     "sensor.test_mosque_isha_iqama",
     "sensor.test_mosque_jumua_prayer",
@@ -117,7 +123,7 @@ async def test_published_sensors_added_at_refresh(
     setup_mawaqit_integration,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test the iqama and Jumua sensors appear when the mosque starts publishing them."""
+    """Test the Imsak, iqama and Jumua sensors appear when the mosque starts publishing them."""
     await setup_mawaqit_integration(
         prayer_data=build_prayer_data(
             fill_all_months=False, iqama_enabled=False, jumua=None, jumua2=None
@@ -129,12 +135,12 @@ async def test_published_sensors_added_at_refresh(
 
     coordinator = mock_config_entry.runtime_data.prayer_time_coordinator
     coordinator.client.mosques.prayer_times.return_value = prayer_times_response(
-        build_prayer_data(fill_all_months=False)
+        build_prayer_data(fill_all_months=False, imsak_nb_min_before_fajr=10)
     )
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all("sensor")) == 18
+    assert len(hass.states.async_all("sensor")) == 19
     for entity_id in PUBLISHED_SENSORS:
         state = hass.states.get(entity_id)
         assert state is not None
@@ -143,7 +149,7 @@ async def test_published_sensors_added_at_refresh(
     # Later refreshes do not add them twice.
     await coordinator.async_refresh()
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 18
+    assert len(hass.states.async_all("sensor")) == 19
     assert "does not generate unique IDs" not in caplog.text
 
 
@@ -154,9 +160,11 @@ async def test_published_sensors_kept_unknown_when_no_longer_published(
     setup_mawaqit_integration,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test the iqama and Jumua sensors stay, as unknown, when the mosque stops publishing them."""
+    """Test the Imsak, iqama and Jumua sensors stay, as unknown, when the mosque stops publishing them."""
     await setup_mawaqit_integration(
-        prayer_data=build_prayer_data(fill_all_months=False)
+        prayer_data=build_prayer_data(
+            fill_all_months=False, imsak_nb_min_before_fajr=10
+        )
     )
 
     coordinator = mock_config_entry.runtime_data.prayer_time_coordinator
@@ -168,7 +176,7 @@ async def test_published_sensors_kept_unknown_when_no_longer_published(
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all("sensor")) == 18
+    assert len(hass.states.async_all("sensor")) == 19
     for entity_id in PUBLISHED_SENSORS:
         state = hass.states.get(entity_id)
         assert state is not None
@@ -271,12 +279,13 @@ async def test_prayer_sensors_move_to_next_day_at_middle_of_the_night(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test prayer times switch day at the middle of the night, not at a refresh."""
-    prayer_data = build_prayer_data()
+    prayer_data = build_prayer_data(imsak_nb_min_before_fajr=10)
     prayer_data["calendar"][3]["11"][1] = "06:43"  # Shuruq, 06:45 the day before
     entity_ids = (
         "sensor.test_mosque_fajr_prayer",
         "sensor.test_mosque_shuruq",
         "sensor.test_mosque_fajr_iqama",
+        "sensor.test_mosque_imsak",
     )
 
     # Maghrib at 18:30 and Fajr at 05:30: the middle of the night is at 00:00.
@@ -290,6 +299,7 @@ async def test_prayer_sensors_move_to_next_day_at_middle_of_the_night(
         "2025-04-10T03:30:00+00:00",
         "2025-04-10T04:45:00+00:00",
         "2025-04-10T03:40:00+00:00",
+        "2025-04-10T03:20:00+00:00",
     ]
 
     freezer.move_to("2025-04-11 00:00:00+02:00")
@@ -299,6 +309,7 @@ async def test_prayer_sensors_move_to_next_day_at_middle_of_the_night(
         "2025-04-11T03:30:00+00:00",
         "2025-04-11T04:43:00+00:00",
         "2025-04-11T03:40:00+00:00",
+        "2025-04-11T03:20:00+00:00",
     ]
 
 
@@ -395,25 +406,30 @@ async def test_invalid_prayer_time_is_ignored(
     ] == [f"Invalid prayer times from MAWAQIT, ignored on: 4/{day}"]
 
 
-async def test_invalid_imsak_is_not_reported(
+async def test_invalid_imsak(
     hass: HomeAssistant,
     setup_mawaqit_integration,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test an invalid Imsak, dropped from the calendar, is not reported."""
+    """Test an invalid Imsak is reported and only makes the Imsak sensor unknown."""
     prayer_data = build_prayer_data()
     prayer_data["calendar"] = [
-        make_month_data(["invalid", *PRAYER_TIMES_ROW]) for _ in range(12)
+        make_month_data(["05:00", *PRAYER_TIMES_ROW]) for _ in range(12)
     ]
+    prayer_data["calendar"][3]["10"][0] = "invalid"
 
     freezer.move_to("2025-04-10 12:00:00+02:00")
     await setup_mawaqit_integration(
         prayer_data=prayer_data, displaying_sabah_imsak=True
     )
 
+    assert hass.states.get("sensor.test_mosque_imsak").state == STATE_UNKNOWN
+    assert hass.states.get("sensor.test_mosque_fajr_prayer").state == (
+        "2025-04-10T03:30:00+00:00"
+    )
     assert hass.states.get("sensor.test_mosque_next_salat_name").state == "dhuhr"
-    assert "Invalid prayer times" not in caplog.text
+    assert "Invalid prayer times from MAWAQIT, ignored on: 4/10" in caplog.text
 
 
 @freeze_time("2025-04-10 12:00:00+02:00")
@@ -529,6 +545,7 @@ async def test_prayer_sensors_with_sabah_and_imsak(
     )
 
     expected = {
+        "sensor.test_mosque_imsak": "2025-04-10T03:00:00+00:00",
         "sensor.test_mosque_fajr_prayer": "2025-04-10T03:30:00+00:00",
         "sensor.test_mosque_shuruq": "2025-04-10T04:45:00+00:00",
         "sensor.test_mosque_maghrib_prayer": "2025-04-10T16:30:00+00:00",

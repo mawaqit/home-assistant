@@ -9,6 +9,9 @@
       "first_third_end": {
         "default": "mdi:moon-waxing-crescent"
       },
+      "imsak": {
+        "default": "mdi:food-off"
+      },
       "iqama_asr": {
         "default": "mdi:weather-sunny"
       },

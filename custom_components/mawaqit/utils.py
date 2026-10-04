@@ -7,7 +7,7 @@ import re
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_UUID
 import homeassistant.util.dt as dt_util
 
-from .const import NIGHT_TIMES, PRAYER_NAMES, PRAYER_NAMES_IQAMA
+from .const import IMSAK_CALENDAR, NIGHT_TIMES, PRAYER_NAMES, PRAYER_NAMES_IQAMA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,15 +50,21 @@ def save_mosque(
     return mosque_name, data_entry
 
 
-def drop_imsak_column(
+def split_imsak_column(
     calendar: list[dict[str, list[str]]],
-) -> list[dict[str, list[str]]]:
-    """Return the calendar of a mosque displaying Sabah and Imsak without Imsak.
+) -> tuple[list[dict[str, str]], list[dict[str, list[str]]]]:
+    """Split the calendar of a mosque displaying Sabah and Imsak.
 
     These mosques have 7 times a day: Imsak, Sabah, Shuruq, Dhuhr, Asr, Maghrib,
-    Isha. Like the MAWAQIT app, Sabah is used as Fajr.
+    Isha. Return the Imsak of each day, and the calendar without it: like the
+    MAWAQIT app, Sabah is used as Fajr.
     """
-    return [{day: times[1:] for day, times in month.items()} for month in calendar]
+    imsak_calendar = [
+        {day: times[0] for day, times in month.items() if times} for month in calendar
+    ]
+    return imsak_calendar, [
+        {day: times[1:] for day, times in month.items()} for month in calendar
+    ]
 
 
 def extract_time_from_calendar(
@@ -492,3 +498,38 @@ def get_iqama_time(prayer_data: dict, prayer_name: str) -> datetime | None:
         return None
 
     return _to_utc(timezone, day, iqama_time)
+
+
+def _imsak_minutes_before_fajr(prayer_data: dict) -> int:
+    """Return the minutes from Imsak to Fajr, 0 if the mosque does not set them."""
+    return prayer_data.get("imsakNbMinBeforeFajr") or 0
+
+
+def has_imsak(prayer_data: dict) -> bool:
+    """Return True if the mosque publishes Imsak."""
+    return (
+        bool(prayer_data.get(IMSAK_CALENDAR))
+        or _imsak_minutes_before_fajr(prayer_data) > 0
+    )
+
+
+def get_imsak_time(prayer_data: dict) -> datetime | None:
+    """Get the Imsak of the day whose prayer times are shown.
+
+    Mosques displaying Sabah and Imsak publish it in their calendar, others as
+    minutes before Fajr. Like in the MAWAQIT app, the calendar comes first.
+    """
+    timezone = prayer_data.get("timezone")
+    if not timezone:
+        return None
+
+    if imsak_calendar := prayer_data.get(IMSAK_CALENDAR):
+        day = get_islamic_date(prayer_data, timezone)
+        if len(imsak_calendar) < day.month:
+            return None
+        return _to_utc(timezone, day, imsak_calendar[day.month - 1].get(str(day.day)))
+
+    if (minutes := _imsak_minutes_before_fajr(prayer_data)) <= 0:
+        return None
+    fajr = get_regular_prayer_time(prayer_data, "fajr")
+    return fajr - timedelta(minutes=minutes) if fajr else None

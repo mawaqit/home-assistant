@@ -3,10 +3,11 @@
 It includes the following sensor entities:
 - Prayer time sensors
 - Iqama prayer time sensors
+- Imsak sensor
 - Night sensors: middle and thirds of the night
 - Next prayer sensors
 
-The sensors are set up using the `async_setup_entry` function, which adds the entities to the platform. The Jumua and iqama sensors are added when the mosque publishes them, at setup or at a later refresh.
+The sensors are set up using the `async_setup_entry` function, which adds the entities to the platform. The Imsak, Jumua and iqama sensors are added when the mosque publishes them, at setup or at a later refresh.
 
 Classes:
     MawaqitPrayerTimeSensor: Represents a prayer time sensor.
@@ -144,6 +145,13 @@ IQAMA_PRAYER_TIME_SENSOR_DESCRIPTIONS = [
     ),
 ]
 
+IMSAK_SENSOR_DESCRIPTION = MawaqitPrayerTimeSensorEntityDescription(
+    key="imsak",
+    translation_key="imsak",
+    device_class=SensorDeviceClass.TIMESTAMP,
+    get_value=utils.get_imsak_time,
+)
+
 NIGHT_SENSOR_DESCRIPTIONS = [
     MawaqitPrayerTimeSensorEntityDescription(
         key=key,
@@ -192,7 +200,7 @@ async def async_setup_entry(
 
     @callback
     def _async_add_published_sensors() -> None:
-        """Add the Jumua and iqama sensors the mosque has started publishing."""
+        """Add the Imsak, Jumua and iqama sensors the mosque has started publishing."""
         if not (prayer_data := coordinator.data):
             return
         descriptions = [
@@ -202,6 +210,8 @@ async def async_setup_entry(
         ]
         if utils.has_iqamas(prayer_data):
             descriptions.extend(IQAMA_PRAYER_TIME_SENSOR_DESCRIPTIONS)
+        if utils.has_imsak(prayer_data):
+            descriptions.append(IMSAK_SENSOR_DESCRIPTION)
         # Sensors the mosque stops publishing are kept, as unknown.
         if new_descriptions := [d for d in descriptions if d.key not in added_keys]:
             added_keys.update(desc.key for desc in new_descriptions)

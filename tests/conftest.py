@@ -111,6 +111,7 @@ def build_prayer_data(
     jumua: str | None = "13:00",
     jumua2: str | None = "14:00",
     jumua3: str | None = None,
+    imsak_nb_min_before_fajr: int | None = None,
     fill_all_months: bool = True,
     active_month_index: int = 3,
 ) -> dict:
@@ -120,6 +121,7 @@ def build_prayer_data(
         iqama_enabled:       Sets the ``iqamaEnabled`` flag.
         with_iqama_calendar: When False the iqama calendar list is empty.
         jumua / jumua2 / jumua3: Friday prayer times; None omits the key.
+        imsak_nb_min_before_fajr: Imsak offset before Fajr; None omits the key.
         fill_all_months:     When True every month gets full day data.
                              When False only *active_month_index* has data.
         active_month_index:  0-based index of the active month (default 3 = April).
@@ -153,6 +155,7 @@ def build_prayer_data(
                 ("jumua", jumua),
                 ("jumua2", jumua2),
                 ("jumua3", jumua3),
+                ("imsakNbMinBeforeFajr", imsak_nb_min_before_fajr),
             )
             if value is not None
         },

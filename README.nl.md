@@ -4,7 +4,7 @@
 
 [English](README.md) | [Français](README.fr.md) | [Deutsch](README.de.md) | **Nederlands**
 
-Deze integratie brengt de gebedstijden van je [MAWAQIT](https://mawaqit.net)-moskee naar Home Assistant: de vijf gebeden, Shuruq, de iqama's, het Jumu'a-gebed en de tijden van de nacht, als sensoren en als agenda. Gebruik ze om de adhan af te spelen, een herinnering te krijgen voor de iqama, het huis te verwarmen voor Fajr of de rolluiken te openen bij Shuruq.
+Deze integratie brengt de gebedstijden van je [MAWAQIT](https://mawaqit.net)-moskee naar Home Assistant: de vijf gebeden, Imsak, Shuruq, de iqama's, het Jumu'a-gebed en de tijden van de nacht, als sensoren en als agenda. Gebruik ze om de adhan af te spelen, een herinnering te krijgen voor de iqama, het huis te verwarmen voor Fajr of de rolluiken te openen bij Shuruq.
 
 - [Vereisten](#vereisten)
 - [Installatie](#installatie)
@@ -82,6 +82,7 @@ De integratie voegt een apparaat toe met de naam van je moskee, gekoppeld aan ha
 | ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Fajr-gebed, Dhuhr-gebed, Asr-gebed, Maghrib-gebed, Isha-gebed           | De adhan van de vijf gebeden van de dag.                                                                                                                             |
 | Shuruq                                                                  | Zonsopgang, zoals gepubliceerd door de moskee.                                                                                                                       |
+| Imsak                                                                   | Imsak, zoals getoond door je moskee, voor Fajr. Alleen aanwezig als je moskee Imsak op MAWAQIT publiceert.                                                           |
 | Fajr Iqama, Dhuhr Iqama, Asr Iqama, Maghrib Iqama, Isha Iqama           | De iqama van de vijf gebeden. Alleen aanwezig als je moskee haar iqama's op MAWAQIT publiceert.                                                                      |
 | Jumua-gebed, Tweede Jumua-gebed, Derde Jumua-gebed                      | Het Jumu'a-gebed van de komende vrijdag, of van vandaag op vrijdag. Alleen die van je moskee worden aangemaakt.                                                     |
 | Einde eerste derde, Midden van de nacht, Begin laatste derde            | De nacht van Maghrib tot de volgende Fajr: het einde van het eerste derde, het midden en het begin van het laatste derde.                                             |
@@ -193,8 +194,8 @@ mode: queued
 ## Gegevensupdates
 
 - De integratie haalt de gebedstijden van het hele jaar op bij MAWAQIT wanneer ze start, en daarna elke 12 uur. Wijzigingen van je moskee verschijnen binnen 12 uur, of meteen als je de integratie herlaadt: **Instellingen** > **Apparaten & diensten** > **MAWAQIT**, menu ⋮ van de vermelding, **Herladen**. Mislukt een update, dan houden de sensoren de al opgehaalde tijden en probeert de integratie het elke 15 minuten opnieuw.
-- De iqama- en Jumu'a-sensoren worden aangemaakt zodra je moskee ze publiceert, dus ook binnen 12 uur. Stopt ze daarmee, dan blijven ze bestaan en worden ze onbekend. Na het herladen of herstarten toont Home Assistant ze als niet meer geleverd, en kun je ze verwijderen.
-- De gebeds-, iqama- en Jumu'a-sensoren gaan midden in de nacht naar de volgende dag, niet om middernacht: na Isha tonen ze nog de tijden van de dag die eindigt.
+- De Imsak-, iqama- en Jumu'a-sensoren worden aangemaakt zodra je moskee ze publiceert, dus ook binnen 12 uur. Stopt ze daarmee, dan blijven ze bestaan en worden ze onbekend. Na het herladen of herstarten toont Home Assistant ze als niet meer geleverd, en kun je ze verwijderen.
+- De gebeds-, Imsak-, iqama- en Jumu'a-sensoren gaan midden in de nacht naar de volgende dag, niet om middernacht: na Isha tonen ze nog de tijden van de dag die eindigt.
 - De tijden van de nacht gaan bij Fajr naar de volgende nacht.
 - **Naam volgend gebed** en **Tijd volgend gebed** veranderen op het tijdstip van elk gebed.
 
@@ -204,7 +205,7 @@ De tijden worden door de moskee in haar tijdzone gepubliceerd, en Home Assistant
 
 - De agenda toont alleen de huidige en de volgende maand: MAWAQIT geeft de tijden van elke dag van het jaar, zonder het jaar.
 - Als MAWAQIT een ongeldige tijd heeft, wordt alleen die tijd overgeslagen: de sensor en de agenda-afspraak ervan zijn onbekend, net als wat ervan wordt berekend, zoals de tijden van de nacht bij een ongeldige Maghrib of Fajr. Er wordt een waarschuwing in de logboeken geschreven.
-- Voor moskeeën die Sabah en Imsak tonen, wordt Sabah als Fajr gebruikt, zoals in de MAWAQIT-app. Imsak is niet beschikbaar.
+- Voor moskeeën die Sabah en Imsak tonen, wordt Sabah als Fajr gebruikt, zoals in de MAWAQIT-app.
 
 ## Probleemoplossing
 
