@@ -1,0 +1,89 @@
+blueprint:
+  name: MAWAQIT actions around a prayer
+  description: >-
+    Run actions at the adhan or the iqama of a prayer, or some minutes before
+    or after: warm up the house before Fajr, open the shutters at Shuruq, turn
+    on a light at the start of the last third of the night.
+  domain: automation
+  source_url: https://github.com/mawaqit/home-assistant/blob/main/blueprints/automation/mawaqit/prayer_actions.yaml
+  author: MAWAQIT
+  homeassistant:
+    min_version: 2025.3.0
+  input:
+    calendar:
+      name: Prayer times calendar
+      description: The Prayer Times calendar of your mosque.
+      selector:
+        entity:
+          filter:
+            integration: mawaqit
+            domain: calendar
+    prayers:
+      name: Prayers and times of the night
+      selector:
+        select:
+          multiple: true
+          options:
+            - Fajr
+            - Shuruq
+            - Dhuhr
+            - Asr
+            - Maghrib
+            - Isha
+            - Jumua
+            - Eid al-Fitr
+            - Eid al-Adha
+            - End of the first third
+            - Middle of the night
+            - Start of the last third
+    moment:
+      name: Moment
+      description: The iqama is only known for the prayers whose iqama your mosque publishes.
+      default: start
+      selector:
+        select:
+          options:
+            - label: Adhan
+              value: start
+            - label: Iqama
+              value: end
+    offset:
+      name: Offset
+      description: In minutes. Negative to run the actions before, for example -20 for 20 minutes before.
+      default: 0
+      selector:
+        number:
+          min: -180
+          max: 180
+          mode: box
+          unit_of_measurement: min
+    actions:
+      name: Actions
+      description: "Available variable: prayer, such as Fajr."
+      selector:
+        action:
+
+triggers:
+  - trigger: calendar
+    event: !input moment
+    offset:
+      minutes: !input offset
+    entity_id: !input calendar
+
+variables:
+  prayers: !input prayers
+  # Jumua 2 and Jumua 3 are Jumua too.
+  prayer: "{{ trigger.calendar_event.summary | regex_replace(' [0-9]+$', '') }}"
+
+conditions:
+  - condition: template
+    value_template: "{{ prayer in prayers }}"
+  # Without iqama, an event ends when it starts.
+  - condition: template
+    value_template: >-
+      {{ trigger.event == 'start'
+         or trigger.calendar_event.end != trigger.calendar_event.start }}
+
+actions: !input actions
+
+mode: queued

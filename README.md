@@ -12,6 +12,7 @@ This integration brings the prayer times of your [MAWAQIT](https://mawaqit.net) 
 - [Entities](#entities)
 - [Dashboards](#dashboards)
 - [Adhans](#adhans)
+- [Blueprints](#blueprints)
 - [Automation examples](#automation-examples)
 - [Data updates](#data-updates)
 - [Known limitations](#known-limitations)
@@ -159,6 +160,19 @@ The adhans of the MAWAQIT mosque screens are available in the media browser. Lis
 | Algeria                | `media-source://mawaqit/adhan-algeria`        | `media-source://mawaqit/adhan-algeria-fajr`        |
 | Egypt                  | `media-source://mawaqit/adhan-egypt`          | `media-source://mawaqit/adhan-egypt-fajr`          |
 | Beep                   | `media-source://mawaqit/bip`                  |                                                    |
+
+## Blueprints
+
+Blueprints create automations from a form, without YAML. Select **Import** next to a blueprint, then create an automation from it in [**Settings** > **Automations & scenes** > **Blueprints**](https://my.home-assistant.io/redirect/blueprints/). They use the **Prayer Times** calendar of your mosque, so they work whatever the language of Home Assistant.
+
+| Blueprint | Description | |
+| --- | --- | --- |
+| MAWAQIT adhan | Plays the adhan on media players at the chosen prayers, with a separate adhan for Fajr and an optional volume. | [![Import](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fmawaqit%2Fhome-assistant%2Fblob%2Fmain%2Fblueprints%2Fautomation%2Fmawaqit%2Fadhan.yaml) |
+| MAWAQIT prayer notification | Notifies phones or notification entities at the adhan or the iqama, or some minutes before or after: 10 minutes before the iqama, 1 hour before Jumu'a. | [![Import](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fmawaqit%2Fhome-assistant%2Fblob%2Fmain%2Fblueprints%2Fautomation%2Fmawaqit%2Fprayer_notification.yaml) |
+| MAWAQIT actions around a prayer | Runs your actions at the adhan or the iqama of a prayer, or at a time of the night, with an offset: the heating 20 minutes before Fajr, the shutters at Shuruq, a light at the start of the last third. | [![Import](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fmawaqit%2Fhome-assistant%2Fblob%2Fmain%2Fblueprints%2Fautomation%2Fmawaqit%2Fprayer_actions.yaml) |
+| MAWAQIT pause media during prayer | Pauses the media players that are playing at the adhan, and resumes them some minutes after the iqama. | [![Import](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fmawaqit%2Fhome-assistant%2Fblob%2Fmain%2Fblueprints%2Fautomation%2Fmawaqit%2Fpause_media_during_prayer.yaml) |
+
+The offset is in minutes: a negative one, such as `-10`, is before the adhan or the iqama. The forms of the blueprints are in English.
 
 ## Automation examples
 

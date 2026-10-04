@@ -1,0 +1,124 @@
+blueprint:
+  name: MAWAQIT adhan
+  description: >-
+    Play the adhan of the MAWAQIT mosque screens on media players at the time
+    of each prayer, with a separate adhan for Fajr.
+  domain: automation
+  source_url: https://github.com/mawaqit/home-assistant/blob/main/blueprints/automation/mawaqit/adhan.yaml
+  author: MAWAQIT
+  homeassistant:
+    min_version: 2025.3.0
+  input:
+    calendar:
+      name: Prayer times calendar
+      description: The Prayer Times calendar of your mosque.
+      selector:
+        entity:
+          filter:
+            integration: mawaqit
+            domain: calendar
+    media_players:
+      name: Media players
+      selector:
+        entity:
+          multiple: true
+          filter:
+            domain: media_player
+    prayers:
+      name: Prayers
+      default: [Fajr, Dhuhr, Asr, Maghrib, Isha]
+      selector:
+        select:
+          multiple: true
+          options:
+            - Fajr
+            - Dhuhr
+            - Asr
+            - Maghrib
+            - Isha
+            - Jumua
+    adhan:
+      name: Adhan
+      default: media-source://mawaqit/adhan-maquah
+      selector:
+        select:
+          options:
+            - label: Makkah
+              value: media-source://mawaqit/adhan-maquah
+            - label: Madinah
+              value: media-source://mawaqit/adhan-madina
+            - label: Al-Quds
+              value: media-source://mawaqit/adhan-quds
+            - label: Al-Afassy
+              value: media-source://mawaqit/adhan-afassy
+            - label: Algeria
+              value: media-source://mawaqit/adhan-algeria
+            - label: Egypt
+              value: media-source://mawaqit/adhan-egypt
+            - label: Beep
+              value: media-source://mawaqit/bip
+    fajr_adhan:
+      name: Fajr adhan
+      default: media-source://mawaqit/adhan-maquah-fajr
+      selector:
+        select:
+          options:
+            - label: Makkah (Fajr)
+              value: media-source://mawaqit/adhan-maquah-fajr
+            - label: Madinah (Fajr)
+              value: media-source://mawaqit/adhan-madina-fajr
+            - label: Al-Quds (Fajr)
+              value: media-source://mawaqit/adhan-quds-fajr
+            - label: Al-Afassy (Fajr)
+              value: media-source://mawaqit/adhan-afassy-fajr
+            - label: Algeria (Fajr)
+              value: media-source://mawaqit/adhan-algeria-fajr
+            - label: Egypt (Fajr)
+              value: media-source://mawaqit/adhan-egypt-fajr
+            - label: Beep
+              value: media-source://mawaqit/bip
+    volume:
+      name: Volume
+      description: Set the volume before playing the adhan. Leave at 0 to keep the current volume.
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+
+triggers:
+  - trigger: calendar
+    event: start
+    entity_id: !input calendar
+
+variables:
+  prayers: !input prayers
+  volume: !input volume
+  fajr_adhan: !input fajr_adhan
+  adhan: !input adhan
+  # Jumua 2 and Jumua 3 are Jumua too.
+  prayer: "{{ trigger.calendar_event.summary | regex_replace(' [0-9]+$', '') }}"
+
+conditions:
+  - condition: template
+    value_template: "{{ prayer in prayers }}"
+
+actions:
+  - if:
+      - condition: template
+        value_template: "{{ volume > 0 }}"
+    then:
+      - action: media_player.volume_set
+        target:
+          entity_id: !input media_players
+        data:
+          volume_level: "{{ volume / 100 }}"
+  - action: media_player.play_media
+    target:
+      entity_id: !input media_players
+    data:
+      media_content_id: "{{ fajr_adhan if prayer == 'Fajr' else adhan }}"
+      media_content_type: audio/mpeg
+
+mode: queued

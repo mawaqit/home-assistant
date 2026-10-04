@@ -1,0 +1,86 @@
+blueprint:
+  name: MAWAQIT pause media during prayer
+  description: >-
+    Pause the media players that are playing at the adhan, and resume them
+    some minutes after the iqama, or after the adhan when your mosque does not
+    publish the iqama.
+  domain: automation
+  source_url: https://github.com/mawaqit/home-assistant/blob/main/blueprints/automation/mawaqit/pause_media_during_prayer.yaml
+  author: MAWAQIT
+  homeassistant:
+    min_version: 2025.3.0
+  input:
+    calendar:
+      name: Prayer times calendar
+      description: The Prayer Times calendar of your mosque.
+      selector:
+        entity:
+          filter:
+            integration: mawaqit
+            domain: calendar
+    media_players:
+      name: Media players
+      selector:
+        entity:
+          multiple: true
+          filter:
+            domain: media_player
+    prayers:
+      name: Prayers
+      default: [Fajr, Dhuhr, Asr, Maghrib, Isha]
+      selector:
+        select:
+          multiple: true
+          options:
+            - Fajr
+            - Dhuhr
+            - Asr
+            - Maghrib
+            - Isha
+            - Jumua
+    minutes:
+      name: Minutes after the iqama
+      default: 10
+      selector:
+        number:
+          min: 0
+          max: 60
+          unit_of_measurement: min
+
+triggers:
+  - trigger: calendar
+    event: start
+    entity_id: !input calendar
+
+variables:
+  prayers: !input prayers
+  media_players: !input media_players
+  minutes: !input minutes
+  # Jumua 2 and Jumua 3 are Jumua too.
+  prayer: "{{ trigger.calendar_event.summary | regex_replace(' [0-9]+$', '') }}"
+  playing: "{{ media_players | select('is_state', 'playing') | list }}"
+
+conditions:
+  - condition: template
+    value_template: "{{ prayer in prayers and playing | length > 0 }}"
+
+actions:
+  - action: media_player.media_pause
+    target:
+      entity_id: "{{ playing }}"
+  - delay:
+      seconds: >-
+        {{ [0, (as_datetime(trigger.calendar_event.end) - now()).total_seconds()
+               + minutes * 60] | max }}
+  # Only the players still paused: the others were stopped or restarted meanwhile.
+  - variables:
+      paused: "{{ playing | select('is_state', 'paused') | list }}"
+  - if:
+      - condition: template
+        value_template: "{{ paused | length > 0 }}"
+    then:
+      - action: media_player.media_play
+        target:
+          entity_id: "{{ paused }}"
+
+mode: single
