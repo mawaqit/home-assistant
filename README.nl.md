@@ -10,6 +10,7 @@ Deze integratie brengt de gebedstijden van je [MAWAQIT](https://mawaqit.net)-mos
 - [Installatie](#installatie)
 - [Instellen](#instellen)
 - [Entiteiten](#entiteiten)
+- [Dashboards](#dashboards)
 - [Adhans](#adhans)
 - [Voorbeeldautomatiseringen](#voorbeeldautomatiseringen)
 - [Gegevensupdates](#gegevensupdates)
@@ -138,6 +139,12 @@ Entiteit-ID's bestaan uit de naam van de moskee en de naam van de entiteit, **in
 Een entiteit-ID uit een voorbeeld of van een andere gebruiker bestaat bij jou dus misschien niet. Om de jouwe te vinden, ga naar **Instellingen** > **Apparaten & diensten** > **MAWAQIT** en open het apparaat van je moskee: kies een entiteit en dan het pictogram ⚙️ om haar entiteit-ID te zien. Daar kun je haar ook hernoemen. In de automatiseringseditor kun je de entiteiten ook op naam kiezen in plaats van hun ID te typen.
 
 Als je de taal van Home Assistant later wijzigt, veranderen de entiteit-ID's niet, alleen de namen in de interface.
+
+## Dashboards
+
+Dashboards om te plakken staan in [Dashboards voor MAWAQIT](docs/dashboards.nl.md): een gebedstijdenkaart met de foto van je moskee, een kaart met het volgende gebed en een schermvullende weergave zoals de schermen van je moskee.
+
+[<img alt="Moskeescherm met een grote klok, de Hijri-datum en de zes gebedstijden op de foto van de moskee" src="docs/images/dashboards/mosque-display-tablet.jpg" width="640">](docs/dashboards.nl.md)
 
 ## Adhans
 

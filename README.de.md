@@ -10,6 +10,7 @@ Diese Integration bringt die Gebetszeiten deiner [MAWAQIT](https://mawaqit.net)-
 - [Installation](#installation)
 - [Einrichtung](#einrichtung)
 - [Entitäten](#entitäten)
+- [Dashboards](#dashboards)
 - [Adhans](#adhans)
 - [Beispiel-Automationen](#beispiel-automationen)
 - [Datenaktualisierung](#datenaktualisierung)
@@ -138,6 +139,12 @@ Entitäts-IDs bestehen aus dem Namen der Moschee und dem Namen der Entität, **i
 Eine Entitäts-ID aus einem Beispiel oder von einem anderen Benutzer existiert bei dir also möglicherweise nicht. Um deine zu finden, gehe zu **Einstellungen** > **Geräte & Dienste** > **MAWAQIT** und öffne das Gerät deiner Moschee: Wähle eine Entität und dann das Symbol ⚙️, um ihre Entitäts-ID zu sehen. Dort kannst du sie auch umbenennen. Im Automationseditor kannst du die Entitäten auch über ihren Namen auswählen, statt ihre ID einzutippen.
 
 Wenn du die Sprache von Home Assistant später änderst, ändern sich die Entitäts-IDs nicht, nur die in der Oberfläche angezeigten Namen.
+
+## Dashboards
+
+Dashboards zum Einfügen findest du unter [Dashboards für MAWAQIT](docs/dashboards.de.md): eine Gebetszeiten-Karte mit dem Foto deiner Moschee, eine Karte für das nächste Gebet und eine Vollbildansicht wie die Bildschirme deiner Moschee.
+
+[<img alt="Moschee-Anzeige mit einer großen Uhr, dem Hidschri-Datum und den sechs Gebetszeiten auf dem Foto der Moschee" src="docs/images/dashboards/mosque-display-tablet.jpg" width="640">](docs/dashboards.de.md)
 
 ## Adhans
 
