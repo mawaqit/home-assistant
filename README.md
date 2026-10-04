@@ -4,7 +4,7 @@
 
 **English** | [Français](README.fr.md) | [Deutsch](README.de.md) | [Nederlands](README.nl.md)
 
-This integration brings the prayer times of your [MAWAQIT](https://mawaqit.net) mosque into Home Assistant: the five prayers, Imsak, Shuruq, the iqamas, Jumu'a, the times of the night and the Hijri date, as sensors and as a calendar. Use them to play the adhan, send a reminder before the iqama, warm up the house before Fajr, open the shutters at Shuruq or wake up for suhoor during Ramadan.
+This integration brings the prayer times of your [MAWAQIT](https://mawaqit.net) mosque into Home Assistant: the five prayers, Imsak, Shuruq, the iqamas, Jumu'a, the Eid prayers, the times of the night and the Hijri date, as sensors and as a calendar. Use them to play the adhan, send a reminder before the iqama, warm up the house before Fajr, open the shutters at Shuruq or wake up for suhoor during Ramadan.
 
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
@@ -95,6 +95,8 @@ The integration adds a device named after your mosque, linked to its page on MAW
 ### The prayer times calendar
 
 Each prayer is an event named `Fajr`, `Shuruq`, `Dhuhr`, `Asr`, `Maghrib` or `Isha`, and on Fridays `Jumua`, `Jumua 2` and `Jumua 3`. It starts at the adhan and ends at the iqama if your mosque publishes it, otherwise it ends when it starts. The times of the night are events named `End of the first third`, `Middle of the night` and `Start of the last third`, which end when they start.
+
+The Eid prayers are events named `Eid al-Fitr` or `Eid al-Adha`, then `Eid al-Fitr 2`, `Eid al-Fitr 3`, and so on, if your mosque publishes them. Like on the screens of the mosque, they appear from 23 Ramadan to 1 Shawwal and from 3 to 10 Dhu al-Hijjah, using the [Hijri date](#the-hijri-date) of the mosque. Eid al-Fitr is shown on the day after the 30th of Ramadan: if the moon is seen on the 29th, it moves one day earlier within an hour of your mosque changing its Hijri date. They end when they start.
 
 These names are in English whatever your language, so an automation filtering on them works for everyone. Use the calendar with a `calendar` trigger, as in the [iqama reminder example](#automation-examples).
 

@@ -16,7 +16,7 @@ import homeassistant.util.dt as dt_util
 
 from . import MawaqitConfigEntry, utils
 from .const import NIGHT_TIMES, PRAYER_NAMES, PRAYER_NAMES_IQAMA
-from .coordinator import PrayerTimeCoordinator
+from .coordinator import HijriCoordinator, PrayerTimeCoordinator
 from .entity import MawaqitEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,6 +33,9 @@ PRAYER_SUMMARIES = {
     "isha": "Isha",
 }
 JUMUA_SUMMARIES = {"jumua": "Jumua", "jumua2": "Jumua 2", "jumua3": "Jumua 3"}
+EID_SUMMARIES = {"eid_al_fitr": "Eid al-Fitr", "eid_al_adha": "Eid al-Adha"}
+# The same fields serve both Eids, and keep the last Eid's times all year.
+EID_PRAYERS = {"aidPrayerTime": "", "aidPrayerTime2": " 2", "aidPrayerTime3": " 3"}
 NIGHT_SUMMARIES = {
     "first_third_end": "End of the first third",
     "middle_of_the_night": "Middle of the night",
@@ -55,6 +58,7 @@ async def async_setup_entry(
         [
             MawaqitPrayerCalendar(
                 config_entry.runtime_data.prayer_time_coordinator,
+                config_entry.runtime_data.hijri_coordinator,
                 CALENDAR_DESCRIPTION,
                 config_entry.data[CONF_UUID],
             )
@@ -144,22 +148,49 @@ def _day_events(prayer_data: dict, day: date, tz: tzinfo) -> list[CalendarEvent]
     return sorted(events, key=lambda event: event.start)
 
 
+def _eid_events(
+    prayer_data: dict, eid: str, day: date, tz: tzinfo
+) -> list[CalendarEvent]:
+    """Return the prayers of an Eid, which last no time."""
+    return [
+        CalendarEvent(
+            start=start,
+            end=start,
+            summary=f"{EID_SUMMARIES[eid]}{suffix}",
+            uid=f"{day.isoformat()}_{field}",
+        )
+        for field, suffix in EID_PRAYERS.items()
+        if (start := _at(day, prayer_data.get(field), tz)) is not None
+    ]
+
+
 class MawaqitPrayerCalendar(MawaqitEntity[PrayerTimeCoordinator], CalendarEntity):
     """Calendar with one event per prayer of the current and next month.
 
     The API returns a calendar without year, so other months are not shown.
+    The Eid prayers are shown during the same periods as on the mosque screens.
     """
 
     def __init__(
         self,
         coordinator: PrayerTimeCoordinator,
+        hijri_coordinator: HijriCoordinator,
         description: CalendarEntityDescription,
         mosque_uuid: str,
     ) -> None:
         """Initialize the calendar."""
         super().__init__(coordinator, mosque_uuid, coordinator.data)
+        self._hijri_coordinator = hijri_coordinator
         self.entity_description = description
         self._attr_unique_id = f"{mosque_uuid}_{description.key}"
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Also update the calendar when the Hijri date changes."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self._hijri_coordinator.async_add_listener(self._handle_coordinator_update)
+        )
 
     def _events(self, first_day: date, end_day: date) -> list[CalendarEvent]:
         """Return the events from first_day to end_day (excluded)."""
@@ -187,6 +218,17 @@ class MawaqitPrayerCalendar(MawaqitEntity[PrayerTimeCoordinator], CalendarEntity
                 if event.end > window_start_time
             )
             day += timedelta(days=1)
+
+        # Unknown until the Hijri settings are fetched.
+        if self._hijri_coordinator.data is not None and (
+            eid := utils.get_eid(
+                dt_util.now(tz).date(), self._hijri_coordinator.today()
+            )
+        ):
+            eid_key, eid_day = eid
+            if first_day <= eid_day < end_day:
+                events.extend(_eid_events(data, eid_key, eid_day, tz))
+                events.sort(key=lambda event: event.start)
         return events
 
     @property

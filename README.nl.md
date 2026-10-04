@@ -4,7 +4,7 @@
 
 [English](README.md) | [Français](README.fr.md) | [Deutsch](README.de.md) | **Nederlands**
 
-Deze integratie brengt de gebedstijden van je [MAWAQIT](https://mawaqit.net)-moskee naar Home Assistant: de vijf gebeden, Imsak, Shuruq, de iqama's, het Jumu'a-gebed, de tijden van de nacht en de Hijri-datum, als sensoren en als agenda. Gebruik ze om de adhan af te spelen, een herinnering te krijgen voor de iqama, het huis te verwarmen voor Fajr, de rolluiken te openen bij Shuruq of tijdens de Ramadan wakker te worden voor de suhoor.
+Deze integratie brengt de gebedstijden van je [MAWAQIT](https://mawaqit.net)-moskee naar Home Assistant: de vijf gebeden, Imsak, Shuruq, de iqama's, het Jumu'a-gebed, de Eid-gebeden, de tijden van de nacht en de Hijri-datum, als sensoren en als agenda. Gebruik ze om de adhan af te spelen, een herinnering te krijgen voor de iqama, het huis te verwarmen voor Fajr, de rolluiken te openen bij Shuruq of tijdens de Ramadan wakker te worden voor de suhoor.
 
 - [Vereisten](#vereisten)
 - [Installatie](#installatie)
@@ -95,6 +95,8 @@ De integratie voegt een apparaat toe met de naam van je moskee, gekoppeld aan ha
 ### De gebedstijdenagenda
 
 Elk gebed is een afspraak met de naam `Fajr`, `Shuruq`, `Dhuhr`, `Asr`, `Maghrib` of `Isha`, en op vrijdag `Jumua`, `Jumua 2` en `Jumua 3`. Ze begint bij de adhan en eindigt bij de iqama als je moskee die publiceert, anders eindigt ze zodra ze begint. De tijden van de nacht zijn afspraken met de naam `End of the first third`, `Middle of the night` en `Start of the last third`, die eindigen zodra ze beginnen.
+
+De Eid-gebeden zijn afspraken met de naam `Eid al-Fitr` of `Eid al-Adha`, dan `Eid al-Fitr 2`, `Eid al-Fitr 3`, enzovoort, als je moskee ze publiceert. Net als op de schermen van de moskee verschijnen ze van 23 Ramadan tot 1 Shawwal en van 3 tot 10 Dhu al-Hijjah, volgens de [Hijri-datum](#de-hijri-datum) van de moskee. Eid al-Fitr staat op de dag na de 30e van Ramadan: wordt de maan op de 29e gezien, dan schuift het een dag naar voren binnen een uur nadat je moskee haar Hijri-datum heeft aangepast. Ze eindigen zodra ze beginnen.
 
 Deze namen zijn in het Engels, ongeacht je taal, zodat een automatisering die erop filtert bij iedereen werkt. Gebruik de agenda met een `calendar`-trigger, zoals in het [voorbeeld met een herinnering voor de iqama](#voorbeeldautomatiseringen).
 

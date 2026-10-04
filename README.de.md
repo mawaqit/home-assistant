@@ -4,7 +4,7 @@
 
 [English](README.md) | [Français](README.fr.md) | **Deutsch** | [Nederlands](README.nl.md)
 
-Diese Integration bringt die Gebetszeiten deiner [MAWAQIT](https://mawaqit.net)-Moschee in Home Assistant: die fünf Gebete, Imsak, Shuruq, die Iqamas, das Jumu'a-Gebet, die Zeiten der Nacht und das Hijri-Datum, als Sensoren und als Kalender. Nutze sie, um den Adhan abzuspielen, vor der Iqama erinnert zu werden, das Haus vor Fajr zu heizen, die Rollläden bei Shuruq zu öffnen oder im Ramadan zum Suhur aufzuwachen.
+Diese Integration bringt die Gebetszeiten deiner [MAWAQIT](https://mawaqit.net)-Moschee in Home Assistant: die fünf Gebete, Imsak, Shuruq, die Iqamas, das Jumu'a-Gebet, die Eid-Gebete, die Zeiten der Nacht und das Hijri-Datum, als Sensoren und als Kalender. Nutze sie, um den Adhan abzuspielen, vor der Iqama erinnert zu werden, das Haus vor Fajr zu heizen, die Rollläden bei Shuruq zu öffnen oder im Ramadan zum Suhur aufzuwachen.
 
 - [Voraussetzungen](#voraussetzungen)
 - [Installation](#installation)
@@ -95,6 +95,8 @@ Die Integration fügt ein Gerät mit dem Namen deiner Moschee hinzu, verlinkt mi
 ### Der Gebetszeiten-Kalender
 
 Jedes Gebet ist ein Ereignis namens `Fajr`, `Shuruq`, `Dhuhr`, `Asr`, `Maghrib` oder `Isha`, freitags außerdem `Jumua`, `Jumua 2` und `Jumua 3`. Es beginnt mit dem Adhan und endet mit der Iqama, wenn deine Moschee sie veröffentlicht, sonst endet es, sobald es beginnt. Die Zeiten der Nacht sind Ereignisse namens `End of the first third`, `Middle of the night` und `Start of the last third`, die enden, sobald sie beginnen.
+
+Die Eid-Gebete sind Ereignisse namens `Eid al-Fitr` oder `Eid al-Adha`, dann `Eid al-Fitr 2`, `Eid al-Fitr 3` usw., wenn deine Moschee sie veröffentlicht. Wie auf den Bildschirmen der Moschee erscheinen sie vom 23. Ramadan bis zum 1. Shawwal und vom 3. bis zum 10. Dhu al-Hijjah, nach dem [Hijri-Datum](#das-hijri-datum) der Moschee. Eid al-Fitr wird auf den Tag nach dem 30. Ramadan gelegt: Wird der Mond am 29. gesichtet, rückt es innerhalb einer Stunde, nachdem deine Moschee ihr Hijri-Datum geändert hat, einen Tag vor. Sie enden, sobald sie beginnen.
 
 Diese Namen sind unabhängig von deiner Sprache auf Englisch, damit eine Automation, die nach ihnen filtert, bei allen funktioniert. Verwende den Kalender mit einem `calendar`-Auslöser, wie im [Beispiel zur Erinnerung vor der Iqama](#beispiel-automationen).
 

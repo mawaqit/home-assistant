@@ -14,7 +14,9 @@ from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
-from .conftest import build_prayer_data
+from .conftest import CONNECTION_ERROR, build_prayer_data, hijri_settings_response
+
+EID_TIMES = {"aidPrayerTime": "08:00", "aidPrayerTime2": "09:30"}
 
 NIGHT = ("End of the first third", "Middle of the night", "Start of the last third")
 
@@ -358,3 +360,145 @@ async def test_calendar_isha_of_the_previous_month(
     assert [(event["summary"], event["start"]) for event in events] == [
         ("Isha", "2025-03-31T23:55:00+02:00")
     ]
+
+
+def eid_events(events: list[dict]) -> list[tuple[str, str]]:
+    """Return the summaries and start times of the Eid prayers."""
+    return [
+        (event["summary"], event["start"])
+        for event in events
+        if event["summary"].startswith("Eid")
+    ]
+
+
+@pytest.mark.parametrize(
+    ("now", "start", "end", "expected"),
+    [
+        # 22 Ramadan 1447: not shown yet.
+        ("2026-03-10 12:00:00+01:00", "2026-03-19 00:00:00", "2026-03-20 00:00:00", []),
+        # 23 Ramadan: on the day after a 30-day Ramadan.
+        (
+            "2026-03-11 12:00:00+01:00",
+            "2026-03-19 00:00:00",
+            "2026-03-20 00:00:00",
+            [
+                ("Eid al-Fitr", "2026-03-19T08:00:00+01:00"),
+                ("Eid al-Fitr 2", "2026-03-19T09:30:00+01:00"),
+            ],
+        ),
+        # Not in the requested days.
+        ("2026-03-11 12:00:00+01:00", "2026-03-18 00:00:00", "2026-03-19 00:00:00", []),
+        # 1 Shawwal, the day of the Eid.
+        (
+            "2026-03-19 07:00:00+01:00",
+            "2026-03-19 00:00:00",
+            "2026-03-20 00:00:00",
+            [
+                ("Eid al-Fitr", "2026-03-19T08:00:00+01:00"),
+                ("Eid al-Fitr 2", "2026-03-19T09:30:00+01:00"),
+            ],
+        ),
+        # 2 Shawwal: no longer shown.
+        ("2026-03-20 07:00:00+01:00", "2026-03-19 00:00:00", "2026-03-21 00:00:00", []),
+        # 3 Dhu al-Hijjah: Eid al-Adha on the 10th.
+        (
+            "2026-05-19 12:00:00+02:00",
+            "2026-05-26 00:00:00",
+            "2026-05-27 00:00:00",
+            [
+                ("Eid al-Adha", "2026-05-26T08:00:00+02:00"),
+                ("Eid al-Adha 2", "2026-05-26T09:30:00+02:00"),
+            ],
+        ),
+        # 11 Dhu al-Hijjah: no longer shown.
+        ("2026-05-27 12:00:00+02:00", "2026-05-26 00:00:00", "2026-05-28 00:00:00", []),
+    ],
+    ids=[
+        "22_ramadan",
+        "23_ramadan",
+        "other_days",
+        "1_shawwal",
+        "2_shawwal",
+        "3_dhu_al_hijjah",
+        "11_dhu_al_hijjah",
+    ],
+)
+async def test_calendar_eid_prayers(
+    hass: HomeAssistant,
+    setup_mawaqit_integration,
+    freezer: FrozenDateTimeFactory,
+    now: str,
+    start: str,
+    end: str,
+    expected: list[tuple[str, str]],
+) -> None:
+    """Test the Eid prayers are shown during the same periods as on the screens."""
+    freezer.move_to(now)
+    await setup_mawaqit_integration(prayer_data={**build_prayer_data(), **EID_TIMES})
+
+    assert eid_events(await get_events(hass, start, end)) == expected
+
+
+async def test_calendar_next_event_is_eid(
+    hass: HomeAssistant,
+    setup_mawaqit_integration,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the calendar shows the Eid prayer as its next event on the Eid day."""
+    freezer.move_to("2026-03-19 07:00:00+01:00")
+    await setup_mawaqit_integration(prayer_data={**build_prayer_data(), **EID_TIMES})
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes["message"] == "Eid al-Fitr"
+    assert state.attributes["start_time"] == "2026-03-19 08:00:00"
+
+
+async def test_calendar_eid_follows_the_hijri_settings(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    setup_mawaqit_integration,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the Eid moves a day earlier when the moon is seen on 29 Ramadan."""
+    prayer_data = {**build_prayer_data(), **EID_TIMES, "aidPrayerTime3": "invalid"}
+    freezer.move_to("2026-03-17 20:00:00+01:00")  # 29 Ramadan
+    await setup_mawaqit_integration(prayer_data=prayer_data)
+    assert eid_events(
+        await get_events(hass, "2026-03-18 00:00:00", "2026-03-20 00:00:00")
+    ) == [
+        ("Eid al-Fitr", "2026-03-19T08:00:00+01:00"),
+        ("Eid al-Fitr 2", "2026-03-19T09:30:00+01:00"),
+    ]
+
+    coordinator = mock_config_entry.runtime_data.hijri_coordinator
+    coordinator.client.mosques.hijri_settings.return_value = hijri_settings_response(1)
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert eid_events(
+        await get_events(hass, "2026-03-18 00:00:00", "2026-03-20 00:00:00")
+    ) == [
+        ("Eid al-Fitr", "2026-03-18T08:00:00+01:00"),
+        ("Eid al-Fitr 2", "2026-03-18T09:30:00+01:00"),
+    ]
+
+
+async def test_calendar_eid_without_hijri_settings(
+    hass: HomeAssistant,
+    setup_mawaqit_integration,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the Eid prayers are left out until the Hijri settings are fetched."""
+    freezer.move_to("2026-03-11 12:00:00+01:00")
+    await setup_mawaqit_integration(
+        prayer_data={**build_prayer_data(), **EID_TIMES},
+        hijri_side_effect=CONNECTION_ERROR,
+    )
+
+    events = await get_events(hass, "2026-03-19 00:00:00", "2026-03-20 00:00:00")
+    assert summaries(events)[:3] == [
+        "Middle of the night",
+        "Start of the last third",
+        "Fajr",
+    ]
+    assert eid_events(events) == []

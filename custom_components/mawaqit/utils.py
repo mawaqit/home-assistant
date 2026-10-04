@@ -4,6 +4,8 @@ from datetime import date, datetime, time, timedelta
 import logging
 import re
 
+from mawaqit.hijri import HijriDate, HijriMonth
+
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_UUID
 import homeassistant.util.dt as dt_util
 
@@ -533,3 +535,20 @@ def get_imsak_time(prayer_data: dict) -> datetime | None:
         return None
     fajr = get_regular_prayer_time(prayer_data, "fajr")
     return fajr - timedelta(minutes=minutes) if fajr else None
+
+
+def get_eid(today: date, hijri_today: HijriDate) -> tuple[str, date] | None:
+    """Return the Eid shown today and its day, like the mosque screens.
+
+    Eid al-Fitr is shown from 23 Ramadan to 1 Shawwal, counting 30 days in
+    Ramadan, and Eid al-Adha from 3 to 10 Dhu al-Hijjah. Only today's Hijri date
+    is reliable, so the day of the Eid is counted from it.
+    """
+    month, day = hijri_today.month, hijri_today.day
+    if month is HijriMonth.RAMADAN and day >= 23:
+        return "eid_al_fitr", today + timedelta(days=31 - day)
+    if month is HijriMonth.SHAWWAL and day == 1:
+        return "eid_al_fitr", today
+    if month is HijriMonth.DHU_AL_HIJJAH and 3 <= day <= 10:
+        return "eid_al_adha", today + timedelta(days=10 - day)
+    return None
