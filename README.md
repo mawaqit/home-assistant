@@ -10,6 +10,7 @@ This integration brings the prayer times of your [MAWAQIT](https://mawaqit.net) 
 - [Installation](#installation)
 - [Setup](#setup)
 - [Entities](#entities)
+- [Dashboards](#dashboards)
 - [Adhans](#adhans)
 - [Automation examples](#automation-examples)
 - [Data updates](#data-updates)
@@ -129,6 +130,12 @@ Entity IDs are made of the name of the mosque and the name of the entity, **in t
 So an entity ID copied from an example or from another user may not exist in your installation. To find yours, go to **Settings** > **Devices & services** > **MAWAQIT** and open the device of your mosque: select an entity, then the ⚙️ icon, to see its entity ID. You can rename it there too. In the automation editor, you can also pick the entities by their name instead of typing their ID.
 
 Changing the language of Home Assistant later does not change the entity IDs, only the names shown in the UI.
+
+## Dashboards
+
+Ready-to-paste dashboards are in [Dashboards for MAWAQIT](docs/dashboards.md): a prayer times card with the picture of your mosque, a next prayer card, and a full-screen view like the screens of your mosque.
+
+[<img alt="Mosque display with a large clock, the Hijri date and the six prayer times on the picture of the mosque" src="docs/images/dashboards/mosque-display-tablet.jpg" width="640">](docs/dashboards.md)
 
 ## Adhans
 
