@@ -104,6 +104,16 @@ Les sensors de la date hégirienne montrent la date affichée sur les écrans de
 
 Seule la date du jour est connue : l'ajustement est décidé jour après jour, l'intégration ne peut donc pas savoir à l'avance quand le Ramadan commence ou se termine. Pour lancer une automatisation pendant le Ramadan, utilisez une condition sur **Mois hégirien**, comme dans l'[exemple du souhour](#exemples-dautomatisations).
 
+Pour afficher la date complète sur un tableau de bord, par exemple `22 Rabi' al-Akhir 1448`, ajoutez une carte **Markdown** avec ce contenu et [vos identifiants](#identifiants-des-entités). `state_translated` affiche le mois dans votre langue :
+
+```yaml
+type: markdown
+content: >
+  {{ states('sensor.my_mosque_hijri_day') }}
+  {{ state_translated('sensor.my_mosque_hijri_month') }}
+  {{ states('sensor.my_mosque_hijri_year') }}
+```
+
 ### Identifiants des entités
 
 Les identifiants des entités sont formés du nom de la mosquée et du nom de l'entité, **dans la langue qu'avait Home Assistant quand vous avez configuré l'intégration**. Pour une mosquée nommée « Ma Mosquée » :

@@ -104,6 +104,16 @@ De Hijri-sensoren tonen de datum die op de schermen van je moskee staat. MAWAQIT
 
 Alleen de datum van vandaag is bekend: de aanpassing wordt van dag tot dag beslist, dus de integratie kan niet vooraf zeggen wanneer de Ramadan begint of eindigt. Gebruik een voorwaarde op **Hijri-maand** om een automatisering tijdens de Ramadan uit te voeren, zoals in het [suhoor-voorbeeld](#voorbeeldautomatiseringen).
 
+Om de volledige datum op een dashboard te tonen, bijvoorbeeld `22 Rabi' al-Thani 1448`, voeg je een **Markdown**-kaart toe met deze inhoud en [je eigen entiteit-ID's](#entiteit-ids). `state_translated` toont de maand in je taal:
+
+```yaml
+type: markdown
+content: >
+  {{ states('sensor.my_mosque_hijri_day') }}
+  {{ state_translated('sensor.my_mosque_hijri_month') }}
+  {{ states('sensor.my_mosque_hijri_year') }}
+```
+
 ### Entiteit-ID's
 
 Entiteit-ID's bestaan uit de naam van de moskee en de naam van de entiteit, **in de taal die Home Assistant had toen je de integratie instelde**. Voor een moskee met de naam "Mijn Moskee":

@@ -104,6 +104,16 @@ Die Hijri-Sensoren zeigen das Datum, das auf den Bildschirmen deiner Moschee ste
 
 Nur das heutige Datum ist bekannt: Die Anpassung wird Tag für Tag entschieden, daher kann die Integration nicht im Voraus sagen, wann der Ramadan beginnt oder endet. Um eine Automation während des Ramadan auszuführen, verwende eine Bedingung auf **Hijri-Monat**, wie im [Suhur-Beispiel](#beispiel-automationen).
 
+Um das ganze Datum auf einem Dashboard anzuzeigen, zum Beispiel `22 Rabi' al-Thani 1448`, füge eine **Markdown**-Karte mit diesem Inhalt und [deinen Entitäts-IDs](#entitäts-ids) hinzu. `state_translated` zeigt den Monat in deiner Sprache an:
+
+```yaml
+type: markdown
+content: >
+  {{ states('sensor.my_mosque_hijri_day') }}
+  {{ state_translated('sensor.my_mosque_hijri_month') }}
+  {{ states('sensor.my_mosque_hijri_year') }}
+```
+
 ### Entitäts-IDs
 
 Entitäts-IDs bestehen aus dem Namen der Moschee und dem Namen der Entität, **in der Sprache, die Home Assistant bei der Einrichtung der Integration hatte**. Für eine Moschee namens „Meine Moschee":
