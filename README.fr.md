@@ -76,7 +76,7 @@ Si MAWAQIT n'accepte plus votre connexion, par exemple après un changement de m
 
 ## Entités
 
-L'intégration ajoute un appareil au nom de votre mosquée, avec un lien vers sa page MAWAQIT, et les entités ci-dessous. Tous les sensors sauf **Nom de la prochaine prière** et la date hégirienne sont des horodatages : Home Assistant les affiche comme une heure, et vous pouvez les utiliser directement dans un déclencheur horaire.
+L'intégration ajoute un appareil au nom de votre mosquée, avec un lien vers sa page MAWAQIT, et les entités ci-dessous. Tous les sensors sauf **Nom de la prochaine prière**, la date hégirienne et le message flash sont des horodatages : Home Assistant les affiche comme une heure, et vous pouvez les utiliser directement dans un déclencheur horaire.
 
 | Entité                                                                  | Description                                                                                                                                                  |
 | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -90,6 +90,7 @@ L'intégration ajoute un appareil au nom de votre mosquée, avec un lien vers sa
 | Heure de la prochaine prière                                            | L'heure de la prochaine prière.                                                                                                                              |
 | Mois hégirien                                                           | Le mois de la date hégirienne de votre mosquée : `muharram`, `safar`, `rabi_al_awwal`, `rabi_al_thani`, `jumada_al_ula`, `jumada_al_akhirah`, `rajab`, `shaban`, `ramadan`, `shawwal`, `dhu_al_qidah` ou `dhu_al_hijjah`. L'interface l'affiche traduit (par ex. « Chaabane »), mais les automatisations voient toujours ces valeurs. |
 | Jour hégirien, Année hégirienne                                         | Le jour, de 1 à 30, et l'année de la date hégirienne de votre mosquée.                                                                                       |
+| Message flash                                                           | Le court message qui défile en bas des écrans de votre mosquée, voir [plus bas](#le-message-flash). Inconnu quand il n'y en a pas. |
 | Photo, Logo (images)                                                    | La photo et le logo de votre mosquée sur MAWAQIT, à afficher sur un tableau de bord. Créés seulement si votre mosquée les publie. |
 | Horaires des prières (calendrier)                                       | Toutes les prières du mois en cours et du mois suivant, voir ci-dessous.                                                                                     |
 
@@ -116,6 +117,14 @@ content: >
   {{ state_translated('sensor.ma_mosquee_mois_hegirien') }}
   {{ states('sensor.ma_mosquee_annee_hegirienne') }}
 ```
+
+### Le message flash
+
+**Message flash** montre le court message qui défile en bas des écrans de votre mosquée, comme l'heure d'une prière mortuaire. Il est inconnu quand votre mosquée n'a pas de message. Si votre mosquée lui a donné des dates, il apparaît à minuit de son premier jour et disparaît à minuit après son dernier jour, dans le fuseau horaire de la mosquée.
+
+Ses attributs indiquent comment les écrans l'affichent : `color` est sa couleur de fond, comme `#d9ad0f`, et `direction` vaut `ltr` de gauche à droite ou `rtl` de droite à gauche. `start_date` et `end_date` sont son premier et son dernier jour, si votre mosquée les a donnés.
+
+Pour recevoir une notification quand votre mosquée publie un message, voir l'[exemple du message flash](#exemples-dautomatisations).
 
 ### Identifiants des entités
 
@@ -231,6 +240,24 @@ actions:
       entity_id: light.bedroom
 ```
 
+Recevoir une notification quand votre mosquée publie un message flash. Elle ne se relance pas au redémarrage de Home Assistant ni au rechargement de l'intégration :
+
+```yaml
+alias: Message flash de la mosquée
+triggers:
+  - trigger: state
+    entity_id: sensor.ma_mosquee_message_flash
+    not_from: unavailable
+    not_to:
+      - unknown
+      - unavailable
+actions:
+  - action: notify.notify
+    data:
+      title: Ma mosquée
+      message: "{{ trigger.to_state.state }}"
+```
+
 ## Mises à jour des données
 
 - L'intégration récupère les horaires de toute l'année auprès de MAWAQIT à son démarrage, puis toutes les 12 heures. Les changements faits par votre mosquée apparaissent dans les 12 heures, ou tout de suite si vous rechargez l'intégration : **Paramètres** > **Appareils et services** > **MAWAQIT**, menu ⋮ de l'entrée, **Recharger**. Si une mise à jour échoue, les sensors gardent les horaires déjà récupérés et l'intégration réessaie toutes les 15 minutes.
@@ -240,6 +267,7 @@ actions:
 - Les moments de la nuit passent à la nuit suivante au Fajr.
 - **Nom de la prochaine prière** et **Heure de la prochaine prière** changent à l'heure de chaque prière.
 - Les réglages de la date hégirienne de votre mosquée sont récupérés toutes les heures : un changement après l'observation de la lune apparaît donc dans l'heure. Les sensors de la date hégirienne passent au jour suivant à minuit, dans le fuseau horaire de la mosquée. Si une mise à jour échoue, ils gardent les réglages déjà récupérés et l'intégration réessaie toutes les 15 minutes.
+- Le message flash de votre mosquée est récupéré toutes les heures : un nouveau message apparaît donc dans l'heure. Si une mise à jour échoue, le sensor garde le message déjà récupéré et l'intégration réessaie toutes les 15 minutes.
 
 Les horaires sont publiés par la mosquée dans son fuseau horaire, et Home Assistant les affiche dans le vôtre. C'est le même instant : une mosquée dans un autre fuseau horaire est affichée à votre heure locale.
 

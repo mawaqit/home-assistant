@@ -105,6 +105,27 @@
       "first_third_end": {
         "name": "Einde eerste derde"
       },
+      "flash_message": {
+        "name": "Flashbericht",
+        "state_attributes": {
+          "color": {
+            "name": "Kleur"
+          },
+          "direction": {
+            "name": "Richting",
+            "state": {
+              "ltr": "Van links naar rechts",
+              "rtl": "Van rechts naar links"
+            }
+          },
+          "end_date": {
+            "name": "Einddatum"
+          },
+          "start_date": {
+            "name": "Begindatum"
+          }
+        }
+      },
       "hijri_day": {
         "name": "Hijri-dag"
       },

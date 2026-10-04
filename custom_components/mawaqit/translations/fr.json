@@ -105,6 +105,27 @@
       "first_third_end": {
         "name": "Fin du premier tiers"
       },
+      "flash_message": {
+        "name": "Message flash",
+        "state_attributes": {
+          "color": {
+            "name": "Couleur"
+          },
+          "direction": {
+            "name": "Direction",
+            "state": {
+              "ltr": "Gauche vers droite",
+              "rtl": "Droite vers gauche"
+            }
+          },
+          "end_date": {
+            "name": "Date de fin"
+          },
+          "start_date": {
+            "name": "Date de début"
+          }
+        }
+      },
       "hijri_day": {
         "name": "Jour hégirien"
       },

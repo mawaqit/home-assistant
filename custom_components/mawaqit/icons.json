@@ -17,6 +17,9 @@
       "first_third_end": {
         "default": "mdi:moon-waxing-crescent"
       },
+      "flash_message": {
+        "default": "mdi:bullhorn"
+      },
       "hijri_day": {
         "default": "mdi:calendar-today"
       },

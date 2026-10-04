@@ -105,6 +105,27 @@
       "first_third_end": {
         "name": "Ende des ersten Drittels"
       },
+      "flash_message": {
+        "name": "Eilmeldung",
+        "state_attributes": {
+          "color": {
+            "name": "Farbe"
+          },
+          "direction": {
+            "name": "Richtung",
+            "state": {
+              "ltr": "Von links nach rechts",
+              "rtl": "Von rechts nach links"
+            }
+          },
+          "end_date": {
+            "name": "Enddatum"
+          },
+          "start_date": {
+            "name": "Startdatum"
+          }
+        }
+      },
       "hijri_day": {
         "name": "Hijri-Tag"
       },

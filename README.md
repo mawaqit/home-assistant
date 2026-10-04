@@ -76,7 +76,7 @@ If MAWAQIT no longer accepts your login, for example after a password change, Ho
 
 ## Entities
 
-The integration adds a device named after your mosque, linked to its page on MAWAQIT, with the entities below. All the sensors except **Next Salat Name** and the Hijri date are timestamps: Home Assistant shows them as a time, and you can use them directly in a time trigger.
+The integration adds a device named after your mosque, linked to its page on MAWAQIT, with the entities below. All the sensors except **Next Salat Name**, the Hijri date and the flash message are timestamps: Home Assistant shows them as a time, and you can use them directly in a time trigger.
 
 | Entity                                                           | Description                                                                                                                                         |
 | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -90,6 +90,7 @@ The integration adds a device named after your mosque, linked to its page on MAW
 | Next Salat Time                                                  | The time of the next prayer.                                                                                                                        |
 | Hijri Month                                                      | The month of the Hijri date of your mosque: `muharram`, `safar`, `rabi_al_awwal`, `rabi_al_thani`, `jumada_al_ula`, `jumada_al_akhirah`, `rajab`, `shaban`, `ramadan`, `shawwal`, `dhu_al_qidah` or `dhu_al_hijjah`. The UI shows it translated, but automations always see these values. |
 | Hijri Day, Hijri Year                                            | The day, from 1 to 30, and the year of the Hijri date of your mosque.                                                                               |
+| Flash Message                                                    | The short message scrolling at the bottom of the screens of your mosque, see [below](#the-flash-message). Unknown when there is none. |
 | Picture, Logo (images)                                           | The picture and the logo of your mosque on MAWAQIT, to show on a dashboard. Only created if your mosque publishes them. |
 | Prayer Times (calendar)                                          | All the prayers of the current and the next month, see below.                                                                                       |
 
@@ -116,6 +117,14 @@ content: >
   {{ state_translated('sensor.my_mosque_hijri_month') }}
   {{ states('sensor.my_mosque_hijri_year') }}
 ```
+
+### The flash message
+
+**Flash Message** shows the short message scrolling at the bottom of the screens of your mosque, such as the time of a janaza prayer. It is unknown when your mosque has no message. If your mosque gave the message dates, it appears at midnight of its first day and disappears at midnight after its last day, in the time zone of the mosque.
+
+Its attributes tell how the screens show it: `color` is its background color, like `#d9ad0f`, and `direction` is `ltr` for left to right or `rtl` for right to left. `start_date` and `end_date` are its first and last days, if your mosque gave them.
+
+To get a notification when your mosque publishes a message, see the [flash message example](#automation-examples).
 
 ### Entity IDs
 
@@ -231,6 +240,24 @@ actions:
       entity_id: light.bedroom
 ```
 
+Get a notification when your mosque publishes a flash message. It does not run again when Home Assistant restarts or the integration is reloaded:
+
+```yaml
+alias: Flash message of the mosque
+triggers:
+  - trigger: state
+    entity_id: sensor.my_mosque_flash_message
+    not_from: unavailable
+    not_to:
+      - unknown
+      - unavailable
+actions:
+  - action: notify.notify
+    data:
+      title: My Mosque
+      message: "{{ trigger.to_state.state }}"
+```
+
 ## Data updates
 
 - The integration fetches the prayer times of the whole year from MAWAQIT when it starts, then every 12 hours. Changes made by your mosque appear within 12 hours, or right away if you reload the integration: **Settings** > **Devices & services** > **MAWAQIT**, ⋮ menu of the entry, **Reload**. If an update fails, the sensors keep the times already fetched and the integration tries again every 15 minutes.
@@ -240,6 +267,7 @@ actions:
 - The times of the night move to the next night at Fajr.
 - **Next Salat Name** and **Next Salat Time** change at the time of each prayer.
 - The Hijri date settings of your mosque are fetched every hour, so a change after the moon sighting appears within an hour. The Hijri sensors move to the next day at midnight, in the time zone of the mosque. If an update fails, they keep the settings already fetched and the integration tries again every 15 minutes.
+- The flash message of your mosque is fetched every hour, so a new message appears within an hour. If an update fails, the sensor keeps the message already fetched and the integration tries again every 15 minutes.
 
 Times are published by the mosque in its own time zone, and Home Assistant shows them in yours. They are the same moment: a mosque in another time zone is shown with your local time.
 

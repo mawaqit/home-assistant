@@ -76,7 +76,7 @@ Wenn MAWAQIT deine Anmeldung nicht mehr akzeptiert, zum Beispiel nach einer Pass
 
 ## Entitäten
 
-Die Integration fügt ein Gerät mit dem Namen deiner Moschee hinzu, verlinkt mit ihrer MAWAQIT-Seite, mit den unten aufgeführten Entitäten. Alle Sensoren außer **Name des nächsten Gebets** und dem Hijri-Datum sind Zeitstempel: Home Assistant zeigt sie als Uhrzeit an, und du kannst sie direkt in einem Zeit-Auslöser verwenden.
+Die Integration fügt ein Gerät mit dem Namen deiner Moschee hinzu, verlinkt mit ihrer MAWAQIT-Seite, mit den unten aufgeführten Entitäten. Alle Sensoren außer **Name des nächsten Gebets**, dem Hijri-Datum und der Eilmeldung sind Zeitstempel: Home Assistant zeigt sie als Uhrzeit an, und du kannst sie direkt in einem Zeit-Auslöser verwenden.
 
 | Entität                                                                    | Beschreibung                                                                                                                                                          |
 | -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -90,6 +90,7 @@ Die Integration fügt ein Gerät mit dem Namen deiner Moschee hinzu, verlinkt mi
 | Zeit des nächsten Gebets                                                   | Die Uhrzeit des nächsten Gebets.                                                                                                                                      |
 | Hijri-Monat                                                                | Der Monat des Hijri-Datums deiner Moschee: `muharram`, `safar`, `rabi_al_awwal`, `rabi_al_thani`, `jumada_al_ula`, `jumada_al_akhirah`, `rajab`, `shaban`, `ramadan`, `shawwal`, `dhu_al_qidah` oder `dhu_al_hijjah`. Die Oberfläche zeigt ihn übersetzt an, Automationen sehen aber immer diese Werte. |
 | Hijri-Tag, Hijri-Jahr                                                      | Der Tag, von 1 bis 30, und das Jahr des Hijri-Datums deiner Moschee.                                                                                                  |
+| Eilmeldung                                                                 | Die kurze Nachricht, die unten über die Bildschirme deiner Moschee läuft, siehe [unten](#die-eilmeldung). Unbekannt, wenn es keine gibt. |
 | Foto, Logo (Bilder)                                                        | Das Foto und das Logo deiner Moschee auf MAWAQIT, zum Anzeigen auf einem Dashboard. Nur angelegt, wenn deine Moschee sie veröffentlicht. |
 | Gebetszeiten (Kalender)                                                    | Alle Gebete des aktuellen und des nächsten Monats, siehe unten.                                                                                                       |
 
@@ -116,6 +117,14 @@ content: >
   {{ state_translated('sensor.meine_moschee_hijri_monat') }}
   {{ states('sensor.meine_moschee_hijri_jahr') }}
 ```
+
+### Die Eilmeldung
+
+**Eilmeldung** zeigt die kurze Nachricht, die unten über die Bildschirme deiner Moschee läuft, etwa die Uhrzeit eines Totengebets. Sie ist unbekannt, wenn deine Moschee keine Nachricht hat. Hat deine Moschee der Nachricht Daten gegeben, erscheint sie um Mitternacht ihres ersten Tages und verschwindet um Mitternacht nach ihrem letzten Tag, in der Zeitzone der Moschee.
+
+Ihre Attribute geben an, wie die Bildschirme sie anzeigen: `color` ist ihre Hintergrundfarbe, etwa `#d9ad0f`, und `direction` ist `ltr` für von links nach rechts oder `rtl` für von rechts nach links. `start_date` und `end_date` sind ihr erster und ihr letzter Tag, wenn deine Moschee sie angegeben hat.
+
+Um benachrichtigt zu werden, wenn deine Moschee eine Nachricht veröffentlicht, siehe das [Eilmeldung-Beispiel](#beispiel-automationen).
 
 ### Entitäts-IDs
 
@@ -231,6 +240,24 @@ actions:
       entity_id: light.bedroom
 ```
 
+Eine Benachrichtigung erhalten, wenn deine Moschee eine Eilmeldung veröffentlicht. Sie wird beim Neustart von Home Assistant oder beim Neuladen der Integration nicht erneut ausgelöst:
+
+```yaml
+alias: Eilmeldung der Moschee
+triggers:
+  - trigger: state
+    entity_id: sensor.meine_moschee_eilmeldung
+    not_from: unavailable
+    not_to:
+      - unknown
+      - unavailable
+actions:
+  - action: notify.notify
+    data:
+      title: Meine Moschee
+      message: "{{ trigger.to_state.state }}"
+```
+
 ## Datenaktualisierung
 
 - Die Integration ruft die Gebetszeiten des ganzen Jahres beim Start von MAWAQIT ab, danach alle 12 Stunden. Änderungen deiner Moschee erscheinen innerhalb von 12 Stunden, oder sofort, wenn du die Integration neu lädst: **Einstellungen** > **Geräte & Dienste** > **MAWAQIT**, Menü ⋮ des Eintrags, **Neu laden**. Schlägt eine Aktualisierung fehl, behalten die Sensoren die bereits abgerufenen Zeiten, und die Integration versucht es alle 15 Minuten erneut.
@@ -240,6 +267,7 @@ actions:
 - Die Zeiten der Nacht wechseln bei Fajr auf die nächste Nacht.
 - **Name des nächsten Gebets** und **Zeit des nächsten Gebets** ändern sich zur Zeit jedes Gebets.
 - Die Einstellungen des Hijri-Datums deiner Moschee werden jede Stunde abgerufen, sodass eine Änderung nach der Mondsichtung innerhalb einer Stunde erscheint. Die Hijri-Sensoren wechseln um Mitternacht in der Zeitzone der Moschee auf den nächsten Tag. Schlägt eine Aktualisierung fehl, behalten sie die bereits abgerufenen Einstellungen, und die Integration versucht es alle 15 Minuten erneut.
+- Die Eilmeldung deiner Moschee wird jede Stunde abgerufen, sodass eine neue Nachricht innerhalb einer Stunde erscheint. Schlägt eine Aktualisierung fehl, behält der Sensor die bereits abgerufene Nachricht, und die Integration versucht es alle 15 Minuten erneut.
 
 Die Zeiten werden von der Moschee in ihrer Zeitzone veröffentlicht, und Home Assistant zeigt sie in deiner an. Es ist derselbe Zeitpunkt: Eine Moschee in einer anderen Zeitzone wird in deiner Ortszeit angezeigt.
 

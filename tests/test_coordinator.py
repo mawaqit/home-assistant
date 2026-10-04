@@ -20,6 +20,7 @@ from .conftest import (
     MOCK_UUID,
     TIMEOUT_ERROR,
     build_prayer_data,
+    flash_message_response,
     hijri_settings_response,
     status_error,
 )
@@ -31,6 +32,7 @@ from .conftest import (
 
 FAJR = "sensor.test_mosque_fajr_prayer"
 CALENDAR = "calendar.test_mosque_prayer_times"
+FLASH_MESSAGE = "sensor.test_mosque_flash_message"
 HIJRI_SENSORS = (
     "sensor.test_mosque_hijri_day",
     "sensor.test_mosque_hijri_month",
@@ -420,3 +422,156 @@ async def test_hijri_coordinator_auth_error_after_setup(
     assert len(flows) == 1
     assert flows[0]["context"]["source"] == SOURCE_REAUTH
     assert _hijri_date(hass) == ["1", "ramadan", "1447"]
+
+
+# --- FlashMessageCoordinator ---
+
+
+def _flash_message(hass: HomeAssistant) -> str:
+    """Return the state of the flash message sensor."""
+    return hass.states.get(FLASH_MESSAGE).state
+
+
+async def test_flash_message_coordinator_update_interval_is_1_hour(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    setup_mawaqit_integration,
+) -> None:
+    """Test the flash message is fetched every hour."""
+    await setup_mawaqit_integration()
+    coordinator = mock_config_entry.runtime_data.flash_message_coordinator
+    coordinator.client.mosques.flash_message.assert_awaited_once_with(MOCK_UUID)
+    assert coordinator.update_interval == timedelta(hours=1)
+
+
+async def test_new_flash_message_within_the_hour(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    setup_mawaqit_integration,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a message published by the mosque shows up at the next hourly refresh."""
+    freezer.move_to("2026-02-17 12:00:00+01:00")
+    await setup_mawaqit_integration()
+    assert _flash_message(hass) == STATE_UNKNOWN
+
+    coordinator = mock_config_entry.runtime_data.flash_message_coordinator
+    coordinator.client.mosques.flash_message.return_value = flash_message_response()
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert _flash_message(hass) == "Janaza prayer after Dhuhr"
+
+
+async def test_flash_message_starts_and_ends_at_midnight_of_the_mosque(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    setup_mawaqit_integration,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the message is shown from its first to its last day, in the time zone of the mosque."""
+    await hass.config.async_set_time_zone("America/New_York")
+    freezer.move_to("2026-02-16 23:59:59+01:00")
+    await setup_mawaqit_integration(
+        flash_message=flash_message_response(
+            start_date="2026-02-17", end_date="2026-02-18"
+        )
+    )
+    assert _flash_message(hass) == STATE_UNKNOWN
+
+    freezer.move_to("2026-02-17 00:00:00+01:00")
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert _flash_message(hass) == "Janaza prayer after Dhuhr"
+    # Without fetching the message again.
+    coordinator = mock_config_entry.runtime_data.flash_message_coordinator
+    assert coordinator.client.mosques.flash_message.await_count == 1
+
+    freezer.move_to("2026-02-18 23:59:59+01:00")
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert _flash_message(hass) == "Janaza prayer after Dhuhr"
+
+    freezer.move_to("2026-02-19 00:00:00+01:00")
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert _flash_message(hass) == STATE_UNKNOWN
+
+
+async def test_flash_message_coordinator_failure_keeps_the_message(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    setup_mawaqit_integration,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a failed refresh keeps the last message and retries every 15 minutes."""
+    freezer.move_to("2026-02-17 12:00:00+01:00")
+    await setup_mawaqit_integration(flash_message=flash_message_response())
+    coordinator = mock_config_entry.runtime_data.flash_message_coordinator
+    fetch_message = coordinator.client.mosques.flash_message
+    fetch_message.side_effect = CONNECTION_ERROR
+
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert not coordinator.last_update_success
+    assert coordinator.update_interval == timedelta(minutes=15)
+    assert _flash_message(hass) == "Janaza prayer after Dhuhr"
+
+    fetch_message.side_effect = None
+    fetch_message.return_value = None
+    freezer.tick(timedelta(minutes=15))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert fetch_message.await_count == 3
+    assert coordinator.update_interval == timedelta(hours=1)
+    assert _flash_message(hass) == STATE_UNKNOWN
+
+
+async def test_flash_message_failure_at_setup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    setup_mawaqit_integration,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the prayer times work when the flash message fails at setup."""
+    freezer.move_to("2026-02-17 12:00:00+01:00")
+    await setup_mawaqit_integration(
+        flash_message=flash_message_response(),
+        flash_message_side_effect=status_error(InternalServerError, 503),
+    )
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(FAJR).state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
+    assert _flash_message(hass) == STATE_UNAVAILABLE
+
+    coordinator = mock_config_entry.runtime_data.flash_message_coordinator
+    coordinator.client.mosques.flash_message.side_effect = None
+    freezer.tick(timedelta(minutes=15))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert _flash_message(hass) == "Janaza prayer after Dhuhr"
+
+
+async def test_flash_message_coordinator_auth_error_after_setup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    setup_mawaqit_integration,
+) -> None:
+    """Test a token rejected for the flash message starts a reauth flow."""
+    await setup_mawaqit_integration()
+    coordinator = mock_config_entry.runtime_data.flash_message_coordinator
+    coordinator.client.mosques.flash_message.side_effect = status_error(
+        AuthenticationError, 401
+    )
+
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH

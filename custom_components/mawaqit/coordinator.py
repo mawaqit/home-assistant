@@ -1,7 +1,7 @@
 """Coordinators for the Mawaqit integration."""
 
 from abc import abstractmethod
-from datetime import datetime, time, timedelta, tzinfo
+from datetime import date, datetime, time, timedelta, tzinfo
 import logging
 from typing import override
 
@@ -13,7 +13,7 @@ from mawaqit import (
     hijri,
 )
 from mawaqit.hijri import HijriDate
-from mawaqit.types import HijriSettings
+from mawaqit.types import FlashMessage, HijriSettings
 
 from homeassistant.const import CONF_UUID
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -33,6 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = timedelta(hours=12)
 HIJRI_UPDATE_INTERVAL = timedelta(hours=1)
+FLASH_MESSAGE_UPDATE_INTERVAL = timedelta(hours=1)
 RETRY_INTERVAL = timedelta(minutes=15)
 
 
@@ -145,6 +146,13 @@ class PrayerTimeCoordinator(MawaqitCoordinator[dict]):
         """Initialize the prayer time coordinator."""
         super().__init__(hass, config_entry, client, "Prayer Times", UPDATE_INTERVAL)
 
+    def time_zone(self) -> tzinfo:
+        """Return the time zone of the mosque, or Home Assistant's if unknown."""
+        timezone = (self.data or {}).get("timezone")
+        return (
+            timezone and dt_util.get_time_zone(timezone)
+        ) or dt_util.get_default_time_zone()
+
     @override
     def _next_change(self) -> datetime | None:
         """Return the next middle of the night or Fajr ending the night."""
@@ -199,21 +207,14 @@ class HijriCoordinator(MawaqitCoordinator[HijriSettings]):
             hass, config_entry, client, "Hijri Date", HIJRI_UPDATE_INTERVAL
         )
 
-    def _time_zone(self) -> tzinfo:
-        """Return the time zone of the mosque, or Home Assistant's if unknown."""
-        timezone = (self._prayer_time_coordinator.data or {}).get("timezone")
-        return (
-            timezone and dt_util.get_time_zone(timezone)
-        ) or dt_util.get_default_time_zone()
-
     def today(self) -> HijriDate:
         """Return today's Hijri date of the mosque."""
-        return hijri.today(self.data, self._time_zone())
+        return hijri.today(self.data, self._prayer_time_coordinator.time_zone())
 
     @override
     def _next_change(self) -> datetime:
         """Return the next midnight in the time zone of the mosque."""
-        tz = self._time_zone()
+        tz = self._prayer_time_coordinator.time_zone()
         tomorrow = dt_util.now(tz).date() + timedelta(days=1)
         return datetime.combine(tomorrow, time(), tz)
 
@@ -221,3 +222,57 @@ class HijriCoordinator(MawaqitCoordinator[HijriSettings]):
     async def _async_fetch(self) -> HijriSettings:
         """Fetch the Hijri settings of the mosque."""
         return await self.client.mosques.hijri_settings(self.mosque_uuid)
+
+
+class FlashMessageCoordinator(MawaqitCoordinator[FlashMessage | None]):
+    """Coordinator of the flash message of a mosque, `None` when it has none.
+
+    It fetches the message every hour. Listeners are also updated at midnight
+    in the time zone of the mosque, when the message starts or ends.
+    """
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: MawaqitConfigEntry,
+        client: AsyncMawaqitClient,
+        prayer_time_coordinator: PrayerTimeCoordinator,
+    ) -> None:
+        """Initialize the flash message coordinator."""
+        self._prayer_time_coordinator = prayer_time_coordinator
+        super().__init__(
+            hass, config_entry, client, "Flash Message", FLASH_MESSAGE_UPDATE_INTERVAL
+        )
+
+    def _today(self) -> date:
+        """Return today's date in the time zone of the mosque."""
+        return dt_util.now(self._prayer_time_coordinator.time_zone()).date()
+
+    def current(self) -> FlashMessage | None:
+        """Return the message the mosque screens show today, if any."""
+        flash, today = self.data, self._today()
+        if (
+            not flash
+            or not flash.content
+            or (flash.start_date and flash.start_date > today)
+            or (flash.end_date and flash.end_date < today)
+        ):
+            return None
+        return flash
+
+    @override
+    def _next_change(self) -> datetime | None:
+        """Return the next midnight of the mosque when the message starts or ends."""
+        flash, today = self.data, self._today()
+        if flash and flash.start_date and flash.start_date > today:
+            day = flash.start_date
+        elif flash and flash.end_date and flash.end_date >= today:
+            day = flash.end_date + timedelta(days=1)
+        else:
+            return None
+        return datetime.combine(day, time(), self._prayer_time_coordinator.time_zone())
+
+    @override
+    async def _async_fetch(self) -> FlashMessage | None:
+        """Fetch the flash message of the mosque."""
+        return await self.client.mosques.flash_message(self.mosque_uuid)

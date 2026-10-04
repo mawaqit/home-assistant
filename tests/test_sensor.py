@@ -1,7 +1,7 @@
 """Tests for the Mawaqit sensor platform."""
 
 from collections.abc import Generator
-from datetime import datetime
+from datetime import date, datetime
 import json
 import logging
 from pathlib import Path
@@ -37,6 +37,7 @@ from .conftest import (
     MOCK_UUID,
     PRAYER_TIMES_ROW,
     build_prayer_data,
+    flash_message_response,
     hijri_settings_response,
     make_month_data,
     prayer_times_response,
@@ -66,14 +67,14 @@ HIJRI_MONTHS = [
 @pytest.mark.parametrize(
     ("prayer_data_kwargs", "expected_count"),
     [
-        ({}, 21),  # 6 prayers + 2 jumua + 5 iqama + 3 night + 2 next + 3 hijri
-        ({"iqama_enabled": False}, 16),  # no iqama sensors
-        ({"with_iqama_calendar": False}, 16),  # no iqama sensors
-        ({"jumua2": None}, 20),  # only 1 Jumua
-        ({"jumua3": "15:00"}, 22),  # 3 Jumua prayers
-        ({"jumua2": None, "iqama_enabled": False}, 15),  # 1 Jumua, no iqama
-        ({"imsak_nb_min_before_fajr": 10}, 22),  # Imsak
-        ({"imsak_nb_min_before_fajr": 0}, 21),  # no Imsak
+        ({}, 22),  # 6 prayers + 2 jumua + 5 iqama + 3 night + 2 next + 3 hijri + flash
+        ({"iqama_enabled": False}, 17),  # no iqama sensors
+        ({"with_iqama_calendar": False}, 17),  # no iqama sensors
+        ({"jumua2": None}, 21),  # only 1 Jumua
+        ({"jumua3": "15:00"}, 23),  # 3 Jumua prayers
+        ({"jumua2": None, "iqama_enabled": False}, 16),  # 1 Jumua, no iqama
+        ({"imsak_nb_min_before_fajr": 10}, 23),  # Imsak
+        ({"imsak_nb_min_before_fajr": 0}, 22),  # no Imsak
     ],
 )
 async def test_sensor_setup_creates_entities(
@@ -145,7 +146,7 @@ async def test_published_sensors_added_at_refresh(
             fill_all_months=False, iqama_enabled=False, jumua=None, jumua2=None
         )
     )
-    assert len(hass.states.async_all("sensor")) == 14
+    assert len(hass.states.async_all("sensor")) == 15
     for entity_id in PUBLISHED_SENSORS:
         assert hass.states.get(entity_id) is None
 
@@ -156,7 +157,7 @@ async def test_published_sensors_added_at_refresh(
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all("sensor")) == 22
+    assert len(hass.states.async_all("sensor")) == 23
     for entity_id in PUBLISHED_SENSORS:
         state = hass.states.get(entity_id)
         assert state is not None
@@ -165,7 +166,7 @@ async def test_published_sensors_added_at_refresh(
     # Later refreshes do not add them twice.
     await coordinator.async_refresh()
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 22
+    assert len(hass.states.async_all("sensor")) == 23
     assert "does not generate unique IDs" not in caplog.text
 
 
@@ -192,7 +193,7 @@ async def test_published_sensors_kept_unknown_when_no_longer_published(
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all("sensor")) == 22
+    assert len(hass.states.async_all("sensor")) == 23
     for entity_id in PUBLISHED_SENSORS:
         state = hass.states.get(entity_id)
         assert state is not None
@@ -610,6 +611,80 @@ async def test_hijri_sensors(
     assert states[1].attributes[ATTR_OPTIONS] == HIJRI_MONTHS
 
 
+@freeze_time("2026-02-17 12:00:00+01:00")
+@pytest.mark.parametrize(
+    ("flash_message", "expected"),
+    [
+        (None, STATE_UNKNOWN),
+        (flash_message_response(), "Janaza prayer after Dhuhr"),
+        (flash_message_response(None), STATE_UNKNOWN),
+        (flash_message_response(""), STATE_UNKNOWN),
+        (
+            flash_message_response(start_date="2026-02-17", end_date="2026-02-17"),
+            "Janaza prayer after Dhuhr",
+        ),
+        (flash_message_response(start_date="2026-02-18"), STATE_UNKNOWN),
+        (flash_message_response(end_date="2026-02-16"), STATE_UNKNOWN),
+    ],
+    ids=[
+        "none",
+        "no_dates",
+        "no_content",
+        "empty_content",
+        "today",
+        "not_started",
+        "ended",
+    ],
+)
+async def test_flash_message_sensor(
+    hass: HomeAssistant,
+    setup_mawaqit_integration,
+    flash_message,
+    expected: str,
+) -> None:
+    """Test the flash message is only shown from its first to its last day."""
+    await setup_mawaqit_integration(flash_message=flash_message)
+
+    state = hass.states.get("sensor.test_mosque_flash_message")
+    assert state.state == expected
+    if expected == STATE_UNKNOWN:
+        assert "color" not in state.attributes
+
+
+@freeze_time("2026-02-17 12:00:00+01:00")
+async def test_flash_message_sensor_attributes(
+    hass: HomeAssistant,
+    setup_mawaqit_integration,
+) -> None:
+    """Test the attributes tell how the mosque screens show the message."""
+    await setup_mawaqit_integration(
+        flash_message=flash_message_response(
+            "صلاة الجنازة بعد الظهر",
+            start_date="2026-02-16",
+            end_date="2026-02-20",
+            color="#1e7a3c",
+            orientation="rtl",
+        )
+    )
+
+    state = hass.states.get("sensor.test_mosque_flash_message")
+    assert state.state == "صلاة الجنازة بعد الظهر"
+    assert state.attributes["color"] == "#1e7a3c"
+    assert state.attributes["direction"] == "rtl"
+    assert state.attributes["start_date"] == date(2026, 2, 16)
+    assert state.attributes["end_date"] == date(2026, 2, 20)
+
+
+async def test_flash_message_sensor_too_long(
+    hass: HomeAssistant,
+    setup_mawaqit_integration,
+) -> None:
+    """Test a message longer than a state can be is cut instead of being unknown."""
+    await setup_mawaqit_integration(flash_message=flash_message_response("a" * 300))
+
+    assert hass.states.get("sensor.test_mosque_flash_message").state == "a" * 255
+
+
 # ---------------------------------------------------------------------------
 # Direct unit tests for sensor class property branches
 # ---------------------------------------------------------------------------
@@ -682,3 +757,20 @@ def test_enum_states_translated(
     translations = json.loads(translation_file.read_text(encoding="utf-8"))
     states = translations["entity"]["sensor"][translation_key]["state"]
     assert sorted(states) == sorted(options)
+
+
+@pytest.mark.parametrize(
+    "translation_file",
+    sorted(
+        (Path(__file__).parents[1] / "custom_components/mawaqit/translations").glob(
+            "*.json"
+        )
+    ),
+    ids=lambda path: path.stem,
+)
+def test_flash_message_attributes_translated(translation_file: Path) -> None:
+    """Test every translation file translates the attributes of the flash message."""
+    translations = json.loads(translation_file.read_text(encoding="utf-8"))
+    attributes = translations["entity"]["sensor"]["flash_message"]["state_attributes"]
+    assert sorted(attributes) == ["color", "direction", "end_date", "start_date"]
+    assert sorted(attributes["direction"]["state"]) == ["ltr", "rtl"]

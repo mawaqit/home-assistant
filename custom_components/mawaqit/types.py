@@ -9,7 +9,11 @@ from typing import TYPE_CHECKING
 from homeassistant.config_entries import ConfigEntry
 
 if TYPE_CHECKING:
-    from .coordinator import HijriCoordinator, PrayerTimeCoordinator
+    from .coordinator import (
+        FlashMessageCoordinator,
+        HijriCoordinator,
+        PrayerTimeCoordinator,
+    )
 
 
 @dataclass
@@ -18,6 +22,7 @@ class MawaqitData:
 
     prayer_time_coordinator: PrayerTimeCoordinator
     hijri_coordinator: HijriCoordinator
+    flash_message_coordinator: FlashMessageCoordinator
 
 
 type MawaqitConfigEntry = ConfigEntry[MawaqitData]

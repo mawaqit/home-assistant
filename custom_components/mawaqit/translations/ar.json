@@ -105,6 +105,27 @@
       "first_third_end": {
         "name": "نهاية الثلث الأول"
       },
+      "flash_message": {
+        "name": "رسالة فلاش",
+        "state_attributes": {
+          "color": {
+            "name": "اللون"
+          },
+          "direction": {
+            "name": "الاتجاه",
+            "state": {
+              "ltr": "من اليسار إلى اليمين",
+              "rtl": "من اليمين إلى اليسار"
+            }
+          },
+          "end_date": {
+            "name": "تاريخ الانتهاء"
+          },
+          "start_date": {
+            "name": "تاريخ البدء"
+          }
+        }
+      },
       "hijri_day": {
         "name": "اليوم الهجري"
       },
