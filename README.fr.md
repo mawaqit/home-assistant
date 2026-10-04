@@ -90,6 +90,7 @@ L'intégration ajoute un appareil au nom de votre mosquée, avec un lien vers sa
 | Heure de la prochaine prière                                            | L'heure de la prochaine prière.                                                                                                                              |
 | Mois hégirien                                                           | Le mois de la date hégirienne de votre mosquée : `muharram`, `safar`, `rabi_al_awwal`, `rabi_al_thani`, `jumada_al_ula`, `jumada_al_akhirah`, `rajab`, `shaban`, `ramadan`, `shawwal`, `dhu_al_qidah` ou `dhu_al_hijjah`. L'interface l'affiche traduit (par ex. « Chaabane »), mais les automatisations voient toujours ces valeurs. |
 | Jour hégirien, Année hégirienne                                         | Le jour, de 1 à 30, et l'année de la date hégirienne de votre mosquée.                                                                                       |
+| Photo, Logo (images)                                                    | La photo et le logo de votre mosquée sur MAWAQIT, à afficher sur un tableau de bord. Créés seulement si votre mosquée les publie. |
 | Horaires des prières (calendrier)                                       | Toutes les prières du mois en cours et du mois suivant, voir ci-dessous.                                                                                     |
 
 ### Le calendrier des horaires des prières
@@ -234,6 +235,7 @@ actions:
 
 - L'intégration récupère les horaires de toute l'année auprès de MAWAQIT à son démarrage, puis toutes les 12 heures. Les changements faits par votre mosquée apparaissent dans les 12 heures, ou tout de suite si vous rechargez l'intégration : **Paramètres** > **Appareils et services** > **MAWAQIT**, menu ⋮ de l'entrée, **Recharger**. Si une mise à jour échoue, les sensors gardent les horaires déjà récupérés et l'intégration réessaie toutes les 15 minutes.
 - Les sensors de l'Imsak, des iqamas et de la Jumu'a sont ajoutés dès que votre mosquée les publie, donc eux aussi dans les 12 heures. Si elle arrête de les publier, ils restent et passent à inconnu. Après un rechargement ou un redémarrage, Home Assistant les indique comme n'étant plus fournis, et vous pouvez les supprimer.
+- Les images sont ajoutées dès que votre mosquée les publie, et changent dans les 12 heures quand elle les change. Si elle arrête d'en publier une, elle devient indisponible.
 - Les sensors des prières, de l'Imsak, des iqamas et de la Jumu'a passent au jour suivant au milieu de la nuit, pas à minuit : après Isha, ils montrent encore les horaires de la journée qui se termine.
 - Les moments de la nuit passent à la nuit suivante au Fajr.
 - **Nom de la prochaine prière** et **Heure de la prochaine prière** changent à l'heure de chaque prière.

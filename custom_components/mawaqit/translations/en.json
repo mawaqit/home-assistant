@@ -93,6 +93,14 @@
         "name": "Prayer Times"
       }
     },
+    "image": {
+      "logo": {
+        "name": "Logo"
+      },
+      "picture": {
+        "name": "Picture"
+      }
+    },
     "sensor": {
       "first_third_end": {
         "name": "End of the First Third"

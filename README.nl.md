@@ -90,6 +90,7 @@ De integratie voegt een apparaat toe met de naam van je moskee, gekoppeld aan ha
 | Tijd volgend gebed                                                      | De tijd van het volgende gebed.                                                                                                                                      |
 | Hijri-maand                                                             | De maand van de Hijri-datum van je moskee: `muharram`, `safar`, `rabi_al_awwal`, `rabi_al_thani`, `jumada_al_ula`, `jumada_al_akhirah`, `rajab`, `shaban`, `ramadan`, `shawwal`, `dhu_al_qidah` of `dhu_al_hijjah`. De interface toont de maand vertaald, maar automatiseringen zien altijd deze waarden. |
 | Hijri-dag, Hijri-jaar                                                   | De dag, van 1 tot 30, en het jaar van de Hijri-datum van je moskee.                                                                                                  |
+| Foto, Logo (afbeeldingen)                                               | De foto en het logo van je moskee op MAWAQIT, om op een dashboard te tonen. Alleen aangemaakt als je moskee ze publiceert. |
 | Gebedstijden (agenda)                                                   | Alle gebeden van de huidige en de volgende maand, zie hieronder.                                                                                                     |
 
 ### De gebedstijdenagenda
@@ -234,6 +235,7 @@ actions:
 
 - De integratie haalt de gebedstijden van het hele jaar op bij MAWAQIT wanneer ze start, en daarna elke 12 uur. Wijzigingen van je moskee verschijnen binnen 12 uur, of meteen als je de integratie herlaadt: **Instellingen** > **Apparaten & diensten** > **MAWAQIT**, menu ⋮ van de vermelding, **Herladen**. Mislukt een update, dan houden de sensoren de al opgehaalde tijden en probeert de integratie het elke 15 minuten opnieuw.
 - De Imsak-, iqama- en Jumu'a-sensoren worden aangemaakt zodra je moskee ze publiceert, dus ook binnen 12 uur. Stopt ze daarmee, dan blijven ze bestaan en worden ze onbekend. Na het herladen of herstarten toont Home Assistant ze als niet meer geleverd, en kun je ze verwijderen.
+- De afbeeldingen worden aangemaakt zodra je moskee ze publiceert, en veranderen binnen 12 uur als ze die wijzigt. Publiceert ze er een niet meer, dan wordt die niet beschikbaar.
 - De gebeds-, Imsak-, iqama- en Jumu'a-sensoren gaan midden in de nacht naar de volgende dag, niet om middernacht: na Isha tonen ze nog de tijden van de dag die eindigt.
 - De tijden van de nacht gaan bij Fajr naar de volgende nacht.
 - **Naam volgend gebed** en **Tijd volgend gebed** veranderen op het tijdstip van elk gebed.

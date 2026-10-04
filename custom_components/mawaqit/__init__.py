@@ -10,7 +10,7 @@ from .coordinator import HijriCoordinator, PrayerTimeCoordinator
 from .migration import async_migrate_legacy_entry, migrate_title
 from .types import MawaqitConfigEntry, MawaqitData
 
-PLATFORMS = [Platform.CALENDAR, Platform.SENSOR]
+PLATFORMS = [Platform.CALENDAR, Platform.IMAGE, Platform.SENSOR]
 
 
 async def async_setup_entry(

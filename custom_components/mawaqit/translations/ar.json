@@ -93,6 +93,14 @@
         "name": "مواقيت الصلاة"
       }
     },
+    "image": {
+      "logo": {
+        "name": "شعار"
+      },
+      "picture": {
+        "name": "صورة"
+      }
+    },
     "sensor": {
       "first_third_end": {
         "name": "نهاية الثلث الأول"

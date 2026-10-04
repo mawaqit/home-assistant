@@ -5,6 +5,14 @@
         "default": "mdi:calendar-clock"
       }
     },
+    "image": {
+      "logo": {
+        "default": "mdi:mosque"
+      },
+      "picture": {
+        "default": "mdi:image"
+      }
+    },
     "sensor": {
       "first_third_end": {
         "default": "mdi:moon-waxing-crescent"

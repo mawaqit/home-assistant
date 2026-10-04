@@ -90,6 +90,7 @@ The integration adds a device named after your mosque, linked to its page on MAW
 | Next Salat Time                                                  | The time of the next prayer.                                                                                                                        |
 | Hijri Month                                                      | The month of the Hijri date of your mosque: `muharram`, `safar`, `rabi_al_awwal`, `rabi_al_thani`, `jumada_al_ula`, `jumada_al_akhirah`, `rajab`, `shaban`, `ramadan`, `shawwal`, `dhu_al_qidah` or `dhu_al_hijjah`. The UI shows it translated, but automations always see these values. |
 | Hijri Day, Hijri Year                                            | The day, from 1 to 30, and the year of the Hijri date of your mosque.                                                                               |
+| Picture, Logo (images)                                           | The picture and the logo of your mosque on MAWAQIT, to show on a dashboard. Only created if your mosque publishes them. |
 | Prayer Times (calendar)                                          | All the prayers of the current and the next month, see below.                                                                                       |
 
 ### The prayer times calendar
@@ -234,6 +235,7 @@ actions:
 
 - The integration fetches the prayer times of the whole year from MAWAQIT when it starts, then every 12 hours. Changes made by your mosque appear within 12 hours, or right away if you reload the integration: **Settings** > **Devices & services** > **MAWAQIT**, ⋮ menu of the entry, **Reload**. If an update fails, the sensors keep the times already fetched and the integration tries again every 15 minutes.
 - The Imsak, iqama and Jumu'a sensors are added as soon as your mosque publishes them, so within 12 hours too. If it stops publishing them, they stay and become unknown. After a reload or a restart, Home Assistant shows them as no longer provided, and you can delete them.
+- The pictures are added as soon as your mosque publishes them, and change within 12 hours when it changes them. If it stops publishing one, it becomes unavailable.
 - The prayer, Imsak, iqama and Jumu'a sensors move to the next day at the middle of the night, not at midnight: after Isha, they still show the times of the day that is ending.
 - The times of the night move to the next night at Fajr.
 - **Next Salat Name** and **Next Salat Time** change at the time of each prayer.
