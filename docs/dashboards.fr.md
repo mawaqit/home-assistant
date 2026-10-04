@@ -4,7 +4,7 @@
 
 Trois exemples à coller dans vos tableaux de bord :
 
-- [Carte des horaires](#carte-des-horaires) : la photo de votre mosquée, la date hégirienne du jour, la prochaine prière, et l'adhan et l'iqama de chaque prière. Uniquement des cartes intégrées.
+- [Carte des horaires](#carte-des-horaires) : la photo de votre mosquée, la date hégirienne du jour, son message flash, la prochaine prière, et l'adhan et l'iqama de chaque prière. Uniquement des cartes intégrées.
 - [Prochaine prière](#prochaine-prière) : une petite carte avec la prochaine prière et le temps restant. Uniquement des cartes intégrées.
 - [Écran de mosquée](#écran-de-mosquée) : une vue plein écran comme les écrans de votre mosquée, pour une tablette au mur. Elle nécessite [button-card](https://github.com/custom-cards/button-card), installée avec HACS.
 
@@ -17,7 +17,7 @@ Pour ajouter une carte : ouvrez votre tableau de bord, choisissez ✏️ **Modif
   <img alt="Carte des horaires avec la photo de la mosquée, la date hégirienne, la prochaine prière et les horaires de l'adhan et de l'iqama" src="images/dashboards/prayer-times-card-light.jpg" width="600">
 </picture>
 
-La prochaine prière est en gras et les prières passées sont en gris. Avant Fajr, la carte montre les horaires de la journée qui commence.
+Le message flash de votre mosquée s'affiche sous la date hégirienne quand elle en a un. La prochaine prière est en gras et les prières passées sont en gris. Avant Fajr, la carte montre les horaires de la journée qui commence.
 
 Remplacez les identifiants d'entités en haut de la carte par les vôtres, voir [Identifiants des entités](../README.fr.md#identifiants-des-entités). Si votre mosquée ne publie pas sa photo, supprimez la carte `picture-entity`. Si elle ne publie pas ses iqamas, la colonne Iqama affiche `–`.
 
@@ -44,6 +44,7 @@ cards:
       {%- set hijri_day = 'sensor.my_mosque_hijri_day' %}
       {%- set hijri_month = 'sensor.my_mosque_hijri_month' %}
       {%- set hijri_year = 'sensor.my_mosque_hijri_year' %}
+      {%- set flash = 'sensor.my_mosque_flash_message' %}
       {%- macro hm(entity) -%}
       {{ as_timestamp(states(entity), none) | timestamp_custom('%H:%M', default='–') if entity else '' }}
       {%- endmacro %}
@@ -51,6 +52,9 @@ cards:
       {%- set left = (as_timestamp(states(next_time), 0) - as_timestamp(now())) | int(0) %}
       ## {{ device_attr(device_id(next_name), 'name') }}
       <ha-icon icon="mdi:star-crescent"></ha-icon> {{ states(hijri_day) }} {{ state_translated(hijri_month) }} {{ states(hijri_year) }}
+      {% if has_value(flash) %}
+      <ha-alert alert-type="info">{{ states(flash) }}</ha-alert>
+      {% endif %}
 
       <ha-alert alert-type="success" title="{{ state_translated(next_name) }} · {{ hm(next_time) }}">dans {{ left // 3600 }} h {{ '%02d' | format(left % 3600 // 60) }} min</ha-alert>
 
@@ -86,7 +90,7 @@ Remplacez les deux identifiants d'entités par les vôtres.
 
 <img alt="Écran de mosquée avec une grande horloge, la date hégirienne et les six horaires sur la photo de la mosquée" src="images/dashboards/mosque-display-tablet.jpg" width="640"> <img alt="Écran de mosquée sur un téléphone" src="images/dashboards/mosque-display-phone.jpg" width="180">
 
-L'horloge, la date du jour et la date hégirienne, et les six horaires de la journée avec leur iqama, sur la photo de votre mosquée. La prochaine prière est en violet, et entre l'adhan et l'iqama, l'écran affiche le compte à rebours jusqu'à l'iqama. Le vendredi, Dhuhr est remplacé par la Jumu'a si votre mosquée la publie. Les noms des prières sont dans la langue de Home Assistant.
+L'horloge, la date du jour et la date hégirienne, et les six horaires de la journée avec leur iqama, sur la photo de votre mosquée. La prochaine prière est en violet, et entre l'adhan et l'iqama, l'écran affiche le compte à rebours jusqu'à l'iqama. Le vendredi, Dhuhr est remplacé par la Jumu'a si votre mosquée la publie. Le message flash de votre mosquée défile en bas, dans sa couleur et son sens, comme sur ses écrans. Les noms des prières sont dans la langue de Home Assistant.
 
 Il n'y a aucun identifiant d'entité à remplacer : la carte trouve elle-même les entités de votre mosquée. Si vous suivez plusieurs mosquées, mettez dans `mosque` le nom de l'appareil de celle à afficher.
 
