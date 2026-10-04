@@ -240,7 +240,7 @@ actions:
       entity_id: light.bedroom
 ```
 
-Get a notification when your mosque publishes a flash message. It does not run again when Home Assistant restarts or the integration is reloaded:
+Get a notification when your mosque publishes a flash message. It does not run when the integration is added, reloaded, or when Home Assistant restarts:
 
 ```yaml
 alias: Flash message of the mosque
@@ -251,6 +251,10 @@ triggers:
     not_to:
       - unknown
       - unavailable
+conditions:
+  # Not when the sensor is created, with a message already published.
+  - condition: template
+    value_template: "{{ trigger.from_state is not none }}"
 actions:
   - action: notify.notify
     data:

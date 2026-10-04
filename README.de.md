@@ -240,7 +240,7 @@ actions:
       entity_id: light.bedroom
 ```
 
-Eine Benachrichtigung erhalten, wenn deine Moschee eine Eilmeldung veröffentlicht. Sie wird beim Neustart von Home Assistant oder beim Neuladen der Integration nicht erneut ausgelöst:
+Eine Benachrichtigung erhalten, wenn deine Moschee eine Eilmeldung veröffentlicht. Sie wird beim Hinzufügen oder Neuladen der Integration und beim Neustart von Home Assistant nicht ausgelöst:
 
 ```yaml
 alias: Eilmeldung der Moschee
@@ -251,6 +251,10 @@ triggers:
     not_to:
       - unknown
       - unavailable
+conditions:
+  # Nicht beim Anlegen des Sensors, mit einer bereits veröffentlichten Nachricht.
+  - condition: template
+    value_template: "{{ trigger.from_state is not none }}"
 actions:
   - action: notify.notify
     data:

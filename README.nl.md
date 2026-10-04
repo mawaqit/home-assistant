@@ -240,7 +240,7 @@ actions:
       entity_id: light.bedroom
 ```
 
-Krijg een melding als je moskee een flashbericht publiceert. Ze wordt niet opnieuw uitgevoerd als Home Assistant herstart of de integratie opnieuw wordt geladen:
+Krijg een melding als je moskee een flashbericht publiceert. Ze wordt niet uitgevoerd als de integratie wordt toegevoegd of opnieuw geladen, of als Home Assistant herstart:
 
 ```yaml
 alias: Flashbericht van de moskee
@@ -251,6 +251,10 @@ triggers:
     not_to:
       - unknown
       - unavailable
+conditions:
+  # Niet bij het aanmaken van de sensor, met een al gepubliceerd bericht.
+  - condition: template
+    value_template: "{{ trigger.from_state is not none }}"
 actions:
   - action: notify.notify
     data:
