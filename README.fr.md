@@ -10,6 +10,7 @@ Cette intégration ajoute à Home Assistant les horaires de prière de votre mos
 - [Installation](#installation)
 - [Configuration](#configuration)
 - [Entités](#entités)
+- [Tableaux de bord](#tableaux-de-bord)
 - [Adhans](#adhans)
 - [Exemples d'automatisations](#exemples-dautomatisations)
 - [Mises à jour des données](#mises-à-jour-des-données)
@@ -129,6 +130,12 @@ Les identifiants des entités sont formés du nom de la mosquée et du nom de l'
 Un identifiant copié d'un exemple ou d'un autre utilisateur peut donc ne pas exister chez vous. Pour trouver les vôtres, allez dans **Paramètres** > **Appareils et services** > **MAWAQIT** et ouvrez l'appareil de votre mosquée : choisissez une entité, puis l'icône ⚙️, pour voir son identifiant. Vous pouvez aussi le renommer à cet endroit. Dans l'éditeur d'automatisations, vous pouvez aussi choisir les entités par leur nom au lieu de taper leur identifiant.
 
 Changer la langue de Home Assistant plus tard ne change pas les identifiants, seulement les noms affichés dans l'interface.
+
+## Tableaux de bord
+
+Des tableaux de bord prêts à coller sont dans [Tableaux de bord pour MAWAQIT](docs/dashboards.fr.md) : une carte des horaires avec la photo de votre mosquée, une carte de la prochaine prière, et une vue plein écran comme les écrans de votre mosquée.
+
+[<img alt="Écran de mosquée avec une grande horloge, la date hégirienne et les six horaires sur la photo de la mosquée" src="docs/images/dashboards/mosque-display-tablet.jpg" width="640">](docs/dashboards.fr.md)
 
 ## Adhans
 
