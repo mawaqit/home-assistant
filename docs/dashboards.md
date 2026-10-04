@@ -86,7 +86,7 @@ Replace the two entity IDs with yours.
 
 <img alt="Mosque display with a large clock, the Hijri date and the six prayer times on the picture of the mosque" src="images/dashboards/mosque-display-tablet.jpg" width="640"> <img alt="Mosque display on a phone" src="images/dashboards/mosque-display-phone.jpg" width="180">
 
-The clock, today's date and Hijri date, and the six times of the day with their iqama, on the picture of your mosque. The next prayer is in gold, and between the adhan and the iqama, the screen counts down to the iqama. On Fridays, Dhuhr is replaced by Jumu'a if your mosque publishes it. The names of the prayers are in the language of Home Assistant.
+The clock, today's date and Hijri date, and the six times of the day with their iqama, on the picture of your mosque. The next prayer is in purple, and between the adhan and the iqama, the screen counts down to the iqama. On Fridays, Dhuhr is replaced by Jumu'a if your mosque publishes it. The names of the prayers are in the language of Home Assistant.
 
 There is no entity ID to replace: the card finds the entities of your mosque by itself. If you follow several mosques, set `mosque` to the name of the device of the one to show.
 
@@ -114,6 +114,53 @@ variables:
         ),
       };
     ]]]
+  # The prayers of the day, with their status: past, active (until the iqama) or next.
+  prayers: |
+    [[[
+      const ids = variables.entities ?? {};
+      const time = (key) => {
+        const state = states[ids[key]]?.state;
+        return state && !["unknown", "unavailable"].includes(state) ? new Date(state) : undefined;
+      };
+      const now = new Date();
+      const nextKey = states[ids.next_salat_name]?.state;
+      const nextTime = time("next_salat_time");
+      const label = (key) =>
+        states[ids.next_salat_name] ? helpers.localize(states[ids.next_salat_name], key) : key;
+      // Jumu'a replaces Dhuhr on Fridays, when the mosque publishes it.
+      const jumua = time("prayer_jumua");
+      const isJumua = jumua && jumua.toDateString() === now.toDateString();
+      const prayers = [
+        ["fajr", "الفجر", "mdi:weather-sunset-up"],
+        ["shuruq", "الشروق", "mdi:weather-sunset"],
+        ["dhuhr", "الظهر", "mdi:weather-sunny"],
+        ["asr", "العصر", "mdi:sun-angle-outline"],
+        ["maghrib", "المغرب", "mdi:weather-sunset-down"],
+        ["isha", "العشاء", "mdi:weather-night"],
+      ].map(([key, ar, icon]) => {
+        let adhan = time(`prayer_${key}`);
+        let iqama = time(`iqama_${key}`);
+        // After Isha the sensors still show today's Fajr: show the next one.
+        if (key === nextKey && nextTime && adhan && nextTime - adhan > 12 * 3600e3) {
+          if (iqama) iqama = new Date(iqama.getTime() + (nextTime - adhan));
+          adhan = nextTime;
+        }
+        let name = label(key);
+        if (key === "dhuhr" && isJumua) {
+          [name, ar, adhan, iqama] = ["Jumu'a", "الجمعة", jumua, undefined];
+        }
+        let status = "";
+        if (adhan && iqama && adhan <= now && now < iqama) status = "active";
+        else if (key === nextKey) status = "next";
+        else if ((iqama ?? adhan) < now) status = "past";
+        return { name, ar, icon, adhan, iqama, status };
+      });
+      const active = prayers.find((p) => p.status === "active");
+      const countdown = active
+        ? { title: `Iqama · ${active.name}`, until: active.iqama }
+        : nextKey && nextTime && { title: label(nextKey), until: nextTime };
+      return { prayers, active: !!active, countdown };
+    ]]]
 update_timer: 1000
 show_name: false
 show_icon: false
@@ -124,168 +171,118 @@ styles:
   card:
     - height: calc(100vh - var(--header-height, 56px))
     - min-height: 480px
-    - padding: 0
+    - padding: clamp(16px, 3vw, 40px)
+    - box-sizing: border-box
     - border: none
     - border-radius: 0
+    - color: white
+    - font-variant-numeric: tabular-nums
     - background: |
         [[[
           const url = states[variables.entities?.picture]?.attributes.entity_picture;
           const shade =
-            "radial-gradient(ellipse at 50% 40%, rgba(8, 20, 24, 0.35), rgba(8, 20, 24, 0.85) 70%), " +
-            "linear-gradient(180deg, rgba(8, 20, 24, 0.55), rgba(8, 20, 24, 0.2) 35%, rgba(8, 20, 24, 0.92))";
-          return url ? `${shade}, center / cover no-repeat url("${url}") #0b1418` : `${shade}, #0b1418`;
+            "radial-gradient(ellipse at 50% 40%, rgba(22, 8, 40, 0.35), rgba(22, 8, 40, 0.85) 70%), " +
+            "linear-gradient(180deg, rgba(22, 8, 40, 0.55), rgba(22, 8, 40, 0.2) 35%, rgba(22, 8, 40, 0.92))";
+          return url ? `${shade}, center / cover no-repeat url("${url}") #14081f` : `${shade}, #14081f`;
         ]]]
-    - color: white
   grid:
-    - grid-template-areas: '"screen"'
-    - grid-template-rows: 1fr
+    - grid-template-areas: '"header" "clock" "tiles" "flash"'
+    - grid-template-rows: auto 1fr auto auto
     - grid-template-columns: 1fr
+    - row-gap: 2vh
     - height: 100%
-  custom_fields:
-    screen:
-      - height: 100%
+# Each field is redrawn only when its content changes: the clock every second, the rest rarely.
 custom_fields:
-  screen: |
+  header: |
     [[[
-      const PRAYERS = [
-        { key: "fajr", ar: "الفجر", icon: "mdi:weather-sunset-up" },
-        { key: "shuruq", ar: "الشروق", icon: "mdi:weather-sunset" },
-        { key: "dhuhr", ar: "الظهر", icon: "mdi:weather-sunny" },
-        { key: "asr", ar: "العصر", icon: "mdi:sun-angle-outline" },
-        { key: "maghrib", ar: "المغرب", icon: "mdi:weather-sunset-down" },
-        { key: "isha", ar: "العشاء", icon: "mdi:weather-night" },
-      ];
-
       const ids = variables.entities;
       if (!ids) return `<div class="empty">MAWAQIT: mosque not found</div>`;
-      const state = (key) => {
-        const s = states[ids[key]];
-        return s && !["unknown", "unavailable"].includes(s.state) ? s : undefined;
-      };
-      const time = (key) => (state(key) ? new Date(state(key).state) : undefined);
-      const hm = (date) => (date ? helpers.formatTime(date) : "—");
-      const pad = (n) => String(n).padStart(2, "0");
-      const escape = (text) =>
-        String(text).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
-      const countdown = (ms) => {
-        const s = Math.max(0, Math.ceil(ms / 1000));
-        const h = Math.floor(s / 3600);
-        return (h ? `${h}:` : "") + `${pad(Math.floor((s % 3600) / 60))}:${pad(s % 60)}`;
-      };
-
-      const now = new Date();
-      const nextKey = state("next_salat_name")?.state;
-      const nextTime = time("next_salat_time");
-      const nameStates = states[ids.next_salat_name];
-      const label = (key) => (nameStates ? helpers.localize(nameStates, key) : key);
-
-      // Jumu'a replaces Dhuhr on Fridays, when the mosque publishes it.
-      const jumua = time("prayer_jumua");
-      const isJumua = jumua && jumua.toDateString() === now.toDateString();
-
-      let banner;
-      const tiles = PRAYERS.map((p) => {
-        let adhan = time(`prayer_${p.key}`);
-        let iqama = time(`iqama_${p.key}`);
-        // After Isha the sensors still show today's Fajr: show the next one.
-        if (p.key === nextKey && nextTime && adhan && nextTime - adhan > 12 * 3600e3) {
-          if (iqama) iqama = new Date(iqama.getTime() + (nextTime - adhan));
-          adhan = nextTime;
-        }
-        let name = label(p.key);
-        let ar = p.ar;
-        if (p.key === "dhuhr" && isJumua) {
-          name = "Jumu'a";
-          ar = "الجمعة";
-          adhan = jumua;
-          iqama = undefined;
-        }
-        let status = "";
-        if (adhan && iqama && adhan <= now && now < iqama) {
-          status = "active";
-          banner = { title: `Iqama · ${name}`, until: iqama, iqama: true };
-        } else if (p.key === nextKey) {
-          status = "next";
-        } else if ((iqama ?? adhan) && (iqama ?? adhan) < now) {
-          status = "past";
-        }
-        return `
-          <div class="tile ${status}">
-            <ha-icon icon="${p.icon}"></ha-icon>
-            <div class="name">${name}</div>
-            <div class="ar">${ar}</div>
-            <div class="adhan">${hm(adhan)}</div>
-            <div class="iqama">${iqama ? hm(iqama) : "&nbsp;"}</div>
-          </div>`;
-      }).join("");
-      banner ??= nextKey && nextTime && { title: label(nextKey), until: nextTime };
-
+      const escape = (text) => String(text).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
       const logo = states[ids.logo]?.attributes.entity_picture;
-      const hijri = state("hijri_day")
-        ? `${state("hijri_day").state} ${helpers.localize(states[ids.hijri_month])} ${state("hijri_year")?.state ?? ""}`
+      const day = states[ids.hijri_day]?.state;
+      const hijri = /^\d+$/.test(day)
+        ? `${day} ${helpers.localize(states[ids.hijri_month])} ${states[ids.hijri_year]?.state ?? ""}`
         : "";
-
-      // The flash message scrolls at a pace set by the clock, so redrawing every second does not restart it.
-      const flash = state("flash_message");
-      let ticker = "";
-      if (flash) {
-        const seconds = Math.max(15, flash.state.length / 3);
-        const delay = -((Date.now() / 1000) % seconds);
-        const dir = flash.attributes.direction === "rtl" ? "rtl" : "ltr";
-        const color = /^#[0-9a-f]{3,8}$/i.test(flash.attributes.color) ? flash.attributes.color : "#1f6f5c";
-        ticker = `
-          <div class="flash" style="background: ${color}">
-            <span dir="${dir}" class="${dir}" style="animation-duration: ${seconds}s; animation-delay: ${delay}s">${escape(flash.state)}</span>
-          </div>`;
-      }
-
       return `
-        <div class="screen">
-          <header>
-            <div class="mosque">
-              ${logo ? `<img src="${logo}" alt="">` : `<ha-icon icon="mdi:mosque"></ha-icon>`}
-              <span>${escape(ids.name)}</span>
-            </div>
-            <div class="dates">
-              <div>${helpers.formatDateWeekdayDay(now)}</div>
-              <div class="hijri">${hijri}</div>
-            </div>
-          </header>
-          <main>
-            <div class="clock">${helpers.formatTime(now)}<span>${pad(now.getSeconds())}</span></div>
-            ${banner ? `<div class="countdown"><b>${banner.title}</b><span>−${countdown(banner.until - now)}</span></div>` : ""}
-          </main>
-          <footer class="${banner?.iqama ? "has-active" : ""}">${tiles}</footer>
-          ${ticker}
+        <header>
+          <div class="mosque">
+            ${logo ? `<img src="${logo}" alt="">` : `<ha-icon icon="mdi:mosque"></ha-icon>`}
+            <span>${escape(ids.name)}</span>
+          </div>
+          <div class="brand">
+            <img src="https://brands.home-assistant.io/mawaqit/dark_icon.png" alt="">
+            <span>MAWAQIT</span>
+          </div>
+          <div class="dates">
+            <div>${helpers.formatDateWeekdayDay(new Date())}</div>
+            <div class="hijri">${hijri}</div>
+          </div>
+        </header>`;
+    ]]]
+  clock: |
+    [[[
+      const now = new Date();
+      const pad = (n) => String(n).padStart(2, "0");
+      const countdown = variables.prayers.countdown;
+      let left = "";
+      if (countdown) {
+        const s = Math.max(0, Math.ceil((countdown.until - now) / 1000));
+        const h = Math.floor(s / 3600);
+        left = (h ? `${h}:` : "") + `${pad(Math.floor((s % 3600) / 60))}:${pad(s % 60)}`;
+      }
+      return `
+        <div class="clock">${helpers.formatTime(now)}<span>${pad(now.getSeconds())}</span></div>
+        ${countdown ? `<div class="countdown"><b>${countdown.title}</b><span>−${left}</span></div>` : ""}`;
+    ]]]
+  tiles: |
+    [[[
+      const { prayers, active } = variables.prayers;
+      const hm = (date) => (date ? helpers.formatTime(date) : "—");
+      return `
+        <div class="tiles ${active ? "has-active" : ""}">
+          ${prayers.map((p) => `
+            <div class="tile ${p.status}">
+              <ha-icon icon="${p.icon}"></ha-icon>
+              <div class="name">${p.name}</div>
+              <div class="ar">${p.ar}</div>
+              <div class="adhan">${hm(p.adhan)}</div>
+              <div class="iqama">${p.iqama ? hm(p.iqama) : "&nbsp;"}</div>
+            </div>`).join("")}
+        </div>`;
+    ]]]
+  # The flash message scrolls at a pace set by the clock, so redrawing it every second does not restart it.
+  flash: |
+    [[[
+      const flash = states[variables.entities?.flash_message];
+      if (!flash || ["unknown", "unavailable"].includes(flash.state)) return "";
+      const escape = (text) => String(text).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+      const seconds = Math.max(15, flash.state.length / 3);
+      const delay = -((Date.now() / 1000) % seconds);
+      const dir = flash.attributes.direction === "rtl" ? "rtl" : "ltr";
+      const color = /^#[0-9a-f]{3,8}$/i.test(flash.attributes.color) ? flash.attributes.color : "#490094";
+      return `
+        <div class="flash" style="background: ${color}">
+          <span dir="${dir}" class="${dir}" style="animation-duration: ${seconds}s; animation-delay: ${delay}s">${escape(flash.state)}</span>
         </div>`;
     ]]]
 extra_styles: |
-  .screen {
-    position: relative;
-    height: 100%;
-    display: grid;
-    grid-template-rows: auto 1fr auto auto;
-    gap: 2vh;
-    padding: clamp(16px, 3vw, 40px);
-    box-sizing: border-box;
-    overflow: hidden;
-    text-align: left;
-    font-variant-numeric: tabular-nums;
-  }
-  header { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+  #header, #clock, #tiles, #flash { text-align: left; min-width: 0; }
+  header { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px; }
   .mosque { display: flex; align-items: center; gap: 14px; font-size: clamp(18px, 2.2vw, 30px); font-weight: 500; }
   .mosque img { height: clamp(40px, 5vw, 64px); width: clamp(40px, 5vw, 64px); object-fit: contain; border-radius: 50%; background: white; padding: 4px; box-sizing: border-box; }
-  .mosque ha-icon { --mdc-icon-size: clamp(32px, 4vw, 48px); color: #e9c46a; }
-  .dates { text-align: right; font-size: clamp(14px, 1.6vw, 22px); opacity: 0.9; }
-  .dates .hijri { color: #e9c46a; font-weight: 500; }
-  main { display: flex; flex-direction: column; align-items: center; justify-content: center; text-shadow: 0 2px 24px rgba(0, 0, 0, 0.5); }
+  .mosque ha-icon { --mdc-icon-size: clamp(32px, 4vw, 48px); color: #c9a2ff; }
+  .brand { display: flex; align-items: center; gap: 10px; font-size: clamp(13px, 1.3vw, 18px); font-weight: 600; letter-spacing: 0.2em; opacity: 0.9; }
+  .brand img { height: clamp(28px, 3vw, 40px); width: auto; }
+  .dates { justify-self: end; text-align: right; font-size: clamp(14px, 1.6vw, 22px); opacity: 0.9; }
+  .dates .hijri { color: #c9a2ff; font-weight: 500; }
+  #clock { display: flex; flex-direction: column; align-items: center; justify-content: center; text-shadow: 0 2px 24px rgba(0, 0, 0, 0.5); }
   .clock { font-size: clamp(72px, 15vw, 220px); font-weight: 200; line-height: 1; letter-spacing: -0.02em; }
   .clock span { font-size: 0.3em; font-weight: 300; margin-left: 0.15em; opacity: 0.7; }
   .countdown { margin-top: 2vh; display: flex; gap: 0.6em; align-items: baseline; font-size: clamp(20px, 2.8vw, 40px);
-    padding: 0.35em 1em; border-radius: 999px; background: rgba(8, 20, 24, 0.55); border: 1px solid rgba(233, 196, 106, 0.55);
+    padding: 0.35em 1em; border-radius: 999px; background: rgba(22, 8, 40, 0.55); border: 1px solid rgba(167, 99, 247, 0.7);
     backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
-  .countdown b { color: #e9c46a; font-weight: 500; }
-  footer { display: grid; grid-template-columns: repeat(6, 1fr); gap: clamp(8px, 1.2vw, 18px); }
+  .countdown b { color: #c9a2ff; font-weight: 500; }
+  .tiles { display: grid; grid-template-columns: repeat(6, 1fr); gap: clamp(8px, 1.2vw, 18px); }
   .tile {
     display: flex; flex-direction: column; align-items: center; gap: 0.2em;
     padding: clamp(10px, 1.6vw, 22px) 6px;
@@ -302,18 +299,15 @@ extra_styles: |
   .tile .iqama { font-size: clamp(13px, 1.3vw, 19px); opacity: 0.75; }
   .tile.past { opacity: 0.45; }
   .tile.next, .tile.active {
-    background: linear-gradient(160deg, rgba(233, 196, 106, 0.95), rgba(214, 160, 60, 0.95));
-    border-color: rgba(255, 236, 190, 0.8);
-    color: #1b1408;
-    box-shadow: 0 10px 40px rgba(233, 196, 106, 0.35);
+    background: linear-gradient(160deg, rgba(167, 99, 247, 0.95), rgba(73, 0, 148, 0.95));
+    border-color: rgba(201, 162, 255, 0.8);
+    box-shadow: 0 10px 40px rgba(146, 60, 246, 0.45);
     transform: translateY(-6px);
   }
-  .tile.next ha-icon, .tile.active ha-icon, .tile.next .ar, .tile.active .ar, .tile.next .iqama, .tile.active .iqama { opacity: 0.85; }
-  .tile.active { box-shadow: 0 10px 60px rgba(233, 196, 106, 0.7); }
+  .tile.active { box-shadow: 0 10px 60px rgba(146, 60, 246, 0.8); }
   .has-active .tile.next {
-    background: rgba(233, 196, 106, 0.14);
-    border-color: rgba(233, 196, 106, 0.8);
-    color: white;
+    background: rgba(167, 99, 247, 0.18);
+    border-color: rgba(167, 99, 247, 0.9);
     box-shadow: none;
     transform: none;
   }
@@ -325,9 +319,10 @@ extra_styles: |
   @keyframes ticker-rtl { from { transform: translateX(-100%); } to { transform: translateX(0); } }
   .empty { display: grid; place-items: center; height: 100%; font-size: 32px; }
   @media (max-width: 700px) {
-    footer { grid-template-columns: repeat(3, 1fr); }
-    header { flex-direction: column; align-items: flex-start; }
-    .dates { text-align: left; }
+    header { grid-template-columns: 1fr; }
+    .brand { grid-row: 1; }
+    .dates { justify-self: start; text-align: left; }
+    .tiles { grid-template-columns: repeat(3, 1fr); }
   }
 ```
 

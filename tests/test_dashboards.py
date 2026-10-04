@@ -76,12 +76,13 @@ async def test_example_entity_ids_exist(
 def test_mosque_display_translation_keys_exist(page: Path) -> None:
     """Test the mosque display finds the entities by existing translation keys."""
     display = _mosque_display(page)
-    keys = set(re.findall(r'(?:state|time)\("(\w+)"\)', display))
+    keys = set(re.findall(r'time\("(\w+)"\)', display))
     keys |= set(re.findall(r"(?:ids|entities\?)\.(\w+)", display)) - {"name"}
-    for prefix in re.findall(r"(\w+_)\$\{p\.key\}", display):
+    for prefix in re.findall(r"(\w+_)\$\{key\}", display):
         keys |= {
             prefix + key
-            for key in re.findall(r'\{ key: "(\w+)"', display)
+            # The prayers, listed with their Arabic name.
+            for key in re.findall(r'\["(\w+)", "[\u0600-\u06ff]', display)
             if prefix + key != "iqama_shuruq"
         }
 
