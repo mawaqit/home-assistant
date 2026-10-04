@@ -3,13 +3,8 @@
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from aiohttp.client_exceptions import ClientConnectorError
-from mawaqit.exceptions import (
-    BadCredentialsException,
-    MawaqitException,
-    NoMosqueAround,
-    NoMosqueFound,
-)
+from mawaqit import AuthenticationError, InternalServerError
+from mawaqit.types import Account, Mosque
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -43,20 +38,53 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .conftest import MOCK_TOKEN, MOCK_UUID, make_config_entry
+from .conftest import (
+    CONNECTION_ERROR,
+    MOCK_TOKEN,
+    MOCK_UUID,
+    TIMEOUT_ERROR,
+    make_config_entry,
+    search_response,
+    status_error,
+)
 
 USER_INPUT = {CONF_USERNAME: "user", CONF_PASSWORD: "pass"}
 NEW_TOKEN = "new-api-token"
 
 
+AUTH_ERROR = status_error(AuthenticationError, 401)
+SERVER_ERROR = status_error(InternalServerError, 500)
+
+
+def _account(token: str) -> Account:
+    """Return the account of a login."""
+    return Account(id=1, api_access_token=token, api_quota=0, api_call_number=0)
+
+
 @pytest.fixture
 def mock_client() -> MagicMock:
-    """Return a mocked AsyncMawaqitClient with a successful login."""
+    """Return a mocked AsyncMawaqitClient with a successful login.
+
+    Its search answers with `search_around` around a position, and with
+    `search_by_keyword` otherwise: set their results as lists of dicts.
+    """
     client = MagicMock()
     client.token = MOCK_TOKEN
-    client.get_api_token = AsyncMock(return_value=MOCK_TOKEN)
-    client.all_mosques_neighborhood = AsyncMock(return_value=[])
-    client.fetch_mosques_by_keyword = AsyncMock(return_value=[])
+    client.auth.login = AsyncMock(return_value=_account(MOCK_TOKEN))
+
+    def with_options(*, token: str) -> MagicMock:
+        client.token = token
+        return client
+
+    client.with_options.side_effect = with_options
+    client.search_around = AsyncMock(return_value=[])
+    client.search_by_keyword = AsyncMock(return_value=[])
+
+    async def search(**kwargs: Any) -> list[Mosque]:
+        found = client.search_around if "lat" in kwargs else client.search_by_keyword
+        return search_response(await found(**kwargs))
+
+    client.mosques.search = AsyncMock(side_effect=search)
     return client
 
 
@@ -141,21 +169,16 @@ async def test_show_form_user_no_input_reopens_form(hass: HomeAssistant) -> None
 @pytest.mark.parametrize(
     ("side_effect", "expected_error"),
     [
-        (BadCredentialsException, WRONG_CREDENTIAL),
-        (MawaqitException, CANNOT_CONNECT_TO_SERVER),
-        (ConnectionError, CANNOT_CONNECT_TO_SERVER),
-        (TimeoutError, CANNOT_CONNECT_TO_SERVER),
-        (
-            ClientConnectorError(MagicMock(), MagicMock()),
-            CANNOT_CONNECT_TO_SERVER,
-        ),
+        (AUTH_ERROR, WRONG_CREDENTIAL),
+        (SERVER_ERROR, CANNOT_CONNECT_TO_SERVER),
+        (CONNECTION_ERROR, CANNOT_CONNECT_TO_SERVER),
+        (TIMEOUT_ERROR, CANNOT_CONNECT_TO_SERVER),
     ],
     ids=[
         "bad_credentials",
         "mawaqit_error",
         "connection_error",
         "timeout",
-        "client_connector_error",
     ],
 )
 async def test_async_step_user_login_errors(
@@ -165,7 +188,7 @@ async def test_async_step_user_login_errors(
     expected_error: str,
 ) -> None:
     """Test the user step surfaces login failures as form errors."""
-    mock_client.get_api_token.side_effect = side_effect
+    mock_client.auth.login.side_effect = side_effect
 
     with patch(
         "custom_components.mawaqit.config_flow.AsyncMawaqitClient",
@@ -177,23 +200,6 @@ async def test_async_step_user_login_errors(
     assert result.get("step_id") == "user"
     errors = result.get("errors")
     assert errors is not None and errors["base"] == expected_error
-
-
-async def test_async_step_user_no_token_returned(
-    hass: HomeAssistant, mock_client: MagicMock
-) -> None:
-    """Test the user step when the API returns no token."""
-    mock_client.get_api_token.return_value = None
-
-    with patch(
-        "custom_components.mawaqit.config_flow.AsyncMawaqitClient",
-        return_value=mock_client,
-    ):
-        result = await _flow(hass).async_step_user(USER_INPUT)
-
-    assert result.get("type") == data_entry_flow.FlowResultType.FORM
-    errors = result.get("errors")
-    assert errors is not None and errors["base"] == CANNOT_CONNECT_TO_SERVER
 
 
 async def test_async_step_user_valid_credentials(
@@ -209,7 +215,7 @@ async def test_async_step_user_valid_credentials(
     assert result.get("type") == data_entry_flow.FlowResultType.MENU
     assert result.get("step_id") == "search_method"
     assert result.get("menu_options") == ["mosques_coordinates", "keyword_search"]
-    mock_client.all_mosques_neighborhood.assert_not_awaited()
+    mock_client.search_around.assert_not_awaited()
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -219,7 +225,7 @@ async def test_search_around_location_creates_entry(
     mock_mosques_search_api_raw: list[dict],
 ) -> None:
     """Test the location search reuses the login client and creates the entry."""
-    mock_client.all_mosques_neighborhood.return_value = mock_mosques_search_api_raw
+    mock_client.search_around.return_value = mock_mosques_search_api_raw
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -244,8 +250,8 @@ async def test_search_around_location_creates_entry(
     assert result.get("title") == "Mosque1-label"
     assert result["result"].unique_id == "aaaaa-bbbbb-cccccc-0000"
     mock_client_class.assert_called_once()
-    mock_client.get_api_token.assert_awaited_once()
-    mock_client.all_mosques_neighborhood.assert_awaited_once()
+    mock_client.auth.login.assert_awaited_once_with(email="user", password="pass")
+    mock_client.search_around.assert_awaited_once()
 
 
 # ---------------------------------------------------------------------------
@@ -256,16 +262,14 @@ async def test_search_around_location_creates_entry(
 @pytest.mark.parametrize(
     ("side_effect", "expected_reason"),
     [
-        (BadCredentialsException, "cannot_connect"),
-        (ConnectionError, "cannot_connect"),
-        (TimeoutError, "cannot_connect"),
-        (ClientConnectorError(MagicMock(), MagicMock()), "cannot_connect"),
+        (AUTH_ERROR, "cannot_connect"),
+        (CONNECTION_ERROR, "cannot_connect"),
+        (TIMEOUT_ERROR, "cannot_connect"),
     ],
     ids=[
         "bad_credentials",
         "connection_error",
         "timeout",
-        "client_connector_error",
     ],
 )
 async def test_async_step_mosques_coordinates_errors_abort(
@@ -275,7 +279,7 @@ async def test_async_step_mosques_coordinates_errors_abort(
     expected_reason: str,
 ) -> None:
     """Test the mosques step aborts when the search fails."""
-    mock_client.all_mosques_neighborhood.side_effect = side_effect
+    mock_client.search_around.side_effect = side_effect
 
     flow = _flow(hass)
     flow.client = mock_client
@@ -285,21 +289,11 @@ async def test_async_step_mosques_coordinates_errors_abort(
     assert result.get("reason") == expected_reason
 
 
-@pytest.mark.parametrize(
-    ("side_effect", "return_value"),
-    [(NoMosqueAround, None), (None, [])],
-    ids=["no_mosque_around", "empty_result"],
-)
 async def test_no_mosque_around_redirects_to_keyword_search(
-    hass: HomeAssistant,
-    mock_client: MagicMock,
-    side_effect: type[Exception] | None,
-    return_value: list | None,
+    hass: HomeAssistant, mock_client: MagicMock
 ) -> None:
     """Test the location search falls back to the keyword search form."""
-    mock_client.all_mosques_neighborhood.side_effect = side_effect
-    mock_client.all_mosques_neighborhood.return_value = return_value
-    mock_client.fetch_mosques_by_keyword.return_value = _keyword_mosques(1)
+    mock_client.search_by_keyword.return_value = _keyword_mosques(1)
 
     flow_id = await _login(hass, mock_client)
     result = await hass.config_entries.flow.async_configure(
@@ -336,7 +330,7 @@ async def test_async_step_mosques_coordinates(
     mock_mosques_search_api_wrapper: list[MawaqitMosqueData],
 ) -> None:
     """Test the mosques coordinates step shows a form then creates an entry."""
-    mock_client.all_mosques_neighborhood.return_value = mock_mosques_search_api_raw
+    mock_client.search_around.return_value = mock_mosques_search_api_raw
 
     flow = _flow(hass)
     flow.client = mock_client
@@ -367,7 +361,7 @@ async def test_keyword_search_creates_entry(
     hass: HomeAssistant, mock_client: MagicMock
 ) -> None:
     """Test searching a trimmed keyword and picking a mosque creates the entry."""
-    mock_client.fetch_mosques_by_keyword.return_value = _keyword_mosques(2)
+    mock_client.search_by_keyword.return_value = _keyword_mosques(2)
 
     result = await _search_keyword(hass, mock_client, "  Paris ")
 
@@ -375,8 +369,8 @@ async def test_keyword_search_creates_entry(
     assert result.get("step_id") == "keyword_results"
     assert result.get("description_placeholders") == {"keyword": "Paris", "page": "1"}
     assert _options(result) == ["mosque-0", "mosque-1", NEW_SEARCH]
-    mock_client.fetch_mosques_by_keyword.assert_awaited_once_with(
-        "Paris", 1, MOSQUES_PER_PAGE
+    mock_client.search_by_keyword.assert_awaited_once_with(
+        word="Paris", page=1, items_per_page=MOSQUES_PER_PAGE
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -397,15 +391,11 @@ async def test_keyword_search_creates_entry(
 @pytest.mark.parametrize(
     ("side_effect", "expected_error"),
     [
-        (NoMosqueFound, NO_MOSQUE_FOUND),
-        (BadCredentialsException, CANNOT_CONNECT_TO_SERVER),
-        (MawaqitException, CANNOT_CONNECT_TO_SERVER),
-        (ConnectionError, CANNOT_CONNECT_TO_SERVER),
-        (TimeoutError, CANNOT_CONNECT_TO_SERVER),
-        (
-            ClientConnectorError(MagicMock(), MagicMock()),
-            CANNOT_CONNECT_TO_SERVER,
-        ),
+        ([[]], NO_MOSQUE_FOUND),
+        (AUTH_ERROR, CANNOT_CONNECT_TO_SERVER),
+        (SERVER_ERROR, CANNOT_CONNECT_TO_SERVER),
+        (CONNECTION_ERROR, CANNOT_CONNECT_TO_SERVER),
+        (TIMEOUT_ERROR, CANNOT_CONNECT_TO_SERVER),
     ],
     ids=[
         "no_mosque_found",
@@ -413,7 +403,6 @@ async def test_keyword_search_creates_entry(
         "mawaqit_error",
         "connection_error",
         "timeout",
-        "client_connector_error",
     ],
 )
 async def test_keyword_search_errors(
@@ -423,7 +412,7 @@ async def test_keyword_search_errors(
     expected_error: str,
 ) -> None:
     """Test search failures are shown on the keyword form, which can be retried."""
-    mock_client.fetch_mosques_by_keyword.side_effect = side_effect
+    mock_client.search_by_keyword.side_effect = side_effect
 
     result = await _search_keyword(hass, mock_client)
 
@@ -431,8 +420,8 @@ async def test_keyword_search_errors(
     assert result.get("step_id") == "keyword_search"
     assert result.get("errors") == {"base": expected_error}
 
-    mock_client.fetch_mosques_by_keyword.side_effect = None
-    mock_client.fetch_mosques_by_keyword.return_value = _keyword_mosques(1)
+    mock_client.search_by_keyword.side_effect = None
+    mock_client.search_by_keyword.return_value = _keyword_mosques(1)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_KEYWORD: "Paris"}
     )
@@ -455,7 +444,7 @@ async def test_keyword_search_empty_keyword_goes_back(
 
     assert result.get("type") == data_entry_flow.FlowResultType.MENU
     assert result.get("menu_options") == ["mosques_coordinates", "keyword_search"]
-    mock_client.fetch_mosques_by_keyword.assert_not_awaited()
+    mock_client.search_by_keyword.assert_not_awaited()
 
 
 async def test_location_search_after_keyword_search(
@@ -464,8 +453,8 @@ async def test_location_search_after_keyword_search(
     mock_mosques_search_api_raw: list[dict],
 ) -> None:
     """Test the location search lists nearby mosques, not the keyword results."""
-    mock_client.fetch_mosques_by_keyword.return_value = _keyword_mosques(1)
-    mock_client.all_mosques_neighborhood.return_value = mock_mosques_search_api_raw
+    mock_client.search_by_keyword.return_value = _keyword_mosques(1)
+    mock_client.search_around.return_value = mock_mosques_search_api_raw
 
     result = await _search_keyword(hass, mock_client)
     result = await hass.config_entries.flow.async_configure(
@@ -489,7 +478,7 @@ async def test_keyword_results_pagination(
     """Test the next page is prefetched and visited pages are not fetched again."""
     page_1 = _keyword_mosques(MOSQUES_PER_PAGE)
     page_2 = _keyword_mosques(3, first=MOSQUES_PER_PAGE)
-    mock_client.fetch_mosques_by_keyword.side_effect = [page_1, page_2]
+    mock_client.search_by_keyword.side_effect = [page_1, page_2]
 
     result = await _search_keyword(hass, mock_client)
     assert result.get("errors") == {}
@@ -507,8 +496,8 @@ async def test_keyword_results_pagination(
     assert result.get("description_placeholders") == {"keyword": "Paris", "page": "1"}
     assert _options(result) == [*_uuids(page_1), NEXT_PAGE, NEW_SEARCH]
     assert [
-        call.args for call in mock_client.fetch_mosques_by_keyword.await_args_list
-    ] == [("Paris", 1, MOSQUES_PER_PAGE), ("Paris", 2, MOSQUES_PER_PAGE)]
+        call.kwargs["page"] for call in mock_client.search_by_keyword.await_args_list
+    ] == [1, 2]
 
 
 async def test_keyword_results_full_last_page(
@@ -516,13 +505,13 @@ async def test_keyword_results_full_last_page(
 ) -> None:
     """Test the next page is not offered when it has no mosques."""
     page_1 = _keyword_mosques(MOSQUES_PER_PAGE)
-    mock_client.fetch_mosques_by_keyword.side_effect = [page_1, NoMosqueFound]
+    mock_client.search_by_keyword.side_effect = [page_1, []]
 
     result = await _search_keyword(hass, mock_client)
 
     assert result.get("errors") == {}
     assert _options(result) == [*_uuids(page_1), NEW_SEARCH]
-    assert mock_client.fetch_mosques_by_keyword.await_count == 2
+    assert mock_client.search_by_keyword.await_count == 2
 
 
 async def test_keyword_results_prefetch_error(
@@ -532,10 +521,10 @@ async def test_keyword_results_prefetch_error(
     page_1 = _keyword_mosques(MOSQUES_PER_PAGE)
     page_2 = _keyword_mosques(MOSQUES_PER_PAGE, first=MOSQUES_PER_PAGE)
     page_3 = _keyword_mosques(1, first=2 * MOSQUES_PER_PAGE)
-    mock_client.fetch_mosques_by_keyword.side_effect = [
+    mock_client.search_by_keyword.side_effect = [
         page_1,
         page_2,
-        ConnectionError,
+        CONNECTION_ERROR,
         page_3,
     ]
 
@@ -556,8 +545,8 @@ async def test_keyword_results_prefetch_error(
     )
     assert result.get("errors") == {}
     assert _options(result) == [*_uuids(page_2), PREVIOUS_PAGE, NEXT_PAGE, NEW_SEARCH]
-    mock_client.fetch_mosques_by_keyword.assert_awaited_with(
-        "Paris", 3, MOSQUES_PER_PAGE
+    mock_client.search_by_keyword.assert_awaited_with(
+        word="Paris", page=3, items_per_page=MOSQUES_PER_PAGE
     )
 
 
@@ -566,9 +555,9 @@ async def test_keyword_results_new_search(
 ) -> None:
     """Test a new search starts from the first page of the new keyword."""
     page_1 = _keyword_mosques(MOSQUES_PER_PAGE)
-    mock_client.fetch_mosques_by_keyword.side_effect = [
+    mock_client.search_by_keyword.side_effect = [
         page_1,
-        NoMosqueFound,
+        [],
         page_1,
         _keyword_mosques(1, first=MOSQUES_PER_PAGE),
     ]
@@ -590,8 +579,8 @@ async def test_keyword_results_new_search(
     )
     assert result.get("description_placeholders") == {"keyword": "Lyon", "page": "1"}
     assert NEXT_PAGE in _options(result)
-    mock_client.fetch_mosques_by_keyword.assert_awaited_with(
-        "Lyon", 2, MOSQUES_PER_PAGE
+    mock_client.search_by_keyword.assert_awaited_with(
+        word="Lyon", page=2, items_per_page=MOSQUES_PER_PAGE
     )
 
 
@@ -608,8 +597,7 @@ async def test_reauth_flow(
 ) -> None:
     """Test reauthentication stores the new token and keeps the mosque."""
     mock_config_entry.add_to_hass(hass)
-    mock_client.token = NEW_TOKEN
-    mock_client.get_api_token.return_value = NEW_TOKEN
+    mock_client.auth.login.return_value = _account(NEW_TOKEN)
 
     result = await mock_config_entry.start_reauth_flow(hass)
     assert result.get("type") == data_entry_flow.FlowResultType.FORM
@@ -618,7 +606,7 @@ async def test_reauth_flow(
     with patch(
         "custom_components.mawaqit.config_flow.AsyncMawaqitClient",
         return_value=mock_client,
-    ) as mock_client_class:
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], USER_INPUT
         )
@@ -626,8 +614,7 @@ async def test_reauth_flow(
 
     assert result.get("type") == data_entry_flow.FlowResultType.ABORT
     assert result.get("reason") == "reauth_successful"
-    assert mock_client_class.call_args.kwargs[CONF_USERNAME] == "user"
-    assert mock_client_class.call_args.kwargs[CONF_PASSWORD] == "pass"
+    mock_client.auth.login.assert_awaited_once_with(email="user", password="pass")
     assert mock_config_entry.data[CONF_API_KEY] == NEW_TOKEN
     assert mock_config_entry.data[CONF_UUID] == MOCK_UUID
 
@@ -635,8 +622,8 @@ async def test_reauth_flow(
 @pytest.mark.parametrize(
     ("side_effect", "expected_error"),
     [
-        (BadCredentialsException, WRONG_CREDENTIAL),
-        (MawaqitException, CANNOT_CONNECT_TO_SERVER),
+        (AUTH_ERROR, WRONG_CREDENTIAL),
+        (SERVER_ERROR, CANNOT_CONNECT_TO_SERVER),
     ],
     ids=["bad_credentials", "mawaqit_error"],
 )
@@ -650,7 +637,7 @@ async def test_reauth_flow_errors_then_recovers(
 ) -> None:
     """Test the reauth form shows login errors and lets the user retry."""
     mock_config_entry.add_to_hass(hass)
-    mock_client.get_api_token.side_effect = side_effect
+    mock_client.auth.login.side_effect = side_effect
 
     result = await mock_config_entry.start_reauth_flow(hass)
 
@@ -665,8 +652,8 @@ async def test_reauth_flow_errors_then_recovers(
         assert result.get("step_id") == "reauth_confirm"
         assert result.get("errors") == {"base": expected_error}
 
-        mock_client.get_api_token.side_effect = None
-        mock_client.token = NEW_TOKEN
+        mock_client.auth.login.side_effect = None
+        mock_client.auth.login.return_value = _account(NEW_TOKEN)
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], USER_INPUT
         )
@@ -693,7 +680,7 @@ async def test_reconfigure_changes_mosque_and_keeps_entities(
 ) -> None:
     """Test reconfiguring moves the device and entities to the new mosque, without a login."""
     mock_config_entry.add_to_hass(hass)
-    mock_client.all_mosques_neighborhood.return_value = mock_mosques_search_api_raw
+    mock_client.search_around.return_value = mock_mosques_search_api_raw
     dev_reg = dr.async_get(hass)
     device = dev_reg.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id, identifiers={(DOMAIN, MOCK_UUID)}
@@ -738,7 +725,7 @@ async def test_reconfigure_changes_mosque_and_keeps_entities(
     assert mock_config_entry.data[CONF_UUID] == NEW_MOSQUE_UUID
     assert mock_config_entry.unique_id == NEW_MOSQUE_UUID
     assert mock_config_entry.data[CONF_API_KEY] == MOCK_TOKEN
-    mock_client.get_api_token.assert_not_awaited()
+    mock_client.auth.login.assert_not_awaited()
 
     moved = ent_reg.async_get(fajr.entity_id)
     assert moved is not None
@@ -762,7 +749,7 @@ async def test_reconfigure_with_keyword_search(
 ) -> None:
     """Test the keyword search can pick the new mosque when reconfiguring."""
     mock_config_entry.add_to_hass(hass)
-    mock_client.fetch_mosques_by_keyword.return_value = _keyword_mosques(1)
+    mock_client.search_by_keyword.return_value = _keyword_mosques(1)
 
     with patch(
         "custom_components.mawaqit.config_flow.AsyncMawaqitClient",
@@ -796,7 +783,7 @@ async def test_reconfigure_same_mosque_keeps_entities(
 ) -> None:
     """Test choosing the current mosque again leaves the device and entities untouched."""
     mock_config_entry.add_to_hass(hass)
-    mock_client.all_mosques_neighborhood.return_value = mock_mosques_search_api_raw
+    mock_client.search_around.return_value = mock_mosques_search_api_raw
     dev_reg = dr.async_get(hass)
     device = dev_reg.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id, identifiers={(DOMAIN, MOCK_UUID)}
@@ -886,7 +873,7 @@ async def test_add_mosque_reuses_login(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         assert entry.state is ConfigEntryState.LOADED
-        mock_client.all_mosques_neighborhood.return_value = mock_mosques_search_api_raw
+        mock_client.search_around.return_value = mock_mosques_search_api_raw
 
         result, mock_client_class = await _start_user_flow(hass, mock_client)
 
@@ -894,11 +881,12 @@ async def test_add_mosque_reuses_login(
         assert result.get("step_id") == "search_method"
         mock_client_class.assert_called_once()
         assert mock_client_class.call_args.kwargs["token"] == MOCK_TOKEN
-        assert mock_client_class.call_args.kwargs["latitude"] == hass.config.latitude
-        assert mock_client_class.call_args.kwargs["longitude"] == hass.config.longitude
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"next_step_id": "mosques_coordinates"}
+        )
+        mock_client.search_around.assert_awaited_once_with(
+            lat=hass.config.latitude, lon=hass.config.longitude
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_UUID: NEW_MOSQUE_UUID}
@@ -911,7 +899,7 @@ async def test_add_mosque_reuses_login(
     assert new_entry.data[CONF_UUID] == NEW_MOSQUE_UUID
     assert new_entry.data[CONF_API_KEY] == MOCK_TOKEN
     assert new_entry.minor_version == config_flow.MawaqitPrayerFlowHandler.MINOR_VERSION
-    mock_client.get_api_token.assert_not_awaited()
+    mock_client.auth.login.assert_not_awaited()
     assert hass.config_entries.async_entries(DOMAIN) == [entry, new_entry]
     assert new_entry.state is ConfigEntryState.LOADED
     assert entry.state is ConfigEntryState.LOADED
@@ -1008,7 +996,7 @@ async def test_add_mosque_already_configured_by_location(
     """Test a mosque found around the location cannot be added twice."""
     entry = make_config_entry(**entry_kwargs)
     entry.add_to_hass(hass)
-    mock_client.all_mosques_neighborhood.return_value = mock_mosques_search_api_raw
+    mock_client.search_around.return_value = mock_mosques_search_api_raw
 
     flow_id = await _login(hass, mock_client)
     result = await hass.config_entries.flow.async_configure(
@@ -1030,7 +1018,7 @@ async def test_add_mosque_already_configured_by_keyword(
     """Test a mosque found by keyword cannot be added twice."""
     entry = make_config_entry("mosque-1", "Mosque1-label")
     entry.add_to_hass(hass)
-    mock_client.fetch_mosques_by_keyword.return_value = _keyword_mosques(2)
+    mock_client.search_by_keyword.return_value = _keyword_mosques(2)
 
     result = await _search_keyword(hass, mock_client)
     result = await hass.config_entries.flow.async_configure(
@@ -1049,7 +1037,7 @@ async def test_add_same_mosque_in_two_flows(
     mock_mosques_search_api_raw: list[dict],
 ) -> None:
     """Test the second of two flows open at once cannot add the same mosque."""
-    mock_client.all_mosques_neighborhood.return_value = mock_mosques_search_api_raw
+    mock_client.search_around.return_value = mock_mosques_search_api_raw
     flow_ids = [await _login(hass, mock_client) for _ in range(2)]
     for flow_id in flow_ids:
         await hass.config_entries.flow.async_configure(
@@ -1088,7 +1076,7 @@ async def test_reconfigure_to_mosque_of_other_entry_aborts(
     other.add_to_hass(hass)
     device, fajr = _add_mosque_device(hass, entry, MOCK_UUID)
     other_device, other_fajr = _add_mosque_device(hass, other, NEW_MOSQUE_UUID)
-    mock_client.all_mosques_neighborhood.return_value = mock_mosques_search_api_raw
+    mock_client.search_around.return_value = mock_mosques_search_api_raw
 
     with patch(
         "custom_components.mawaqit.config_flow.AsyncMawaqitClient",
@@ -1138,7 +1126,7 @@ async def test_reconfigure_leaves_other_mosques_untouched(
     other.add_to_hass(hass)
     device, fajr = _add_mosque_device(hass, entry, MOCK_UUID)
     other_device, other_fajr = _add_mosque_device(hass, other, NEW_MOSQUE_UUID)
-    mock_client.all_mosques_neighborhood.return_value = mock_mosques_search_api_raw
+    mock_client.search_around.return_value = mock_mosques_search_api_raw
 
     with patch(
         "custom_components.mawaqit.config_flow.AsyncMawaqitClient",
@@ -1205,7 +1193,7 @@ async def test_reauth_logs_in_mosques_sharing_the_login(
     }
     [flow] = [flow for flow in flows if flow["context"]["entry_id"] == entry.entry_id]
 
-    mock_client.token = NEW_TOKEN
+    mock_client.auth.login.return_value = _account(NEW_TOKEN)
     with (
         _patch_setup_entry() as mock_setup,
         patch(

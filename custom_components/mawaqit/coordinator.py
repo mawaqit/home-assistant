@@ -4,9 +4,14 @@ from datetime import datetime, timedelta
 import logging
 from typing import override
 
-from mawaqit import AsyncMawaqitClient
-from mawaqit.exceptions import BadCredentialsException, MawaqitException
+from mawaqit import (
+    APIConnectionError,
+    AsyncMawaqitClient,
+    AuthenticationError,
+    MawaqitError,
+)
 
+from homeassistant.const import CONF_UUID
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -42,6 +47,7 @@ class PrayerTimeCoordinator(TimestampDataUpdateCoordinator[dict]):
     ) -> None:
         """Initialize the prayer time coordinator."""
         self.client = client
+        self.mosque_uuid: str = config_entry.data[CONF_UUID]
         self._unsub_day_change: CALLBACK_TYPE | None = None
 
         super().__init__(
@@ -101,33 +107,30 @@ class PrayerTimeCoordinator(TimestampDataUpdateCoordinator[dict]):
 
     async def _async_fetch_prayer_times(self) -> dict:
         """Fetch prayer times from the API."""
-        prayer_times: dict | None
         try:
-            prayer_times = await self.client.fetch_prayer_times()
-        except BadCredentialsException as err:
+            response = await self.client.mosques.prayer_times(self.mosque_uuid)
+        except AuthenticationError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="auth_failed",
             ) from err
-        except MawaqitException as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="mawaqit_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
-        except (ConnectionError, TimeoutError) as err:
+        except APIConnectionError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="network_error",
                 translation_placeholders={"error": str(err)},
             ) from err
-
-        if not prayer_times:
+        except MawaqitError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key="no_prayer_times_data",
-            )
+                translation_key="mawaqit_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
+        # The API JSON, which the sensors and the calendar read.
+        prayer_times = response.model_dump(
+            mode="json", by_alias=True, exclude_unset=True
+        )
         if calendar := prayer_times.get("calendar"):
             prayer_times["calendar"] = utils.drop_imsak_column(calendar)
             if invalid_days := utils.find_invalid_times(prayer_times["calendar"]):

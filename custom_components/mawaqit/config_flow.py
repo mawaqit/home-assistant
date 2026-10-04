@@ -4,21 +4,14 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
-from aiohttp.client_exceptions import ClientConnectorError
-from mawaqit import AsyncMawaqitClient
-from mawaqit.exceptions import (
-    BadCredentialsException,
-    MawaqitException,
-    NoMosqueAround,
-    NoMosqueFound,
-)
+from mawaqit import AsyncMawaqitClient, AuthenticationError, MawaqitError
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME, CONF_UUID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er, selector
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.httpx_client import get_async_client
 
 from . import mawaqit_wrapper, utils
 from .const import (
@@ -111,17 +104,10 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.client = self._client_with_token(token)
             return await self.async_step_search_method()
 
-        if user_input is not None:
-            client = AsyncMawaqitClient(
-                latitude=self.hass.config.latitude,
-                longitude=self.hass.config.longitude,
-                username=user_input[CONF_USERNAME],
-                password=user_input[CONF_PASSWORD],
-                session=async_get_clientsession(self.hass),
-            )
-            if not (errors := await self._async_login(client)):
-                self.client = client
-                return await self.async_step_search_method()
+        if user_input is not None and not (
+            errors := await self._async_login(user_input)
+        ):
+            return await self.async_step_search_method()
 
         return self.async_show_form(
             step_id="user",
@@ -145,12 +131,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            client = AsyncMawaqitClient(
-                username=user_input[CONF_USERNAME],
-                password=user_input[CONF_PASSWORD],
-                session=async_get_clientsession(self.hass),
-            )
-            if not (errors := await self._async_login(client)):
+            if not (errors := await self._async_login(user_input)):
                 entry = self._get_reauth_entry()
                 # The other mosques logged in with the rejected token too. Since
                 # Home Assistant 2025.5, their reload aborts their reauth flows.
@@ -160,11 +141,11 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         and other.data[CONF_API_KEY] == entry.data[CONF_API_KEY]
                     ):
                         self.hass.config_entries.async_update_entry(
-                            other, data={**other.data, CONF_API_KEY: client.token}
+                            other, data={**other.data, CONF_API_KEY: self.client.token}
                         )
                         self.hass.config_entries.async_schedule_reload(other.entry_id)
                 return self.async_update_reload_and_abort(
-                    entry, data_updates={CONF_API_KEY: client.token}
+                    entry, data_updates={CONF_API_KEY: self.client.token}
                 )
 
         return self.async_show_form(
@@ -195,30 +176,22 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return token
         return None
 
-    def _client_with_token(self, token: str) -> AsyncMawaqitClient:
-        """Return a client searching around Home Assistant with a known token."""
-        return AsyncMawaqitClient(
-            latitude=self.hass.config.latitude,
-            longitude=self.hass.config.longitude,
-            token=token,
-            session=async_get_clientsession(self.hass),
-        )
+    def _client_with_token(self, token: str | None = None) -> AsyncMawaqitClient:
+        """Return a client sharing the HTTP connections of Home Assistant."""
+        return AsyncMawaqitClient(token=token, http_client=get_async_client(self.hass))
 
-    async def _async_login(self, client: AsyncMawaqitClient) -> dict[str, str]:
+    async def _async_login(self, user_input: dict[str, Any]) -> dict[str, str]:
         """Log in to MAWAQIT and return the form errors, empty on success."""
+        client = self._client_with_token()
         try:
-            token = await client.get_api_token()
-        except BadCredentialsException:
+            account = await client.auth.login(
+                email=user_input[CONF_USERNAME], password=user_input[CONF_PASSWORD]
+            )
+        except AuthenticationError:
             return {"base": WRONG_CREDENTIAL}
-        except (
-            ClientConnectorError,
-            ConnectionError,
-            TimeoutError,
-            MawaqitException,
-        ):
+        except MawaqitError:
             return {"base": CANNOT_CONNECT_TO_SERVER}
-        if not token:
-            return {"base": CANNOT_CONNECT_TO_SERVER}
+        self.client = client.with_options(token=account.api_access_token)
         return {}
 
     async def async_step_search_method(
@@ -243,16 +216,9 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # Always fetched: self.mosques may hold keyword results by now.
         try:
             neighborhood_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
-                self.client
+                self.client, self.hass.config.latitude, self.hass.config.longitude
             )
-        except NoMosqueAround:
-            neighborhood_mosques = []
-        except (
-            BadCredentialsException,
-            ClientConnectorError,
-            ConnectionError,
-            TimeoutError,
-        ):
+        except MawaqitError:
             return self.async_abort(reason="cannot_connect")
 
         if not neighborhood_mosques:
@@ -358,14 +324,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             mosques = await mawaqit_wrapper.fetch_mosques_by_keyword(
                 self.client, self.keyword, page
             )
-        except NoMosqueFound:
-            mosques = []
-        except (
-            ClientConnectorError,
-            ConnectionError,
-            TimeoutError,
-            MawaqitException,
-        ):
+        except MawaqitError:
             return {"base": CANNOT_CONNECT_TO_SERVER}
         self.pages[page] = mosques
         return {}

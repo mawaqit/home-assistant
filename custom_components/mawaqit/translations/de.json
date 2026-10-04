@@ -174,9 +174,6 @@
     "no_mosque_data": {
       "message": "MAWAQIT hat keine Moscheedaten zurückgegeben."
     },
-    "no_prayer_times_data": {
-      "message": "MAWAQIT hat keine Gebetszeiten zurückgegeben."
-    },
     "unknown_adhan": {
       "message": "Unbekannter Adhan: {adhan}."
     }

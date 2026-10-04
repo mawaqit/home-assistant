@@ -26,6 +26,7 @@ from .conftest import (
     MOCK_UUID,
     build_prayer_data,
     make_config_entry,
+    prayer_times_response,
 )
 
 
@@ -50,8 +51,8 @@ def _legacy_entry(data: dict[str, Any] | None = None) -> MockConfigEntry:
 async def _setup(hass: HomeAssistant, entry: MockConfigEntry) -> None:
     """Set up an entry already added to hass."""
     with patch("custom_components.mawaqit.AsyncMawaqitClient") as mock_client_class:
-        mock_client_class.return_value.fetch_prayer_times = AsyncMock(
-            return_value=build_prayer_data()
+        mock_client_class.return_value.mosques.prayer_times = AsyncMock(
+            return_value=prayer_times_response(build_prayer_data())
         )
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

@@ -33,7 +33,13 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_CLASS
 from homeassistant.core import HomeAssistant
 
-from .conftest import MOCK_UUID, PRAYER_TIMES_ROW, build_prayer_data, make_month_data
+from .conftest import (
+    MOCK_UUID,
+    PRAYER_TIMES_ROW,
+    build_prayer_data,
+    make_month_data,
+    prayer_times_response,
+)
 
 # ---------------------------------------------------------------------------
 # Sensor setup tests
@@ -122,8 +128,8 @@ async def test_published_sensors_added_at_refresh(
         assert hass.states.get(entity_id) is None
 
     coordinator = mock_config_entry.runtime_data.prayer_time_coordinator
-    coordinator.client.fetch_prayer_times.return_value = build_prayer_data(
-        fill_all_months=False
+    coordinator.client.mosques.prayer_times.return_value = prayer_times_response(
+        build_prayer_data(fill_all_months=False)
     )
     await coordinator.async_refresh()
     await hass.async_block_till_done()
@@ -154,8 +160,10 @@ async def test_published_sensors_kept_unknown_when_no_longer_published(
     )
 
     coordinator = mock_config_entry.runtime_data.prayer_time_coordinator
-    coordinator.client.fetch_prayer_times.return_value = build_prayer_data(
-        fill_all_months=False, iqama_enabled=False, jumua=None, jumua2=None
+    coordinator.client.mosques.prayer_times.return_value = prayer_times_response(
+        build_prayer_data(
+            fill_all_months=False, iqama_enabled=False, jumua=None, jumua2=None
+        )
     )
     await coordinator.async_refresh()
     await hass.async_block_till_done()

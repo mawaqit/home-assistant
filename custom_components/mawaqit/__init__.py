@@ -4,7 +4,7 @@ from mawaqit import AsyncMawaqitClient
 
 from homeassistant.const import CONF_API_KEY, CONF_UUID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.httpx_client import get_async_client
 
 from .coordinator import PrayerTimeCoordinator
 from .migration import async_migrate_legacy_entry, migrate_title
@@ -18,9 +18,7 @@ async def async_setup_entry(
 ) -> bool:
     """Set up the Mawaqit Prayer Component."""
     client = AsyncMawaqitClient(
-        mosque=config_entry.data[CONF_UUID],
-        token=config_entry.data[CONF_API_KEY],
-        session=async_get_clientsession(hass),
+        token=config_entry.data[CONF_API_KEY], http_client=get_async_client(hass)
     )
 
     prayer_time_coordinator = PrayerTimeCoordinator(hass, config_entry, client)
