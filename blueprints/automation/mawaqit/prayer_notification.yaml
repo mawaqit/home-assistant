@@ -1,0 +1,132 @@
+blueprint:
+  name: MAWAQIT prayer notification
+  description: >-
+    Send a notification at the adhan or the iqama of a prayer, or some minutes
+    before or after. Use it for a reminder before the iqama, or before Jumu'a
+    on Fridays.
+  domain: automation
+  source_url: https://github.com/mawaqit/home-assistant/blob/main/blueprints/automation/mawaqit/prayer_notification.yaml
+  author: MAWAQIT
+  homeassistant:
+    min_version: 2025.3.0
+  input:
+    calendar:
+      name: Prayer times calendar
+      description: The Prayer Times calendar of your mosque.
+      selector:
+        entity:
+          filter:
+            integration: mawaqit
+            domain: calendar
+    prayers:
+      name: Prayers
+      default: [Fajr, Dhuhr, Asr, Maghrib, Isha]
+      selector:
+        select:
+          multiple: true
+          options:
+            - Fajr
+            - Shuruq
+            - Dhuhr
+            - Asr
+            - Maghrib
+            - Isha
+            - Jumua
+            - Eid al-Fitr
+            - Eid al-Adha
+    moment:
+      name: Moment
+      description: The iqama is only known for the prayers whose iqama your mosque publishes.
+      default: start
+      selector:
+        select:
+          options:
+            - label: Adhan
+              value: start
+            - label: Iqama
+              value: end
+    offset:
+      name: Offset
+      description: In minutes. Negative to be notified before, for example -10 for 10 minutes before.
+      default: 0
+      selector:
+        number:
+          min: -180
+          max: 180
+          mode: box
+          unit_of_measurement: min
+    mobile_devices:
+      name: Mobile devices
+      description: Devices running the Home Assistant app.
+      default: []
+      selector:
+        device:
+          multiple: true
+          filter:
+            integration: mobile_app
+    notify_entities:
+      name: Notification entities
+      default: []
+      selector:
+        entity:
+          multiple: true
+          filter:
+            domain: notify
+    title:
+      name: Title
+      description: "Available variables: prayer, moment (Adhan or Iqama) and time."
+      default: "{{ prayer }}"
+      selector:
+        text:
+    message:
+      name: Message
+      description: "Available variables: prayer, moment (Adhan or Iqama) and time."
+      default: "{{ moment }} {{ prayer }} at {{ time }}"
+      selector:
+        text:
+
+triggers:
+  - trigger: calendar
+    event: !input moment
+    offset:
+      minutes: !input offset
+    entity_id: !input calendar
+
+variables:
+  prayers: !input prayers
+  mobile_devices: !input mobile_devices
+  notify_entities: !input notify_entities
+  # Jumua 2 and Jumua 3 are Jumua too.
+  prayer: "{{ trigger.calendar_event.summary | regex_replace(' [0-9]+$', '') }}"
+  moment: "{{ 'Iqama' if trigger.event == 'end' else 'Adhan' }}"
+  time: "{{ as_timestamp(trigger.calendar_event[trigger.event]) | timestamp_custom('%H:%M') }}"
+
+conditions:
+  - condition: template
+    value_template: "{{ prayer in prayers }}"
+  # Without iqama, an event ends when it starts.
+  - condition: template
+    value_template: >-
+      {{ trigger.event == 'start'
+         or trigger.calendar_event.end != trigger.calendar_event.start }}
+
+actions:
+  - repeat:
+      for_each: "{{ mobile_devices }}"
+      sequence:
+        - action: "notify.mobile_app_{{ device_attr(repeat.item, 'name') | slugify }}"
+          data:
+            title: !input title
+            message: !input message
+  - if:
+      - condition: template
+        value_template: "{{ notify_entities | length > 0 }}"
+    then:
+      - action: notify.send_message
+        target:
+          entity_id: !input notify_entities
+        data:
+          title: !input title
+          message: !input message
+
+mode: queued
