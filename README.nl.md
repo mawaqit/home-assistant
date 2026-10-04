@@ -109,9 +109,9 @@ Om de volledige datum op een dashboard te tonen, bijvoorbeeld `22 Rabi' al-Thani
 ```yaml
 type: markdown
 content: >
-  {{ states('sensor.my_mosque_hijri_day') }}
-  {{ state_translated('sensor.my_mosque_hijri_month') }}
-  {{ states('sensor.my_mosque_hijri_year') }}
+  {{ states('sensor.mijn_moskee_hijri_dag') }}
+  {{ state_translated('sensor.mijn_moskee_hijri_maand') }}
+  {{ states('sensor.mijn_moskee_hijri_jaar') }}
 ```
 
 ### Entiteit-ID's
@@ -216,11 +216,11 @@ alias: Suhoor
 triggers:
   - trigger: time
     at:
-      entity_id: sensor.my_mosque_fajr_prayer
+      entity_id: sensor.mijn_moskee_fajr_gebed
       offset: "-00:45:00"
 conditions:
   - condition: state
-    entity_id: sensor.my_mosque_hijri_month
+    entity_id: sensor.mijn_moskee_hijri_maand
     state: ramadan
 actions:
   - action: light.turn_on

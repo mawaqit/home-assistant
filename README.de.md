@@ -109,9 +109,9 @@ Um das ganze Datum auf einem Dashboard anzuzeigen, zum Beispiel `22 Rabi' al-Tha
 ```yaml
 type: markdown
 content: >
-  {{ states('sensor.my_mosque_hijri_day') }}
-  {{ state_translated('sensor.my_mosque_hijri_month') }}
-  {{ states('sensor.my_mosque_hijri_year') }}
+  {{ states('sensor.meine_moschee_hijri_tag') }}
+  {{ state_translated('sensor.meine_moschee_hijri_monat') }}
+  {{ states('sensor.meine_moschee_hijri_jahr') }}
 ```
 
 ### Entitäts-IDs
@@ -216,11 +216,11 @@ alias: Suhur
 triggers:
   - trigger: time
     at:
-      entity_id: sensor.my_mosque_fajr_prayer
+      entity_id: sensor.meine_moschee_fajr_gebet
       offset: "-00:45:00"
 conditions:
   - condition: state
-    entity_id: sensor.my_mosque_hijri_month
+    entity_id: sensor.meine_moschee_hijri_monat
     state: ramadan
 actions:
   - action: light.turn_on
