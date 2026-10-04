@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 from zoneinfo import ZoneInfo
 
 from freezegun import freeze_time
+from mawaqit.hijri import HijriDate, HijriMonth
 import pytest
 
 from custom_components.mawaqit import utils
@@ -909,3 +910,31 @@ def test_extract_time_index_error() -> None:
     month_data = {"1": FailGetitemList(list(PRAYER_TIMES_ROW))}
     result = utils.extract_time_from_calendar([month_data], "Fajr", date(2025, 1, 1))
     assert result is None
+
+
+# ---------------------------------------------------------------------------
+# get_eid
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("month", "day", "expected"),
+    [
+        (HijriMonth.SHABAN, 23, None),
+        (HijriMonth.RAMADAN, 22, None),
+        (HijriMonth.RAMADAN, 23, ("eid_al_fitr", date(2026, 3, 19))),
+        (HijriMonth.RAMADAN, 29, ("eid_al_fitr", date(2026, 3, 13))),
+        (HijriMonth.RAMADAN, 30, ("eid_al_fitr", date(2026, 3, 12))),
+        (HijriMonth.SHAWWAL, 1, ("eid_al_fitr", date(2026, 3, 11))),
+        (HijriMonth.SHAWWAL, 2, None),
+        (HijriMonth.DHU_AL_HIJJAH, 2, None),
+        (HijriMonth.DHU_AL_HIJJAH, 3, ("eid_al_adha", date(2026, 3, 18))),
+        (HijriMonth.DHU_AL_HIJJAH, 10, ("eid_al_adha", date(2026, 3, 11))),
+        (HijriMonth.DHU_AL_HIJJAH, 11, None),
+    ],
+)
+def test_get_eid(
+    month: HijriMonth, day: int, expected: tuple[str, date] | None
+) -> None:
+    """Test the Eid shown on 11 March 2026 for a given Hijri date."""
+    assert utils.get_eid(date(2026, 3, 11), HijriDate(1447, month, day)) == expected

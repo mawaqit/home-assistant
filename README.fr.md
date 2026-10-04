@@ -4,7 +4,7 @@
 
 [English](README.md) | **Français** | [Deutsch](README.de.md) | [Nederlands](README.nl.md)
 
-Cette intégration ajoute à Home Assistant les horaires de prière de votre mosquée [MAWAQIT](https://mawaqit.net) : les cinq prières, l'Imsak, le Shuruq, les iqamas, la Jumu'a, les moments de la nuit et la date hégirienne, sous forme de sensors et d'un calendrier. Utilisez-les pour lancer l'adhan, recevoir un rappel avant l'iqama, chauffer la maison avant Fajr, ouvrir les volets au Shuruq ou vous réveiller pour le souhour pendant le Ramadan.
+Cette intégration ajoute à Home Assistant les horaires de prière de votre mosquée [MAWAQIT](https://mawaqit.net) : les cinq prières, l'Imsak, le Shuruq, les iqamas, la Jumu'a, les prières de l'Aïd, les moments de la nuit et la date hégirienne, sous forme de sensors et d'un calendrier. Utilisez-les pour lancer l'adhan, recevoir un rappel avant l'iqama, chauffer la maison avant Fajr, ouvrir les volets au Shuruq ou vous réveiller pour le souhour pendant le Ramadan.
 
 - [Prérequis](#prérequis)
 - [Installation](#installation)
@@ -95,6 +95,8 @@ L'intégration ajoute un appareil au nom de votre mosquée, avec un lien vers sa
 ### Le calendrier des horaires des prières
 
 Chaque prière est un événement nommé `Fajr`, `Shuruq`, `Dhuhr`, `Asr`, `Maghrib` ou `Isha`, et le vendredi `Jumua`, `Jumua 2` et `Jumua 3`. Il commence à l'adhan et se termine à l'iqama si votre mosquée la publie, sinon il se termine dès qu'il commence. Les moments de la nuit sont des événements nommés `End of the first third`, `Middle of the night` et `Start of the last third`, qui se terminent dès qu'ils commencent.
+
+Les prières de l'Aïd sont des événements nommés `Eid al-Fitr` ou `Eid al-Adha`, puis `Eid al-Fitr 2`, `Eid al-Fitr 3`, etc., si votre mosquée les publie. Comme sur les écrans de la mosquée, ils apparaissent du 23 Ramadan au 1er Shawwal et du 3 au 10 Dhu al-Hijjah, selon la [date hégirienne](#la-date-hégirienne) de la mosquée. L'Aïd al-Fitr est placé le lendemain du 30 Ramadan : si la lune est aperçue le 29, il avance d'un jour dans l'heure qui suit le changement de la date hégirienne par votre mosquée. Ils se terminent dès qu'ils commencent.
 
 Ces noms restent en anglais quelle que soit votre langue, pour qu'une automatisation qui les utilise fonctionne chez tout le monde. Utilisez le calendrier avec un déclencheur `calendar`, comme dans l'[exemple de rappel avant l'iqama](#exemples-dautomatisations).
 
