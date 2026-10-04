@@ -4,7 +4,7 @@
 
 Drie voorbeelden om in je dashboards te plakken:
 
-- [Gebedstijdenkaart](#gebedstijdenkaart): de foto van je moskee, de Hijri-datum van vandaag, het volgende gebed en de adhan en iqama van elk gebed. Alleen ingebouwde kaarten.
+- [Gebedstijdenkaart](#gebedstijdenkaart): de foto van je moskee, de Hijri-datum van vandaag, haar flashbericht, het volgende gebed en de adhan en iqama van elk gebed. Alleen ingebouwde kaarten.
 - [Volgend gebed](#volgend-gebed): een kleine kaart met het volgende gebed en de resterende tijd. Alleen ingebouwde kaarten.
 - [Moskeescherm](#moskeescherm): een schermvullende weergave zoals de schermen van je moskee, voor een tablet aan de muur. Hiervoor is [button-card](https://github.com/custom-cards/button-card) nodig, geïnstalleerd met HACS.
 
@@ -17,7 +17,7 @@ Een kaart toevoegen: open je dashboard, kies ✏️ **Dashboard bewerken** en da
   <img alt="Gebedstijdenkaart met de foto van de moskee, de Hijri-datum, het volgende gebed en de tijden van de adhan en de iqama" src="images/dashboards/prayer-times-card-light.jpg" width="600">
 </picture>
 
-Het volgende gebed is vet en de gebeden die voorbij zijn, zijn grijs. Vóór Fajr toont de kaart de tijden van de dag die begint.
+Het flashbericht van je moskee staat onder de Hijri-datum als ze er een heeft. Het volgende gebed is vet en de gebeden die voorbij zijn, zijn grijs. Vóór Fajr toont de kaart de tijden van de dag die begint.
 
 Vervang de entiteit-ID's bovenaan de kaart door de jouwe, zie [Entiteit-ID's](../README.nl.md#entiteit-ids). Publiceert je moskee geen foto, verwijder dan de kaart `picture-entity`. Publiceert ze geen iqama's, dan toont de kolom Iqama `–`.
 
@@ -44,6 +44,7 @@ cards:
       {%- set hijri_day = 'sensor.my_mosque_hijri_day' %}
       {%- set hijri_month = 'sensor.my_mosque_hijri_month' %}
       {%- set hijri_year = 'sensor.my_mosque_hijri_year' %}
+      {%- set flash = 'sensor.my_mosque_flash_message' %}
       {%- macro hm(entity) -%}
       {{ as_timestamp(states(entity), none) | timestamp_custom('%H:%M', default='–') if entity else '' }}
       {%- endmacro %}
@@ -51,6 +52,9 @@ cards:
       {%- set left = (as_timestamp(states(next_time), 0) - as_timestamp(now())) | int(0) %}
       ## {{ device_attr(device_id(next_name), 'name') }}
       <ha-icon icon="mdi:star-crescent"></ha-icon> {{ states(hijri_day) }} {{ state_translated(hijri_month) }} {{ states(hijri_year) }}
+      {% if has_value(flash) %}
+      <ha-alert alert-type="info">{{ states(flash) }}</ha-alert>
+      {% endif %}
 
       <ha-alert alert-type="success" title="{{ state_translated(next_name) }} · {{ hm(next_time) }}">over {{ left // 3600 }} h {{ '%02d' | format(left % 3600 // 60) }} min</ha-alert>
 
@@ -86,7 +90,7 @@ Vervang de twee entiteit-ID's door de jouwe.
 
 <img alt="Moskeescherm met een grote klok, de Hijri-datum en de zes gebedstijden op de foto van de moskee" src="images/dashboards/mosque-display-tablet.jpg" width="640"> <img alt="Moskeescherm op een telefoon" src="images/dashboards/mosque-display-phone.jpg" width="180">
 
-De klok, de datum van vandaag en de Hijri-datum, en de zes tijden van de dag met hun iqama, op de foto van je moskee. Het volgende gebed is paars, en tussen de adhan en de iqama telt het scherm af tot de iqama. Op vrijdag wordt Dhuhr vervangen door Jumu'a als je moskee die publiceert. De namen van de gebeden zijn in de taal van Home Assistant.
+De klok, de datum van vandaag en de Hijri-datum, en de zes tijden van de dag met hun iqama, op de foto van je moskee. Het volgende gebed is paars, en tussen de adhan en de iqama telt het scherm af tot de iqama. Op vrijdag wordt Dhuhr vervangen door Jumu'a als je moskee die publiceert. Het flashbericht van je moskee loopt onderaan voorbij, in zijn kleur en richting, zoals op haar schermen. De namen van de gebeden zijn in de taal van Home Assistant.
 
 Er zijn geen entiteit-ID's te vervangen: de kaart vindt de entiteiten van je moskee zelf. Volg je meerdere moskeeën, zet `mosque` dan op de naam van het apparaat van de moskee die je wilt tonen.
 

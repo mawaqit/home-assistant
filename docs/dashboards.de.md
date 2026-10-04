@@ -4,7 +4,7 @@
 
 Drei Beispiele zum Einfügen in deine Dashboards:
 
-- [Gebetszeiten-Karte](#gebetszeiten-karte): das Foto deiner Moschee, das heutige Hidschri-Datum, das nächste Gebet sowie Adhan und Iqama jedes Gebets. Nur integrierte Karten.
+- [Gebetszeiten-Karte](#gebetszeiten-karte): das Foto deiner Moschee, das heutige Hidschri-Datum, ihre Eilmeldung, das nächste Gebet sowie Adhan und Iqama jedes Gebets. Nur integrierte Karten.
 - [Nächstes Gebet](#nächstes-gebet): eine kleine Karte mit dem nächsten Gebet und der verbleibenden Zeit. Nur integrierte Karten.
 - [Moschee-Anzeige](#moschee-anzeige): eine Vollbildansicht wie die Bildschirme deiner Moschee, für ein Tablet an der Wand. Sie benötigt [button-card](https://github.com/custom-cards/button-card), installiert mit HACS.
 
@@ -17,7 +17,7 @@ So fügst du eine Karte hinzu: Öffne dein Dashboard, wähle ✏️ **Dashboard 
   <img alt="Gebetszeiten-Karte mit dem Foto der Moschee, dem Hidschri-Datum, dem nächsten Gebet und den Zeiten von Adhan und Iqama" src="images/dashboards/prayer-times-card-light.jpg" width="600">
 </picture>
 
-Das nächste Gebet ist fett, vergangene Gebete sind grau. Vor Fadschr zeigt die Karte die Zeiten des beginnenden Tages.
+Die Eilmeldung deiner Moschee erscheint unter dem Hidschri-Datum, wenn sie eine hat. Das nächste Gebet ist fett, vergangene Gebete sind grau. Vor Fadschr zeigt die Karte die Zeiten des beginnenden Tages.
 
 Ersetze die Entitäts-IDs oben in der Karte durch deine, siehe [Entitäts-IDs](../README.de.md#entitäts-ids). Wenn deine Moschee kein Foto veröffentlicht, entferne die Karte `picture-entity`. Wenn sie keine Iqamas veröffentlicht, zeigt die Spalte Iqama `–`.
 
@@ -44,6 +44,7 @@ cards:
       {%- set hijri_day = 'sensor.my_mosque_hijri_day' %}
       {%- set hijri_month = 'sensor.my_mosque_hijri_month' %}
       {%- set hijri_year = 'sensor.my_mosque_hijri_year' %}
+      {%- set flash = 'sensor.my_mosque_flash_message' %}
       {%- macro hm(entity) -%}
       {{ as_timestamp(states(entity), none) | timestamp_custom('%H:%M', default='–') if entity else '' }}
       {%- endmacro %}
@@ -51,6 +52,9 @@ cards:
       {%- set left = (as_timestamp(states(next_time), 0) - as_timestamp(now())) | int(0) %}
       ## {{ device_attr(device_id(next_name), 'name') }}
       <ha-icon icon="mdi:star-crescent"></ha-icon> {{ states(hijri_day) }} {{ state_translated(hijri_month) }} {{ states(hijri_year) }}
+      {% if has_value(flash) %}
+      <ha-alert alert-type="info">{{ states(flash) }}</ha-alert>
+      {% endif %}
 
       <ha-alert alert-type="success" title="{{ state_translated(next_name) }} · {{ hm(next_time) }}">in {{ left // 3600 }} h {{ '%02d' | format(left % 3600 // 60) }} min</ha-alert>
 
@@ -86,7 +90,7 @@ Ersetze die beiden Entitäts-IDs durch deine.
 
 <img alt="Moschee-Anzeige mit einer großen Uhr, dem Hidschri-Datum und den sechs Gebetszeiten auf dem Foto der Moschee" src="images/dashboards/mosque-display-tablet.jpg" width="640"> <img alt="Moschee-Anzeige auf einem Telefon" src="images/dashboards/mosque-display-phone.jpg" width="180">
 
-Die Uhr, das heutige Datum und das Hidschri-Datum sowie die sechs Zeiten des Tages mit ihrer Iqama, auf dem Foto deiner Moschee. Das nächste Gebet ist violett, und zwischen Adhan und Iqama zählt die Anzeige bis zur Iqama herunter. Freitags wird Dhuhr durch Jumu'a ersetzt, wenn deine Moschee sie veröffentlicht. Die Namen der Gebete sind in der Sprache von Home Assistant.
+Die Uhr, das heutige Datum und das Hidschri-Datum sowie die sechs Zeiten des Tages mit ihrer Iqama, auf dem Foto deiner Moschee. Das nächste Gebet ist violett, und zwischen Adhan und Iqama zählt die Anzeige bis zur Iqama herunter. Freitags wird Dhuhr durch Jumu'a ersetzt, wenn deine Moschee sie veröffentlicht. Die Eilmeldung deiner Moschee läuft unten durch, in ihrer Farbe und Richtung, wie auf ihren Bildschirmen. Die Namen der Gebete sind in der Sprache von Home Assistant.
 
 Es gibt keine Entitäts-ID zu ersetzen: Die Karte findet die Entitäten deiner Moschee selbst. Wenn du mehreren Moscheen folgst, setze `mosque` auf den Namen des Geräts der anzuzeigenden Moschee.
 

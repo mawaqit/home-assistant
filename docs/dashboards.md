@@ -4,7 +4,7 @@
 
 Three examples to paste into your dashboards:
 
-- [Prayer times card](#prayer-times-card): the picture of your mosque, today's Hijri date, the next prayer and the adhan and iqama of each prayer. Built-in cards only.
+- [Prayer times card](#prayer-times-card): the picture of your mosque, today's Hijri date, its flash message, the next prayer and the adhan and iqama of each prayer. Built-in cards only.
 - [Next prayer](#next-prayer): a small card with the next prayer and the time left. Built-in cards only.
 - [Mosque display](#mosque-display): a full-screen view like the screens of your mosque, for a tablet on the wall. It needs [button-card](https://github.com/custom-cards/button-card), installed with HACS.
 
@@ -17,7 +17,7 @@ To add a card: open your dashboard, select ✏️ **Edit dashboard**, then **Add
   <img alt="Prayer times card with the picture of the mosque, the Hijri date, the next prayer and the adhan and iqama times" src="images/dashboards/prayer-times-card-light.jpg" width="600">
 </picture>
 
-The next prayer is in bold and the prayers that have passed are in gray. Before Fajr, the card shows the times of the day that starts.
+The flash message of your mosque shows under the Hijri date when it has one. The next prayer is in bold and the prayers that have passed are in gray. Before Fajr, the card shows the times of the day that starts.
 
 Replace the entity IDs at the top of the card with yours, see [Entity IDs](../README.md#entity-ids). If your mosque does not publish its picture, remove the `picture-entity` card. If it does not publish its iqamas, the Iqama column shows `–`.
 
@@ -44,6 +44,7 @@ cards:
       {%- set hijri_day = 'sensor.my_mosque_hijri_day' %}
       {%- set hijri_month = 'sensor.my_mosque_hijri_month' %}
       {%- set hijri_year = 'sensor.my_mosque_hijri_year' %}
+      {%- set flash = 'sensor.my_mosque_flash_message' %}
       {%- macro hm(entity) -%}
       {{ as_timestamp(states(entity), none) | timestamp_custom('%H:%M', default='–') if entity else '' }}
       {%- endmacro %}
@@ -51,6 +52,9 @@ cards:
       {%- set left = (as_timestamp(states(next_time), 0) - as_timestamp(now())) | int(0) %}
       ## {{ device_attr(device_id(next_name), 'name') }}
       <ha-icon icon="mdi:star-crescent"></ha-icon> {{ states(hijri_day) }} {{ state_translated(hijri_month) }} {{ states(hijri_year) }}
+      {% if has_value(flash) %}
+      <ha-alert alert-type="info">{{ states(flash) }}</ha-alert>
+      {% endif %}
 
       <ha-alert alert-type="success" title="{{ state_translated(next_name) }} · {{ hm(next_time) }}">in {{ left // 3600 }} h {{ '%02d' | format(left % 3600 // 60) }} min</ha-alert>
 
@@ -86,7 +90,7 @@ Replace the two entity IDs with yours.
 
 <img alt="Mosque display with a large clock, the Hijri date and the six prayer times on the picture of the mosque" src="images/dashboards/mosque-display-tablet.jpg" width="640"> <img alt="Mosque display on a phone" src="images/dashboards/mosque-display-phone.jpg" width="180">
 
-The clock, today's date and Hijri date, and the six times of the day with their iqama, on the picture of your mosque. The next prayer is in purple, and between the adhan and the iqama, the screen counts down to the iqama. On Fridays, Dhuhr is replaced by Jumu'a if your mosque publishes it. The names of the prayers are in the language of Home Assistant.
+The clock, today's date and Hijri date, and the six times of the day with their iqama, on the picture of your mosque. The next prayer is in purple, and between the adhan and the iqama, the screen counts down to the iqama. On Fridays, Dhuhr is replaced by Jumu'a if your mosque publishes it. The flash message of your mosque scrolls at the bottom, in its color and direction, like on its screens. The names of the prayers are in the language of Home Assistant.
 
 There is no entity ID to replace: the card finds the entities of your mosque by itself. If you follow several mosques, set `mosque` to the name of the device of the one to show.
 
