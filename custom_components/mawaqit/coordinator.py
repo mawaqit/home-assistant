@@ -109,6 +109,7 @@ class PrayerTimeCoordinator(TimestampDataUpdateCoordinator[dict]):
         """Fetch prayer times from the API."""
         try:
             response = await self.client.mosques.prayer_times(self.mosque_uuid)
+            config = await self.client.mosques.config(self.mosque_uuid)
         except AuthenticationError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -132,8 +133,9 @@ class PrayerTimeCoordinator(TimestampDataUpdateCoordinator[dict]):
             mode="json", by_alias=True, exclude_unset=True
         )
         if calendar := prayer_times.get("calendar"):
-            prayer_times["calendar"] = utils.drop_imsak_column(calendar)
-            if invalid_days := utils.find_invalid_times(prayer_times["calendar"]):
+            if config.displaying_sabah_imsak:
+                calendar = prayer_times["calendar"] = utils.drop_imsak_column(calendar)
+            if invalid_days := utils.find_invalid_times(calendar):
                 _LOGGER.warning(
                     "Invalid prayer times from MAWAQIT, ignored on: %s",
                     ", ".join(invalid_days),

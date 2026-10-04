@@ -408,7 +408,9 @@ async def test_invalid_imsak_is_not_reported(
     ]
 
     freezer.move_to("2025-04-10 12:00:00+02:00")
-    await setup_mawaqit_integration(prayer_data=prayer_data)
+    await setup_mawaqit_integration(
+        prayer_data=prayer_data, displaying_sabah_imsak=True
+    )
 
     assert hass.states.get("sensor.test_mosque_next_salat_name").state == "dhuhr"
     assert "Invalid prayer times" not in caplog.text
@@ -522,7 +524,9 @@ async def test_prayer_sensors_with_sabah_and_imsak(
     prayer_data["calendar"] = [make_month_data(imsak_row) for _ in range(12)]
 
     freezer.move_to("2025-04-10 19:00:00+02:00")
-    await setup_mawaqit_integration(prayer_data=prayer_data)
+    await setup_mawaqit_integration(
+        prayer_data=prayer_data, displaying_sabah_imsak=True
+    )
 
     expected = {
         "sensor.test_mosque_fajr_prayer": "2025-04-10T03:30:00+00:00",

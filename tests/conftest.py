@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, patch
 
 import httpx
 from mawaqit import APIConnectionError, APIStatusError, APITimeoutError
-from mawaqit.types import Announcement, FlashMessage, Mosque, PrayerTimes
+from mawaqit.types import Announcement, FlashMessage, Mosque, MosqueConfig, PrayerTimes
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -61,6 +61,11 @@ def prayer_times_response(data: dict[str, Any]) -> PrayerTimes:
     if data.get("flash"):
         nested["flash"] = FlashMessage.model_construct(**data["flash"])
     return PrayerTimes.model_construct(**{**data, **nested})
+
+
+def config_response(*, displaying_sabah_imsak: bool = False) -> MosqueConfig:
+    """Return the screen settings of the library, with only the fields read."""
+    return MosqueConfig.model_construct(displaying_sabah_imsak=displaying_sabah_imsak)
 
 
 def search_response(mosques: list[dict[str, Any]]) -> list[Mosque]:
@@ -312,6 +317,7 @@ def setup_mawaqit_integration(
     async def _setup(
         prayer_data: dict | None = None,
         prayer_side_effect: Exception | None = None,
+        displaying_sabah_imsak: bool = False,
     ) -> None:
         resolved_prayer = build_prayer_data() if prayer_data is None else prayer_data
 
@@ -322,6 +328,11 @@ def setup_mawaqit_integration(
             client.mosques.prayer_times = AsyncMock(
                 return_value=prayer_times_response(resolved_prayer),
                 side_effect=prayer_side_effect,
+            )
+            client.mosques.config = AsyncMock(
+                return_value=config_response(
+                    displaying_sabah_imsak=displaying_sabah_imsak
+                )
             )
 
             await hass.config_entries.async_setup(mock_config_entry.entry_id)

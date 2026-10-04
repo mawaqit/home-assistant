@@ -17,6 +17,7 @@ from .conftest import (
     MOCK_TOKEN,
     MOCK_UUID,
     build_prayer_data,
+    config_response,
     make_config_entry,
     make_month_data,
     prayer_times_response,
@@ -45,6 +46,7 @@ def _client(prayer_data: dict | None = None, side_effect: Any = None) -> MagicMo
         return_value=prayer_data and prayer_times_response(prayer_data),
         side_effect=side_effect,
     )
+    client.mosques.config = AsyncMock(return_value=config_response())
     return client
 
 
@@ -57,6 +59,9 @@ async def _set_up(hass: HomeAssistant, clients: dict[str, MagicMock]) -> MagicMo
     with patch("custom_components.mawaqit.AsyncMawaqitClient") as mock_client_class:
         mock_client_class.return_value.mosques.prayer_times = AsyncMock(
             side_effect=prayer_times
+        )
+        mock_client_class.return_value.mosques.config = AsyncMock(
+            return_value=config_response()
         )
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
