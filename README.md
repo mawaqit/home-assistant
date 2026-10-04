@@ -1,5 +1,12 @@
 # MAWAQIT for Home Assistant
 
+[![HACS](https://img.shields.io/badge/HACS-Custom-41BDF5?style=for-the-badge&logo=homeassistantcommunitystore&logoColor=white)](https://www.hacs.xyz/)
+[![Release](https://img.shields.io/github/v/release/mawaqit/home-assistant?style=for-the-badge)](https://github.com/mawaqit/home-assistant/releases)
+[![Installs](https://img.shields.io/badge/dynamic/json?style=for-the-badge&logo=homeassistant&logoColor=white&color=41BDF5&label=installs&url=https%3A%2F%2Fanalytics.home-assistant.io%2Fcustom_integrations.json&query=%24.mawaqit.total)](https://analytics.home-assistant.io/custom_integrations)
+[![Home Assistant](https://img.shields.io/badge/dynamic/json?style=for-the-badge&logo=homeassistant&logoColor=white&color=41BDF5&label=Home%20Assistant&suffix=%2B&url=https%3A%2F%2Fraw.githubusercontent.com%2Fmawaqit%2Fhome-assistant%2Fmain%2Fhacs.json&query=%24.homeassistant)](https://www.home-assistant.io/)
+[![CI](https://img.shields.io/github/actions/workflow/status/mawaqit/home-assistant/ci.yaml?branch=main&style=for-the-badge&label=CI)](https://github.com/mawaqit/home-assistant/actions/workflows/ci.yaml)
+[![License](https://img.shields.io/github/license/mawaqit/home-assistant?style=for-the-badge)](LICENSE)
+
 ٱلسَّلَامُ عَلَيْكُمْ وَرَحْمَةُ ٱللَّٰهِ وَبَرَكَاتُهُ
 
 **English** | [Français](README.fr.md) | [Deutsch](README.de.md) | [Nederlands](README.nl.md)
@@ -25,7 +32,7 @@ This integration brings the prayer times of your [MAWAQIT](https://mawaqit.net) 
 
 - A MAWAQIT account. It is free: create one on [mawaqit.net](https://mawaqit.net) if you do not have one.
 - Home Assistant **2025.3** or newer.
-- [HACS](https://www.hacs.xyz/), unless you install the integration manually.
+- [HACS](https://www.hacs.xyz/docs/use/download/download/#to-download-hacs), unless you install the integration manually.
 - To list the mosques around you during setup, the location of your home set in [**Settings** > **System** > **General**](https://my.home-assistant.io/redirect/general/). You can also find your mosque by name instead.
 
 ## Installation
