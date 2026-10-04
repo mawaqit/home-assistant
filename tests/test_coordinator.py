@@ -15,7 +15,13 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
-from .conftest import CONNECTION_ERROR, TIMEOUT_ERROR, build_prayer_data, status_error
+from .conftest import (
+    CONNECTION_ERROR,
+    MOCK_UUID,
+    TIMEOUT_ERROR,
+    build_prayer_data,
+    status_error,
+)
 
 # All shared data and setup are provided by conftest:
 #   - mock_prayer_data                    ->  standard data dict
@@ -186,6 +192,24 @@ async def test_prayer_time_coordinator_failure_keeps_changing_days(
     assert await move_to("2025-04-12 00:30:00+02:00") == "2025-04-12T03:26:00+00:00"
     assert not coordinator.last_update_success
     assert fetch_prayer_times.call_count > 2
+
+
+async def test_prayer_time_coordinator_config_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    setup_mawaqit_integration,
+) -> None:
+    """Test a failure to fetch the screen settings fails the refresh."""
+    await setup_mawaqit_integration()
+    coordinator = mock_config_entry.runtime_data.prayer_time_coordinator
+    coordinator.client.mosques.config.assert_awaited_once_with(MOCK_UUID)
+    coordinator.client.mosques.config.side_effect = CONNECTION_ERROR
+
+    await coordinator.async_refresh()
+
+    assert not coordinator.last_update_success
+    assert coordinator.update_interval == timedelta(minutes=15)
+    assert hass.states.get(FAJR).state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
 
 
 async def test_prayer_time_coordinator_auth_error_after_setup(
