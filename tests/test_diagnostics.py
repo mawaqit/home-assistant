@@ -1,13 +1,13 @@
 """Tests for the Mawaqit diagnostics."""
 
-from mawaqit.exceptions import MawaqitException
+from mawaqit import InternalServerError
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.mawaqit.diagnostics import async_get_config_entry_diagnostics
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 
-from .conftest import build_prayer_data
+from .conftest import build_prayer_data, status_error
 
 
 async def test_diagnostics(
@@ -56,7 +56,9 @@ async def test_diagnostics_after_failed_update(
     await setup_mawaqit_integration()
     coordinator = mock_config_entry.runtime_data.prayer_time_coordinator
     last_success_time = coordinator.last_update_success_time
-    coordinator.client.fetch_prayer_times.side_effect = MawaqitException("boom")
+    coordinator.client.mosques.prayer_times.side_effect = status_error(
+        InternalServerError, 503
+    )
     await coordinator.async_refresh()
 
     diagnostics = await async_get_config_entry_diagnostics(hass, mock_config_entry)
@@ -64,6 +66,6 @@ async def test_diagnostics_after_failed_update(
     assert diagnostics["coordinator"] == {
         "last_update_success": False,
         "last_update_success_time": last_success_time,
-        "last_exception": "Error communicating with MAWAQIT: boom",
+        "last_exception": "Error communicating with MAWAQIT: MAWAQIT error. (HTTP 503)",
     }
     assert diagnostics["prayer_times"]["calendar"] == build_prayer_data()["calendar"]

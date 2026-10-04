@@ -3,7 +3,7 @@
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from mawaqit.exceptions import BadCredentialsException
+from mawaqit import AuthenticationError
 
 from custom_components.mawaqit.const import DOMAIN
 from custom_components.mawaqit.diagnostics import async_get_config_entry_diagnostics
@@ -19,6 +19,8 @@ from .conftest import (
     build_prayer_data,
     make_config_entry,
     make_month_data,
+    prayer_times_response,
+    status_error,
 )
 
 OTHER_UUID = "bbbbb-cccccc-ddddd-0000"
@@ -39,18 +41,23 @@ def _other_prayer_data(name: str = "Other Mosque") -> dict[str, Any]:
 def _client(prayer_data: dict | None = None, side_effect: Any = None) -> MagicMock:
     """Return a client returning the prayer data of one mosque."""
     client = MagicMock()
-    client.fetch_prayer_times = AsyncMock(
-        return_value=prayer_data, side_effect=side_effect
+    client.mosques.prayer_times = AsyncMock(
+        return_value=prayer_data and prayer_times_response(prayer_data),
+        side_effect=side_effect,
     )
     return client
 
 
 async def _set_up(hass: HomeAssistant, clients: dict[str, MagicMock]) -> MagicMock:
-    """Set up the entries added to hass, each with the client of its mosque."""
-    with patch(
-        "custom_components.mawaqit.AsyncMawaqitClient",
-        side_effect=lambda **kwargs: clients[kwargs["mosque"]],
-    ) as mock_client_class:
+    """Set up the entries added to hass, each mosque answered by its client."""
+
+    async def prayer_times(uuid: str) -> Any:
+        return await clients[uuid].mosques.prayer_times(uuid)
+
+    with patch("custom_components.mawaqit.AsyncMawaqitClient") as mock_client_class:
+        mock_client_class.return_value.mosques.prayer_times = AsyncMock(
+            side_effect=prayer_times
+        )
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
     return mock_client_class
@@ -86,12 +93,15 @@ async def test_two_mosques_side_by_side(
     assert entry.state is ConfigEntryState.LOADED
     assert other.state is ConfigEntryState.LOADED
     assert sorted(
-        (call.kwargs["mosque"], call.kwargs["token"])
-        for call in mock_client_class.call_args_list
-    ) == [(MOCK_UUID, MOCK_TOKEN), (OTHER_UUID, OTHER_TOKEN)]
+        call.kwargs["token"] for call in mock_client_class.call_args_list
+    ) == sorted([MOCK_TOKEN, OTHER_TOKEN])
     coordinator = entry.runtime_data.prayer_time_coordinator
     other_coordinator = other.runtime_data.prayer_time_coordinator
     assert coordinator is not other_coordinator
+    assert (coordinator.mosque_uuid, other_coordinator.mosque_uuid) == (
+        MOCK_UUID,
+        OTHER_UUID,
+    )
     assert coordinator.data["name"] == "Test Mosque"
     assert other_coordinator.data["name"] == "Other Mosque"
 
@@ -210,7 +220,7 @@ async def test_one_mosque_with_a_rejected_login(
     await _set_up(
         hass,
         {
-            MOCK_UUID: _client(side_effect=BadCredentialsException),
+            MOCK_UUID: _client(side_effect=status_error(AuthenticationError, 401)),
             OTHER_UUID: _client(_other_prayer_data()),
         },
     )
@@ -240,11 +250,13 @@ async def test_refresh_of_one_mosque(hass: HomeAssistant) -> None:
     fajr = hass.states.get("sensor.test_mosque_fajr_prayer")
     assert fajr is not None and fajr.state != other_fajr.state
 
-    client.fetch_prayer_times.return_value = _other_prayer_data(name="Test Mosque")
+    client.mosques.prayer_times.return_value = prayer_times_response(
+        _other_prayer_data(name="Test Mosque")
+    )
     await entry.runtime_data.prayer_time_coordinator.async_refresh()
     await hass.async_block_till_done()
 
     fajr = hass.states.get("sensor.test_mosque_fajr_prayer")
     assert fajr is not None and fajr.state == other_fajr.state
-    assert other_client.fetch_prayer_times.await_count == 1
+    assert other_client.mosques.prayer_times.await_count == 1
     assert hass.states.get("sensor.other_mosque_fajr_prayer") == other_fajr

@@ -174,9 +174,6 @@
     "no_mosque_data": {
       "message": "No mosque data was returned by MAWAQIT."
     },
-    "no_prayer_times_data": {
-      "message": "No prayer times were returned by MAWAQIT."
-    },
     "unknown_adhan": {
       "message": "Unknown adhan: {adhan}."
     }

@@ -6,6 +6,9 @@ from collections.abc import Callable, Generator
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+import httpx
+from mawaqit import APIConnectionError, APIStatusError, APITimeoutError
+from mawaqit.types import Announcement, FlashMessage, Mosque, PrayerTimes
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -32,16 +35,37 @@ PRAYER_TIMES_ROW = ["05:30", "06:45", "12:30", "15:45", "18:30", "20:00"]
 IQAMA_OFFSET_TIMES_ROW = ["+10", "+15", "+10", "+5", "+10"]
 IQAMA_ABSOLUTE_TIMES_ROW = ["05:45", "13:00", "16:00", "19:00", "21:00"]
 
-MOCK_MOSQUE_DATA: dict[str, Any] = {
-    "uuid": MOCK_UUID,
-    "name": "Test Mosque",
-    "announcements": [
-        {"title": "Ramadan", "content": "Starts tomorrow"},
-    ],
-}
+_REQUEST = httpx.Request("GET", f"https://mawaqit.net/api/2.0/mosque/{MOCK_UUID}")
 
-# Sentinel: distinguishes "caller did not supply a value" from explicit None.
-_UNSET = object()
+
+def status_error(error: type[APIStatusError], status: int) -> APIStatusError:
+    """Return an error of the mawaqit library for an HTTP status."""
+    response = httpx.Response(status, request=_REQUEST)
+    return error("MAWAQIT error.", response, body=None)
+
+
+CONNECTION_ERROR = APIConnectionError(_REQUEST)
+TIMEOUT_ERROR = APITimeoutError(_REQUEST)
+
+
+def prayer_times_response(data: dict[str, Any]) -> PrayerTimes:
+    """Return the prayer times of the library with only these JSON fields set.
+
+    Not validated, so tests can leave out the fields they do not need.
+    """
+    nested = {
+        key: [Announcement.model_construct(**item) for item in data[key]]
+        for key in ("announcements", "events")
+        if key in data
+    }
+    if data.get("flash"):
+        nested["flash"] = FlashMessage.model_construct(**data["flash"])
+    return PrayerTimes.model_construct(**{**data, **nested})
+
+
+def search_response(mosques: list[dict[str, Any]]) -> list[Mosque]:
+    """Return the mosques of the library found by a search."""
+    return [Mosque.model_construct(**mosque) for mosque in mosques]
 
 
 # ---------------------------------------------------------------------------
@@ -261,12 +285,6 @@ def mock_prayer_data() -> dict:
     return build_prayer_data()
 
 
-@pytest.fixture
-def mock_mosque_data() -> dict:
-    """Return mock mosque detail data."""
-    return dict(MOCK_MOSQUE_DATA)
-
-
 # ---------------------------------------------------------------------------
 # Integration setup helper fixture
 # ---------------------------------------------------------------------------
@@ -281,43 +299,29 @@ def setup_mawaqit_integration(
 
     Usage::
 
-        # Use defaults (MOCK_MOSQUE_DATA + build_prayer_data())
+        # Use defaults (build_prayer_data())
         await setup_mawaqit_integration()
 
         # Override data
-        await setup_mawaqit_integration(mosque_data={"name": "Other"})
-
-        # Inject an explicit None (coordinator receives no data -> SETUP_RETRY)
-        await setup_mawaqit_integration(mosque_data=None)
+        await setup_mawaqit_integration(prayer_data=build_prayer_data(jumua=None))
 
         # Inject an exception
-        await setup_mawaqit_integration(prayer_side_effect=BadCredentialsException)
-
-    Passing ``mosque_data=None`` (or ``prayer_data=None``) is intentional and
-    causes the mock to return ``None``, which triggers ``UpdateFailed``.
-    When a parameter is *omitted entirely* the fixture supplies sensible defaults.
+        await setup_mawaqit_integration(prayer_side_effect=CONNECTION_ERROR)
     """
 
     async def _setup(
-        mosque_data: dict | None = _UNSET,
-        prayer_data: dict | None = _UNSET,
-        mosque_side_effect: type[Exception] | None = None,
-        prayer_side_effect: type[Exception] | None = None,
+        prayer_data: dict | None = None,
+        prayer_side_effect: Exception | None = None,
     ) -> None:
-        resolved_mosque = (
-            dict(MOCK_MOSQUE_DATA) if mosque_data is _UNSET else mosque_data
-        )
-        resolved_prayer = build_prayer_data() if prayer_data is _UNSET else prayer_data
+        resolved_prayer = build_prayer_data() if prayer_data is None else prayer_data
 
         mock_config_entry.add_to_hass(hass)
 
         with patch("custom_components.mawaqit.AsyncMawaqitClient") as mock_client_class:
             client = mock_client_class.return_value
-            client.fetch_mosque_by_id = AsyncMock(
-                return_value=resolved_mosque, side_effect=mosque_side_effect
-            )
-            client.fetch_prayer_times = AsyncMock(
-                return_value=resolved_prayer, side_effect=prayer_side_effect
+            client.mosques.prayer_times = AsyncMock(
+                return_value=prayer_times_response(resolved_prayer),
+                side_effect=prayer_side_effect,
             )
 
             await hass.config_entries.async_setup(mock_config_entry.entry_id)
