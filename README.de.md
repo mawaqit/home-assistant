@@ -90,6 +90,7 @@ Die Integration fügt ein Gerät mit dem Namen deiner Moschee hinzu, verlinkt mi
 | Zeit des nächsten Gebets                                                   | Die Uhrzeit des nächsten Gebets.                                                                                                                                      |
 | Hijri-Monat                                                                | Der Monat des Hijri-Datums deiner Moschee: `muharram`, `safar`, `rabi_al_awwal`, `rabi_al_thani`, `jumada_al_ula`, `jumada_al_akhirah`, `rajab`, `shaban`, `ramadan`, `shawwal`, `dhu_al_qidah` oder `dhu_al_hijjah`. Die Oberfläche zeigt ihn übersetzt an, Automationen sehen aber immer diese Werte. |
 | Hijri-Tag, Hijri-Jahr                                                      | Der Tag, von 1 bis 30, und das Jahr des Hijri-Datums deiner Moschee.                                                                                                  |
+| Foto, Logo (Bilder)                                                        | Das Foto und das Logo deiner Moschee auf MAWAQIT, zum Anzeigen auf einem Dashboard. Nur angelegt, wenn deine Moschee sie veröffentlicht. |
 | Gebetszeiten (Kalender)                                                    | Alle Gebete des aktuellen und des nächsten Monats, siehe unten.                                                                                                       |
 
 ### Der Gebetszeiten-Kalender
@@ -234,6 +235,7 @@ actions:
 
 - Die Integration ruft die Gebetszeiten des ganzen Jahres beim Start von MAWAQIT ab, danach alle 12 Stunden. Änderungen deiner Moschee erscheinen innerhalb von 12 Stunden, oder sofort, wenn du die Integration neu lädst: **Einstellungen** > **Geräte & Dienste** > **MAWAQIT**, Menü ⋮ des Eintrags, **Neu laden**. Schlägt eine Aktualisierung fehl, behalten die Sensoren die bereits abgerufenen Zeiten, und die Integration versucht es alle 15 Minuten erneut.
 - Die Imsak-, Iqama- und Jumu'a-Sensoren werden angelegt, sobald deine Moschee sie veröffentlicht, also ebenfalls innerhalb von 12 Stunden. Hört sie damit auf, bleiben sie erhalten und werden unbekannt. Nach einem Neuladen oder Neustart zeigt Home Assistant sie als nicht mehr bereitgestellt an, und du kannst sie löschen.
+- Die Bilder werden angelegt, sobald deine Moschee sie veröffentlicht, und ändern sich innerhalb von 12 Stunden, wenn sie sie ändert. Veröffentlicht sie eines nicht mehr, wird es nicht verfügbar.
 - Die Gebets-, Imsak-, Iqama- und Jumu'a-Sensoren wechseln in der Mitte der Nacht auf den nächsten Tag, nicht um Mitternacht: Nach Isha zeigen sie noch die Zeiten des zu Ende gehenden Tages.
 - Die Zeiten der Nacht wechseln bei Fajr auf die nächste Nacht.
 - **Name des nächsten Gebets** und **Zeit des nächsten Gebets** ändern sich zur Zeit jedes Gebets.

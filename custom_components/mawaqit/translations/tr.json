@@ -93,6 +93,14 @@
         "name": "Namaz Vakitleri"
       }
     },
+    "image": {
+      "logo": {
+        "name": "Logo"
+      },
+      "picture": {
+        "name": "Fotoğraf"
+      }
+    },
     "sensor": {
       "first_third_end": {
         "name": "İlk Üçte Birin Sonu"

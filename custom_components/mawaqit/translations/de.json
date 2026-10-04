@@ -93,6 +93,14 @@
         "name": "Gebetszeiten"
       }
     },
+    "image": {
+      "logo": {
+        "name": "Logo"
+      },
+      "picture": {
+        "name": "Foto"
+      }
+    },
     "sensor": {
       "first_third_end": {
         "name": "Ende des ersten Drittels"

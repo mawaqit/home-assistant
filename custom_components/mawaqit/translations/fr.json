@@ -93,6 +93,14 @@
         "name": "Horaires des prières"
       }
     },
+    "image": {
+      "logo": {
+        "name": "Logo"
+      },
+      "picture": {
+        "name": "Photo"
+      }
+    },
     "sensor": {
       "first_third_end": {
         "name": "Fin du premier tiers"
