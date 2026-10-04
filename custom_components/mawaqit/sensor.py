@@ -6,12 +6,14 @@ It includes the following sensor entities:
 - Imsak sensor
 - Night sensors: middle and thirds of the night
 - Next prayer sensors
+- Hijri date sensors: month, day and year
 
 The sensors are set up using the `async_setup_entry` function, which adds the entities to the platform. The Imsak, Jumua and iqama sensors are added when the mosque publishes them, at setup or at a later refresh.
 
 Classes:
     MawaqitPrayerTimeSensor: Represents a prayer time sensor.
     NextPrayerSensor: Represents the next prayer time and name sensor.
+    MawaqitHijriSensor: Represents a part of today's Hijri date.
 
 Functions:
         async_setup_entry: Sets up the Mawaqit sensor platform.
@@ -23,6 +25,8 @@ from datetime import datetime
 from functools import partial
 import logging
 from typing import override
+
+from mawaqit.hijri import HijriDate, HijriMonth
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -37,7 +41,7 @@ import homeassistant.util.dt as dt_util
 
 from . import MawaqitConfigEntry, utils
 from .const import NIGHT_TIMES, PRAYER_NAMES
-from .coordinator import PrayerTimeCoordinator
+from .coordinator import HijriCoordinator, PrayerTimeCoordinator
 from .entity import MawaqitEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,6 +54,13 @@ class MawaqitPrayerTimeSensorEntityDescription(SensorEntityDescription):
     """Describes Mawaqit prayer time sensor entity."""
 
     get_value: Callable[[dict], datetime | None]
+
+
+@dataclass(frozen=True, kw_only=True)
+class MawaqitHijriSensorEntityDescription(SensorEntityDescription):
+    """Describes Mawaqit Hijri date sensor entity."""
+
+    get_value: Callable[[HijriDate], str | int]
 
 
 PRAYER_TIME_SENSOR_DESCRIPTIONS = [
@@ -176,6 +187,26 @@ NEXT_SALAT_SENSOR_DESCRIPTION = [
     ),
 ]
 
+HIJRI_SENSOR_DESCRIPTIONS = [
+    MawaqitHijriSensorEntityDescription(
+        key="hijri_month",
+        translation_key="hijri_month",
+        device_class=SensorDeviceClass.ENUM,
+        options=[month.name.lower() for month in HijriMonth],
+        get_value=lambda date: date.month.name.lower(),
+    ),
+    MawaqitHijriSensorEntityDescription(
+        key="hijri_day",
+        translation_key="hijri_day",
+        get_value=lambda date: date.day,
+    ),
+    MawaqitHijriSensorEntityDescription(
+        key="hijri_year",
+        translation_key="hijri_year",
+        get_value=lambda date: date.year,
+    ),
+]
+
 
 async def async_setup_entry(
     _hass: HomeAssistant,
@@ -193,6 +224,15 @@ async def async_setup_entry(
     entities.extend(
         NextPrayerSensor(coordinator, desc, mosque_uuid)
         for desc in NEXT_SALAT_SENSOR_DESCRIPTION
+    )
+    entities.extend(
+        MawaqitHijriSensor(
+            config_entry.runtime_data.hijri_coordinator,
+            desc,
+            mosque_uuid,
+            coordinator.data,
+        )
+        for desc in HIJRI_SENSOR_DESCRIPTIONS
     )
     async_add_entities(entities)
 
@@ -228,7 +268,7 @@ async def async_setup_entry(
     _LOGGER.info("Mawaqit sensors successfully initialized")
 
 
-class MawaqitPrayerTimeSensor(MawaqitEntity, SensorEntity):
+class MawaqitPrayerTimeSensor(MawaqitEntity[PrayerTimeCoordinator], SensorEntity):
     """Representation of a prayer time sensor."""
 
     entity_description: MawaqitPrayerTimeSensorEntityDescription
@@ -240,7 +280,7 @@ class MawaqitPrayerTimeSensor(MawaqitEntity, SensorEntity):
         mosque_uuid: str,
     ) -> None:
         """Initialize the prayer time sensor."""
-        super().__init__(coordinator, mosque_uuid)
+        super().__init__(coordinator, mosque_uuid, coordinator.data)
         self.entity_description = sensor_description
         self._attr_unique_id = f"{mosque_uuid}_{self.entity_description.key.lower()}"
 
@@ -264,7 +304,7 @@ class MawaqitPrayerTimeSensor(MawaqitEntity, SensorEntity):
             return None
 
 
-class NextPrayerSensor(MawaqitEntity, SensorEntity):
+class NextPrayerSensor(MawaqitEntity[PrayerTimeCoordinator], SensorEntity):
     """Sensor for the next prayer time and name.
 
     Computes the next prayer from the coordinator's prayer calendar and
@@ -279,7 +319,7 @@ class NextPrayerSensor(MawaqitEntity, SensorEntity):
         mosque_uuid: str,
     ) -> None:
         """Initialize the sensor with a specific description."""
-        super().__init__(coordinator, mosque_uuid)
+        super().__init__(coordinator, mosque_uuid, coordinator.data)
         self.entity_description = description
         self._attr_unique_id = (
             f"{mosque_uuid}_next_prayer_{self.entity_description.key.lower()}"
@@ -357,3 +397,27 @@ class NextPrayerSensor(MawaqitEntity, SensorEntity):
         if self.entity_description.key == "next_salat_time":
             return self._next_prayer_time
         return None
+
+
+class MawaqitHijriSensor(MawaqitEntity[HijriCoordinator], SensorEntity):
+    """Representation of a part of today's Hijri date of the mosque."""
+
+    entity_description: MawaqitHijriSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: HijriCoordinator,
+        description: MawaqitHijriSensorEntityDescription,
+        mosque_uuid: str,
+        mosque_data: dict,
+    ) -> None:
+        """Initialize the Hijri date sensor."""
+        super().__init__(coordinator, mosque_uuid, mosque_data)
+        self.entity_description = description
+        self._attr_unique_id = f"{mosque_uuid}_{description.key}"
+
+    @property
+    @override
+    def native_value(self) -> str | int:
+        """Return the part of today's Hijri date."""
+        return self.entity_description.get_value(self.coordinator.today())

@@ -97,6 +97,29 @@
       "first_third_end": {
         "name": "Fin du premier tiers"
       },
+      "hijri_day": {
+        "name": "Jour hégirien"
+      },
+      "hijri_month": {
+        "name": "Mois hégirien",
+        "state": {
+          "dhu_al_hijjah": "Dhu al-Hijjah",
+          "dhu_al_qidah": "Dhu al-Qi'dah",
+          "jumada_al_akhirah": "Joumada al-Akhirah",
+          "jumada_al_ula": "Joumada al-Oula",
+          "muharram": "Mouharram",
+          "rabi_al_awwal": "Rabi' al-Awwal",
+          "rabi_al_thani": "Rabi' al-Akhir",
+          "rajab": "Rajab",
+          "ramadan": "Ramadan",
+          "safar": "Safar",
+          "shaban": "Chaabane",
+          "shawwal": "Shawwal"
+        }
+      },
+      "hijri_year": {
+        "name": "Année hégirienne"
+      },
       "imsak": {
         "name": "Imsak"
       },

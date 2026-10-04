@@ -1,2 +1,2 @@
-mawaqit==2.0.0b2
+mawaqit==2.0.0b3
 pytest-homeassistant-custom-component==0.13.367

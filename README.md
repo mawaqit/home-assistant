@@ -4,7 +4,7 @@
 
 **English** | [Français](README.fr.md) | [Deutsch](README.de.md) | [Nederlands](README.nl.md)
 
-This integration brings the prayer times of your [MAWAQIT](https://mawaqit.net) mosque into Home Assistant: the five prayers, Imsak, Shuruq, the iqamas, Jumu'a and the times of the night, as sensors and as a calendar. Use them to play the adhan, send a reminder before the iqama, warm up the house before Fajr or open the shutters at Shuruq.
+This integration brings the prayer times of your [MAWAQIT](https://mawaqit.net) mosque into Home Assistant: the five prayers, Imsak, Shuruq, the iqamas, Jumu'a, the times of the night and the Hijri date, as sensors and as a calendar. Use them to play the adhan, send a reminder before the iqama, warm up the house before Fajr, open the shutters at Shuruq or wake up for suhoor during Ramadan.
 
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
@@ -76,7 +76,7 @@ If MAWAQIT no longer accepts your login, for example after a password change, Ho
 
 ## Entities
 
-The integration adds a device named after your mosque, linked to its page on MAWAQIT, with the entities below. All the sensors except **Next Salat Name** are timestamps: Home Assistant shows them as a time, and you can use them directly in a time trigger.
+The integration adds a device named after your mosque, linked to its page on MAWAQIT, with the entities below. All the sensors except **Next Salat Name** and the Hijri date are timestamps: Home Assistant shows them as a time, and you can use them directly in a time trigger.
 
 | Entity                                                           | Description                                                                                                                                         |
 | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -88,6 +88,8 @@ The integration adds a device named after your mosque, linked to its page on MAW
 | End of the First Third, Middle of the Night, Start of the Last Third | The night from Maghrib to the next Fajr: the end of its first third, its middle and the start of its last third.                                |
 | Next Salat Name                                                  | The next prayer: `fajr`, `shuruq`, `dhuhr`, `asr`, `maghrib` or `isha`. The UI shows it translated, but automations always see these values. Jumu'a is not included: on Fridays it is `dhuhr`. |
 | Next Salat Time                                                  | The time of the next prayer.                                                                                                                        |
+| Hijri Month                                                      | The month of the Hijri date of your mosque: `muharram`, `safar`, `rabi_al_awwal`, `rabi_al_thani`, `jumada_al_ula`, `jumada_al_akhirah`, `rajab`, `shaban`, `ramadan`, `shawwal`, `dhu_al_qidah` or `dhu_al_hijjah`. The UI shows it translated, but automations always see these values. |
+| Hijri Day, Hijri Year                                            | The day, from 1 to 30, and the year of the Hijri date of your mosque.                                                                               |
 | Prayer Times (calendar)                                          | All the prayers of the current and the next month, see below.                                                                                       |
 
 ### The prayer times calendar
@@ -95,6 +97,22 @@ The integration adds a device named after your mosque, linked to its page on MAW
 Each prayer is an event named `Fajr`, `Shuruq`, `Dhuhr`, `Asr`, `Maghrib` or `Isha`, and on Fridays `Jumua`, `Jumua 2` and `Jumua 3`. It starts at the adhan and ends at the iqama if your mosque publishes it, otherwise it ends when it starts. The times of the night are events named `End of the first third`, `Middle of the night` and `Start of the last third`, which end when they start.
 
 These names are in English whatever your language, so an automation filtering on them works for everyone. Use the calendar with a `calendar` trigger, as in the [iqama reminder example](#automation-examples).
+
+### The Hijri date
+
+The Hijri sensors show the date displayed on the screens of your mosque. MAWAQIT computes it with the Islamic calendar, shifted by the adjustment your mosque sets after the moon sighting, or that MAWAQIT sets for all the mosques of a country. It changes at midnight in the time zone of the mosque, not at Maghrib.
+
+Only today's date is known: the adjustment is decided day by day, so the integration cannot tell in advance when Ramadan starts or ends. To run an automation during Ramadan, use a condition on **Hijri Month**, as in the [suhoor example](#automation-examples).
+
+To show the whole date on a dashboard, like `22 Rabi' al-Thani 1448`, add a **Markdown** card with this content and [your entity IDs](#entity-ids). `state_translated` shows the month in your language:
+
+```yaml
+type: markdown
+content: >
+  {{ states('sensor.my_mosque_hijri_day') }}
+  {{ state_translated('sensor.my_mosque_hijri_month') }}
+  {{ states('sensor.my_mosque_hijri_year') }}
+```
 
 ### Entity IDs
 
@@ -191,6 +209,25 @@ actions:
 mode: queued
 ```
 
+Wake up for suhoor 45 minutes before Fajr, during Ramadan only. The Hijri date changes at midnight, so it also rings before the first fast, and not on the morning of Eid:
+
+```yaml
+alias: Suhoor
+triggers:
+  - trigger: time
+    at:
+      entity_id: sensor.my_mosque_fajr_prayer
+      offset: "-00:45:00"
+conditions:
+  - condition: state
+    entity_id: sensor.my_mosque_hijri_month
+    state: ramadan
+actions:
+  - action: light.turn_on
+    target:
+      entity_id: light.bedroom
+```
+
 ## Data updates
 
 - The integration fetches the prayer times of the whole year from MAWAQIT when it starts, then every 12 hours. Changes made by your mosque appear within 12 hours, or right away if you reload the integration: **Settings** > **Devices & services** > **MAWAQIT**, ⋮ menu of the entry, **Reload**. If an update fails, the sensors keep the times already fetched and the integration tries again every 15 minutes.
@@ -198,6 +235,7 @@ mode: queued
 - The prayer, Imsak, iqama and Jumu'a sensors move to the next day at the middle of the night, not at midnight: after Isha, they still show the times of the day that is ending.
 - The times of the night move to the next night at Fajr.
 - **Next Salat Name** and **Next Salat Time** change at the time of each prayer.
+- The Hijri date settings of your mosque are fetched every hour, so a change after the moon sighting appears within an hour. The Hijri sensors move to the next day at midnight, in the time zone of the mosque. If an update fails, they keep the settings already fetched and the integration tries again every 15 minutes.
 
 Times are published by the mosque in its own time zone, and Home Assistant shows them in yours. They are the same moment: a mosque in another time zone is shown with your local time.
 

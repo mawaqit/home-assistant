@@ -9,6 +9,15 @@
       "first_third_end": {
         "default": "mdi:moon-waxing-crescent"
       },
+      "hijri_day": {
+        "default": "mdi:calendar-today"
+      },
+      "hijri_month": {
+        "default": "mdi:star-crescent"
+      },
+      "hijri_year": {
+        "default": "mdi:calendar"
+      },
       "imsak": {
         "default": "mdi:food-off"
       },

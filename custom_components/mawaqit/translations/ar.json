@@ -97,6 +97,29 @@
       "first_third_end": {
         "name": "نهاية الثلث الأول"
       },
+      "hijri_day": {
+        "name": "اليوم الهجري"
+      },
+      "hijri_month": {
+        "name": "الشهر الهجري",
+        "state": {
+          "dhu_al_hijjah": "ذو الحجة",
+          "dhu_al_qidah": "ذو القعدة",
+          "jumada_al_akhirah": "جُمادى الآخرة",
+          "jumada_al_ula": "جُمادى الأولى",
+          "muharram": "محرم",
+          "rabi_al_awwal": "ربيع الأول",
+          "rabi_al_thani": "ربيع الثاني",
+          "rajab": "رجب",
+          "ramadan": "رمضان",
+          "safar": "صفر",
+          "shaban": "شعبان",
+          "shawwal": "شوّال"
+        }
+      },
+      "hijri_year": {
+        "name": "السنة الهجرية"
+      },
       "imsak": {
         "name": "الإمساك"
       },

@@ -4,7 +4,7 @@
 
 [English](README.md) | [Français](README.fr.md) | [Deutsch](README.de.md) | **Nederlands**
 
-Deze integratie brengt de gebedstijden van je [MAWAQIT](https://mawaqit.net)-moskee naar Home Assistant: de vijf gebeden, Imsak, Shuruq, de iqama's, het Jumu'a-gebed en de tijden van de nacht, als sensoren en als agenda. Gebruik ze om de adhan af te spelen, een herinnering te krijgen voor de iqama, het huis te verwarmen voor Fajr of de rolluiken te openen bij Shuruq.
+Deze integratie brengt de gebedstijden van je [MAWAQIT](https://mawaqit.net)-moskee naar Home Assistant: de vijf gebeden, Imsak, Shuruq, de iqama's, het Jumu'a-gebed, de tijden van de nacht en de Hijri-datum, als sensoren en als agenda. Gebruik ze om de adhan af te spelen, een herinnering te krijgen voor de iqama, het huis te verwarmen voor Fajr, de rolluiken te openen bij Shuruq of tijdens de Ramadan wakker te worden voor de suhoor.
 
 - [Vereisten](#vereisten)
 - [Installatie](#installatie)
@@ -76,7 +76,7 @@ Als MAWAQIT je login niet meer accepteert, bijvoorbeeld na een wachtwoordwijzigi
 
 ## Entiteiten
 
-De integratie voegt een apparaat toe met de naam van je moskee, gekoppeld aan haar MAWAQIT-pagina, met de entiteiten hieronder. Alle sensoren behalve **Naam volgend gebed** zijn tijdstempels: Home Assistant toont ze als een tijd, en je kunt ze direct gebruiken in een tijd-trigger.
+De integratie voegt een apparaat toe met de naam van je moskee, gekoppeld aan haar MAWAQIT-pagina, met de entiteiten hieronder. Alle sensoren behalve **Naam volgend gebed** en de Hijri-datum zijn tijdstempels: Home Assistant toont ze als een tijd, en je kunt ze direct gebruiken in een tijd-trigger.
 
 | Entiteit                                                                | Beschrijving                                                                                                                                                         |
 | ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -88,6 +88,8 @@ De integratie voegt een apparaat toe met de naam van je moskee, gekoppeld aan ha
 | Einde eerste derde, Midden van de nacht, Begin laatste derde            | De nacht van Maghrib tot de volgende Fajr: het einde van het eerste derde, het midden en het begin van het laatste derde.                                             |
 | Naam volgend gebed                                                      | Het volgende gebed: `fajr`, `shuruq`, `dhuhr`, `asr`, `maghrib` of `isha`. De interface toont het vertaald, maar automatiseringen zien altijd deze waarden. Het Jumu'a-gebed hoort er niet bij: op vrijdag is het `dhuhr`. |
 | Tijd volgend gebed                                                      | De tijd van het volgende gebed.                                                                                                                                      |
+| Hijri-maand                                                             | De maand van de Hijri-datum van je moskee: `muharram`, `safar`, `rabi_al_awwal`, `rabi_al_thani`, `jumada_al_ula`, `jumada_al_akhirah`, `rajab`, `shaban`, `ramadan`, `shawwal`, `dhu_al_qidah` of `dhu_al_hijjah`. De interface toont de maand vertaald, maar automatiseringen zien altijd deze waarden. |
+| Hijri-dag, Hijri-jaar                                                   | De dag, van 1 tot 30, en het jaar van de Hijri-datum van je moskee.                                                                                                  |
 | Gebedstijden (agenda)                                                   | Alle gebeden van de huidige en de volgende maand, zie hieronder.                                                                                                     |
 
 ### De gebedstijdenagenda
@@ -95,6 +97,22 @@ De integratie voegt een apparaat toe met de naam van je moskee, gekoppeld aan ha
 Elk gebed is een afspraak met de naam `Fajr`, `Shuruq`, `Dhuhr`, `Asr`, `Maghrib` of `Isha`, en op vrijdag `Jumua`, `Jumua 2` en `Jumua 3`. Ze begint bij de adhan en eindigt bij de iqama als je moskee die publiceert, anders eindigt ze zodra ze begint. De tijden van de nacht zijn afspraken met de naam `End of the first third`, `Middle of the night` en `Start of the last third`, die eindigen zodra ze beginnen.
 
 Deze namen zijn in het Engels, ongeacht je taal, zodat een automatisering die erop filtert bij iedereen werkt. Gebruik de agenda met een `calendar`-trigger, zoals in het [voorbeeld met een herinnering voor de iqama](#voorbeeldautomatiseringen).
+
+### De Hijri-datum
+
+De Hijri-sensoren tonen de datum die op de schermen van je moskee staat. MAWAQIT berekent die met de islamitische kalender, verschoven met de aanpassing die je moskee na de maanwaarneming instelt, of die MAWAQIT voor alle moskeeën van een land instelt. De datum verandert om middernacht in de tijdzone van de moskee, niet bij Maghrib.
+
+Alleen de datum van vandaag is bekend: de aanpassing wordt van dag tot dag beslist, dus de integratie kan niet vooraf zeggen wanneer de Ramadan begint of eindigt. Gebruik een voorwaarde op **Hijri-maand** om een automatisering tijdens de Ramadan uit te voeren, zoals in het [suhoor-voorbeeld](#voorbeeldautomatiseringen).
+
+Om de volledige datum op een dashboard te tonen, bijvoorbeeld `22 Rabi' al-Thani 1448`, voeg je een **Markdown**-kaart toe met deze inhoud en [je eigen entiteit-ID's](#entiteit-ids). `state_translated` toont de maand in je taal:
+
+```yaml
+type: markdown
+content: >
+  {{ states('sensor.mijn_moskee_hijri_dag') }}
+  {{ state_translated('sensor.mijn_moskee_hijri_maand') }}
+  {{ states('sensor.mijn_moskee_hijri_jaar') }}
+```
 
 ### Entiteit-ID's
 
@@ -191,6 +209,25 @@ actions:
 mode: queued
 ```
 
+Wakker worden voor de suhoor, 45 minuten voor Fajr, alleen tijdens de Ramadan. De Hijri-datum verandert om middernacht, dus de wekker gaat ook voor de eerste vastendag af, en niet op de ochtend van het Suikerfeest:
+
+```yaml
+alias: Suhoor
+triggers:
+  - trigger: time
+    at:
+      entity_id: sensor.mijn_moskee_fajr_gebed
+      offset: "-00:45:00"
+conditions:
+  - condition: state
+    entity_id: sensor.mijn_moskee_hijri_maand
+    state: ramadan
+actions:
+  - action: light.turn_on
+    target:
+      entity_id: light.bedroom
+```
+
 ## Gegevensupdates
 
 - De integratie haalt de gebedstijden van het hele jaar op bij MAWAQIT wanneer ze start, en daarna elke 12 uur. Wijzigingen van je moskee verschijnen binnen 12 uur, of meteen als je de integratie herlaadt: **Instellingen** > **Apparaten & diensten** > **MAWAQIT**, menu ⋮ van de vermelding, **Herladen**. Mislukt een update, dan houden de sensoren de al opgehaalde tijden en probeert de integratie het elke 15 minuten opnieuw.
@@ -198,6 +235,7 @@ mode: queued
 - De gebeds-, Imsak-, iqama- en Jumu'a-sensoren gaan midden in de nacht naar de volgende dag, niet om middernacht: na Isha tonen ze nog de tijden van de dag die eindigt.
 - De tijden van de nacht gaan bij Fajr naar de volgende nacht.
 - **Naam volgend gebed** en **Tijd volgend gebed** veranderen op het tijdstip van elk gebed.
+- De instellingen van de Hijri-datum van je moskee worden elk uur opgehaald, dus een wijziging na de maanwaarneming verschijnt binnen het uur. De Hijri-sensoren gaan om middernacht naar de volgende dag, in de tijdzone van de moskee. Mislukt een update, dan houden ze de al opgehaalde instellingen en probeert de integratie het elke 15 minuten opnieuw.
 
 De tijden worden door de moskee in haar tijdzone gepubliceerd, en Home Assistant toont ze in de jouwe. Het is hetzelfde moment: een moskee in een andere tijdzone wordt in jouw lokale tijd getoond.
 

@@ -97,6 +97,29 @@
       "first_third_end": {
         "name": "End of the First Third"
       },
+      "hijri_day": {
+        "name": "Hijri Day"
+      },
+      "hijri_month": {
+        "name": "Hijri Month",
+        "state": {
+          "dhu_al_hijjah": "Dhu al-Hijjah",
+          "dhu_al_qidah": "Dhu al-Qi'dah",
+          "jumada_al_akhirah": "Jumada al-Akhirah",
+          "jumada_al_ula": "Jumada al-Ula",
+          "muharram": "Muharram",
+          "rabi_al_awwal": "Rabi' al-Awwal",
+          "rabi_al_thani": "Rabi' al-Thani",
+          "rajab": "Rajab",
+          "ramadan": "Ramadan",
+          "safar": "Safar",
+          "shaban": "Sha'ban",
+          "shawwal": "Shawwal"
+        }
+      },
+      "hijri_year": {
+        "name": "Hijri Year"
+      },
       "imsak": {
         "name": "Imsak"
       },
