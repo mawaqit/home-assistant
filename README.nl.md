@@ -77,7 +77,7 @@ Als MAWAQIT je login niet meer accepteert, bijvoorbeeld na een wachtwoordwijzigi
 
 ## Entiteiten
 
-De integratie voegt een apparaat toe met de naam van je moskee, gekoppeld aan haar MAWAQIT-pagina, met de entiteiten hieronder. Alle sensoren behalve **Naam volgend gebed** en de Hijri-datum zijn tijdstempels: Home Assistant toont ze als een tijd, en je kunt ze direct gebruiken in een tijd-trigger.
+De integratie voegt een apparaat toe met de naam van je moskee, gekoppeld aan haar MAWAQIT-pagina, met de entiteiten hieronder. Alle sensoren behalve **Naam volgend gebed**, de Hijri-datum en het flashbericht zijn tijdstempels: Home Assistant toont ze als een tijd, en je kunt ze direct gebruiken in een tijd-trigger.
 
 | Entiteit                                                                | Beschrijving                                                                                                                                                         |
 | ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -91,6 +91,7 @@ De integratie voegt een apparaat toe met de naam van je moskee, gekoppeld aan ha
 | Tijd volgend gebed                                                      | De tijd van het volgende gebed.                                                                                                                                      |
 | Hijri-maand                                                             | De maand van de Hijri-datum van je moskee: `muharram`, `safar`, `rabi_al_awwal`, `rabi_al_thani`, `jumada_al_ula`, `jumada_al_akhirah`, `rajab`, `shaban`, `ramadan`, `shawwal`, `dhu_al_qidah` of `dhu_al_hijjah`. De interface toont de maand vertaald, maar automatiseringen zien altijd deze waarden. |
 | Hijri-dag, Hijri-jaar                                                   | De dag, van 1 tot 30, en het jaar van de Hijri-datum van je moskee.                                                                                                  |
+| Flashbericht                                                            | Het korte bericht dat onderaan over de schermen van je moskee loopt, zie [hieronder](#het-flashbericht). Onbekend als er geen is. |
 | Foto, Logo (afbeeldingen)                                               | De foto en het logo van je moskee op MAWAQIT, om op een dashboard te tonen. Alleen aangemaakt als je moskee ze publiceert. |
 | Gebedstijden (agenda)                                                   | Alle gebeden van de huidige en de volgende maand, zie hieronder.                                                                                                     |
 
@@ -117,6 +118,14 @@ content: >
   {{ state_translated('sensor.mijn_moskee_hijri_maand') }}
   {{ states('sensor.mijn_moskee_hijri_jaar') }}
 ```
+
+### Het flashbericht
+
+**Flashbericht** toont het korte bericht dat onderaan over de schermen van je moskee loopt, zoals het tijdstip van een janazagebed. Het is onbekend als je moskee geen bericht heeft. Heeft je moskee het bericht data gegeven, dan verschijnt het om middernacht van de eerste dag en verdwijnt het om middernacht na de laatste dag, in de tijdzone van de moskee.
+
+De attributen geven aan hoe de schermen het tonen: `color` is de achtergrondkleur, zoals `#d9ad0f`, en `direction` is `ltr` voor van links naar rechts of `rtl` voor van rechts naar links. `start_date` en `end_date` zijn de eerste en de laatste dag, als je moskee ze heeft opgegeven.
+
+Zie het [flashbericht-voorbeeld](#voorbeeldautomatiseringen) om een melding te krijgen als je moskee een bericht publiceert.
 
 ### Entiteit-ID's
 
@@ -238,6 +247,28 @@ actions:
       entity_id: light.bedroom
 ```
 
+Krijg een melding als je moskee een flashbericht publiceert. Ze wordt niet uitgevoerd als de integratie wordt toegevoegd of opnieuw geladen, of als Home Assistant herstart:
+
+```yaml
+alias: Flashbericht van de moskee
+triggers:
+  - trigger: state
+    entity_id: sensor.mijn_moskee_flashbericht
+    not_from: unavailable
+    not_to:
+      - unknown
+      - unavailable
+conditions:
+  # Niet bij het aanmaken van de sensor, met een al gepubliceerd bericht.
+  - condition: template
+    value_template: "{{ trigger.from_state is not none }}"
+actions:
+  - action: notify.notify
+    data:
+      title: Mijn moskee
+      message: "{{ trigger.to_state.state }}"
+```
+
 ## Gegevensupdates
 
 - De integratie haalt de gebedstijden van het hele jaar op bij MAWAQIT wanneer ze start, en daarna elke 12 uur. Wijzigingen van je moskee verschijnen binnen 12 uur, of meteen als je de integratie herlaadt: **Instellingen** > **Apparaten & diensten** > **MAWAQIT**, menu ⋮ van de vermelding, **Herladen**. Mislukt een update, dan houden de sensoren de al opgehaalde tijden en probeert de integratie het elke 15 minuten opnieuw.
@@ -247,6 +278,7 @@ actions:
 - De tijden van de nacht gaan bij Fajr naar de volgende nacht.
 - **Naam volgend gebed** en **Tijd volgend gebed** veranderen op het tijdstip van elk gebed.
 - De instellingen van de Hijri-datum van je moskee worden elk uur opgehaald, dus een wijziging na de maanwaarneming verschijnt binnen het uur. De Hijri-sensoren gaan om middernacht naar de volgende dag, in de tijdzone van de moskee. Mislukt een update, dan houden ze de al opgehaalde instellingen en probeert de integratie het elke 15 minuten opnieuw.
+- Het flashbericht van je moskee wordt elk uur opgehaald, dus een nieuw bericht verschijnt binnen het uur. Mislukt een update, dan houdt de sensor het al opgehaalde bericht en probeert de integratie het elke 15 minuten opnieuw.
 
 De tijden worden door de moskee in haar tijdzone gepubliceerd, en Home Assistant toont ze in de jouwe. Het is hetzelfde moment: een moskee in een andere tijdzone wordt in jouw lokale tijd getoond.
 

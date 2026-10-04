@@ -7,6 +7,7 @@ It includes the following sensor entities:
 - Night sensors: middle and thirds of the night
 - Next prayer sensors
 - Hijri date sensors: month, day and year
+- Flash message sensor
 
 The sensors are set up using the `async_setup_entry` function, which adds the entities to the platform. The Imsak, Jumua and iqama sensors are added when the mosque publishes them, at setup or at a later refresh.
 
@@ -14,6 +15,7 @@ Classes:
     MawaqitPrayerTimeSensor: Represents a prayer time sensor.
     NextPrayerSensor: Represents the next prayer time and name sensor.
     MawaqitHijriSensor: Represents a part of today's Hijri date.
+    MawaqitFlashMessageSensor: Represents the flash message of the mosque.
 
 Functions:
         async_setup_entry: Sets up the Mawaqit sensor platform.
@@ -24,7 +26,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from functools import partial
 import logging
-from typing import override
+from typing import Any, override
 
 from mawaqit.hijri import HijriDate, HijriMonth
 
@@ -33,7 +35,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import CONF_UUID
+from homeassistant.const import CONF_UUID, MAX_LENGTH_STATE_STATE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -41,7 +43,11 @@ import homeassistant.util.dt as dt_util
 
 from . import MawaqitConfigEntry, utils
 from .const import NIGHT_TIMES, PRAYER_NAMES
-from .coordinator import HijriCoordinator, PrayerTimeCoordinator
+from .coordinator import (
+    FlashMessageCoordinator,
+    HijriCoordinator,
+    PrayerTimeCoordinator,
+)
 from .entity import MawaqitEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -234,6 +240,13 @@ async def async_setup_entry(
         )
         for desc in HIJRI_SENSOR_DESCRIPTIONS
     )
+    entities.append(
+        MawaqitFlashMessageSensor(
+            config_entry.runtime_data.flash_message_coordinator,
+            mosque_uuid,
+            coordinator.data,
+        )
+    )
     async_add_entities(entities)
 
     added_keys: set[str] = set()
@@ -421,3 +434,48 @@ class MawaqitHijriSensor(MawaqitEntity[HijriCoordinator], SensorEntity):
     def native_value(self) -> str | int:
         """Return the part of today's Hijri date."""
         return self.entity_description.get_value(self.coordinator.today())
+
+
+class MawaqitFlashMessageSensor(MawaqitEntity[FlashMessageCoordinator], SensorEntity):
+    """Representation of the flash message shown today on the mosque screens."""
+
+    _attr_translation_key = "flash_message"
+
+    def __init__(
+        self,
+        coordinator: FlashMessageCoordinator,
+        mosque_uuid: str,
+        mosque_data: dict,
+    ) -> None:
+        """Initialize the flash message sensor."""
+        super().__init__(coordinator, mosque_uuid, mosque_data)
+        self._attr_unique_id = f"{mosque_uuid}_flash_message"
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True once the message has been fetched."""
+        # The data is None when the mosque has no message.
+        return self.coordinator.last_update_success_time is not None
+
+    @property
+    @override
+    def native_value(self) -> str | None:
+        """Return the text of the message."""
+        if (flash := self.coordinator.current()) and flash.content:
+            # MAWAQIT limits messages to 200 characters, but only in its back office.
+            return flash.content[:MAX_LENGTH_STATE_STATE]
+        return None
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return how the mosque screens show the message, and its dates."""
+        if not (flash := self.coordinator.current()):
+            return None
+        return {
+            "color": flash.color,
+            "direction": flash.orientation,
+            "start_date": flash.start_date,
+            "end_date": flash.end_date,
+        }

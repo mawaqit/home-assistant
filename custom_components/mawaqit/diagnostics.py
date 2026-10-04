@@ -31,6 +31,7 @@ TO_REDACT = {
     CONF_UUID,
     "announcements",
     "association",
+    "content",
     "events",
     "exteriorPicture",
     "flash",
@@ -65,6 +66,7 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     coordinator = config_entry.runtime_data.prayer_time_coordinator
     hijri_coordinator = config_entry.runtime_data.hijri_coordinator
+    flash_message_coordinator = config_entry.runtime_data.flash_message_coordinator
 
     return async_redact_data(
         {
@@ -80,6 +82,12 @@ async def async_get_config_entry_diagnostics(
                 mode="json", by_alias=True
             )
             if hijri_coordinator.data
+            else None,
+            "flash_message_coordinator": _coordinator_status(flash_message_coordinator),
+            "flash_message": flash_message_coordinator.data.model_dump(
+                mode="json", by_alias=True
+            )
+            if flash_message_coordinator.data
             else None,
         },
         TO_REDACT,

@@ -94,6 +94,7 @@ async def test_new_install_entity_ids(
         "sensor.test_mosque_end_of_the_first_third",
         "sensor.test_mosque_fajr_iqama",
         "sensor.test_mosque_fajr_prayer",
+        "sensor.test_mosque_flash_message",
         "sensor.test_mosque_hijri_day",
         "sensor.test_mosque_hijri_month",
         "sensor.test_mosque_hijri_year",

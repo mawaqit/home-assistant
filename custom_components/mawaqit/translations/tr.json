@@ -105,6 +105,27 @@
       "first_third_end": {
         "name": "İlk Üçte Birin Sonu"
       },
+      "flash_message": {
+        "name": "Anlık Mesaj",
+        "state_attributes": {
+          "color": {
+            "name": "Renk"
+          },
+          "direction": {
+            "name": "Yön",
+            "state": {
+              "ltr": "Soldan sağa",
+              "rtl": "Sağdan sola"
+            }
+          },
+          "end_date": {
+            "name": "Bitiş Tarihi"
+          },
+          "start_date": {
+            "name": "Başlangıç Tarihi"
+          }
+        }
+      },
       "hijri_day": {
         "name": "Hicri Gün"
       },

@@ -7,7 +7,12 @@ from custom_components.mawaqit.diagnostics import async_get_config_entry_diagnos
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 
-from .conftest import CONNECTION_ERROR, build_prayer_data, status_error
+from .conftest import (
+    CONNECTION_ERROR,
+    build_prayer_data,
+    flash_message_response,
+    status_error,
+)
 
 
 async def test_diagnostics(
@@ -19,6 +24,7 @@ async def test_diagnostics(
     await setup_mawaqit_integration()
     coordinator = mock_config_entry.runtime_data.prayer_time_coordinator
     hijri_coordinator = mock_config_entry.runtime_data.hijri_coordinator
+    flash_message_coordinator = mock_config_entry.runtime_data.flash_message_coordinator
 
     diagnostics = await async_get_config_entry_diagnostics(hass, mock_config_entry)
 
@@ -51,6 +57,37 @@ async def test_diagnostics(
             "last_exception": None,
         },
         "hijri_settings": {"hijriAdjustment": 0, "hijriDateForceTo30": False},
+        "flash_message_coordinator": {
+            "last_update_success": True,
+            "last_update_success_time": (
+                flash_message_coordinator.last_update_success_time
+            ),
+            "last_exception": None,
+        },
+        "flash_message": None,
+    }
+
+
+async def test_diagnostics_with_flash_message(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    setup_mawaqit_integration,
+) -> None:
+    """Test the diagnostics show the flash message without its text."""
+    await setup_mawaqit_integration(
+        flash_message=flash_message_response(end_date="2026-02-20")
+    )
+
+    diagnostics = await async_get_config_entry_diagnostics(hass, mock_config_entry)
+
+    assert diagnostics["flash_message"] == {
+        "content": "**REDACTED**",
+        "uuid": "**REDACTED**",
+        "expire": None,
+        "startDate": None,
+        "endDate": "2026-02-20",
+        "color": "#d9ad0f",
+        "orientation": "ltr",
     }
 
 

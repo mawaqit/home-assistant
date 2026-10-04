@@ -82,6 +82,28 @@ def hijri_settings_response(
     return HijriSettings(hijri_adjustment=adjustment, hijri_date_force_to_30=force_30)
 
 
+def flash_message_response(
+    content: str | None = "Janaza prayer after Dhuhr",
+    *,
+    start_date: str | None = None,
+    end_date: str | None = None,
+    color: str = "#d9ad0f",
+    orientation: str = "ltr",
+) -> FlashMessage:
+    """Return the flash message of a mosque."""
+    return FlashMessage.model_validate(
+        {
+            "content": content,
+            "uuid": MOCK_UUID,
+            "expire": None,
+            "startDate": start_date,
+            "endDate": end_date,
+            "color": color,
+            "orientation": orientation,
+        }
+    )
+
+
 def search_response(mosques: list[dict[str, Any]]) -> list[Mosque]:
     """Return the mosques of the library found by a search."""
     return [Mosque.model_construct(**mosque) for mosque in mosques]
@@ -337,6 +359,8 @@ def setup_mawaqit_integration(
         displaying_sabah_imsak: bool = False,
         hijri_settings: HijriSettings | None = None,
         hijri_side_effect: Exception | None = None,
+        flash_message: FlashMessage | None = None,
+        flash_message_side_effect: Exception | None = None,
     ) -> None:
         resolved_prayer = build_prayer_data() if prayer_data is None else prayer_data
 
@@ -356,6 +380,9 @@ def setup_mawaqit_integration(
             client.mosques.hijri_settings = AsyncMock(
                 return_value=hijri_settings or hijri_settings_response(),
                 side_effect=hijri_side_effect,
+            )
+            client.mosques.flash_message = AsyncMock(
+                return_value=flash_message, side_effect=flash_message_side_effect
             )
 
             await hass.config_entries.async_setup(mock_config_entry.entry_id)

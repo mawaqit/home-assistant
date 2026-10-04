@@ -6,7 +6,11 @@ from homeassistant.const import CONF_API_KEY, CONF_UUID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .coordinator import HijriCoordinator, PrayerTimeCoordinator
+from .coordinator import (
+    FlashMessageCoordinator,
+    HijriCoordinator,
+    PrayerTimeCoordinator,
+)
 from .migration import async_migrate_legacy_entry, migrate_title
 from .types import MawaqitConfigEntry, MawaqitData
 
@@ -27,12 +31,17 @@ async def async_setup_entry(
     hijri_coordinator = HijriCoordinator(
         hass, config_entry, client, prayer_time_coordinator
     )
-    # Not the first refresh: a failure only makes the Hijri sensors unavailable.
+    flash_message_coordinator = FlashMessageCoordinator(
+        hass, config_entry, client, prayer_time_coordinator
+    )
+    # Not the first refresh: a failure only makes their sensors unavailable.
     await hijri_coordinator.async_refresh()
+    await flash_message_coordinator.async_refresh()
 
     config_entry.runtime_data = MawaqitData(
         prayer_time_coordinator=prayer_time_coordinator,
         hijri_coordinator=hijri_coordinator,
+        flash_message_coordinator=flash_message_coordinator,
     )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
