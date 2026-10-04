@@ -8,9 +8,6 @@ on:
         description: "Pre-release (beta)"
         type: boolean
         default: false
-  # Publishing the draft (or a release created by hand) attaches the zip.
-  release:
-    types: [published]
 
 permissions: {}
 
@@ -38,12 +35,7 @@ jobs:
             echo "::error::$TAG is a development version, bump the manifest first (see RELEASING.md)"
             exit 1
           fi
-          if [ "$GITHUB_EVENT_NAME" = release ] && [ "$GITHUB_REF_NAME" != "$TAG" ]; then
-            echo "::error::Tag $GITHUB_REF_NAME does not match the manifest version $TAG"
-            exit 1
-          fi
       - name: Create the draft release
-        if: github.event_name == 'workflow_dispatch'
         env:
           PRERELEASE: ${{ inputs.prerelease }}
         run: >-
@@ -53,4 +45,5 @@ jobs:
         # Files at the zip root: users extract it into custom_components/mawaqit.
         run: cd custom_components/mawaqit && zip -r "$RUNNER_TEMP/mawaqit.zip" . -x "*__pycache__*" ".gitignore"
       - name: Attach the zip
-        run: gh release upload "$TAG" "$RUNNER_TEMP/mawaqit.zip" --clobber
+        # Releases are immutable: assets can only be attached to the draft.
+        run: gh release upload "$TAG" "$RUNNER_TEMP/mawaqit.zip"
