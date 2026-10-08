@@ -1,12 +1,18 @@
 """Tests for the Mawaqit API wrapper."""
 
+from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock, MagicMock
 
+from mawaqit import AsyncMawaqitClient
 from mawaqit.types import MosqueSummary
+import pytest
+import respx
 
 from custom_components.mawaqit import mawaqit_wrapper
 from custom_components.mawaqit.const import MOSQUES_PER_PAGE
 from custom_components.mawaqit.types import MawaqitMosqueData
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.httpx_client import get_async_client
 
 from .conftest import search_response
 
@@ -76,3 +82,24 @@ async def test_fetch_mosque_by_id_converts_api_payload() -> None:
         localisation=" 75005 Paris France",
     )
     client.mosques.get.assert_awaited_once_with(1234)
+
+
+@pytest.mark.parametrize(
+    "search",
+    [
+        lambda client: mawaqit_wrapper.all_mosques_neighborhood(client, 48.85, 2.35),
+        lambda client: mawaqit_wrapper.fetch_mosques_by_keyword(client, "Paris", 1),
+    ],
+    ids=["neighborhood", "keyword"],
+)
+@respx.mock
+async def test_search_sends_the_api_token(
+    hass: HomeAssistant,
+    search: Callable[[AsyncMawaqitClient], Awaitable[list[MawaqitMosqueData]]],
+) -> None:
+    """Test the searches send the API token, required by MAWAQIT since October 2026."""
+    route = respx.get("https://mawaqit.net/api/2.0/mosque/search").respond(json=[])
+    client = AsyncMawaqitClient(token="api-token", http_client=get_async_client(hass))
+
+    assert await search(client) == []
+    assert route.calls.last.request.headers["Api-Access-Token"] == "api-token"
