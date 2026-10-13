@@ -67,7 +67,8 @@ Download niet de repository zelf: de branch `main` bevat nog niet uitgebrachte w
 3. Kies hoe je je moskee wilt vinden:
    - **Moskeeën in de buurt van mijn locatie**: de moskeeën rond de locatie van je huis in Home Assistant. Zijn er geen, dan wordt je in plaats daarvan om een trefwoord gevraagd.
    - **Zoeken op trefwoord**: de naam van de moskee of van haar stad. De resultaten komen per 5: kies **Volgende pagina** of **Vorige pagina** om erdoor te bladeren, of **Nieuwe zoekopdracht** om het trefwoord te wijzigen. Laat het trefwoord leeg om terug te gaan naar de zoekmethoden.
-4. Kies je moskee.
+   - **ID van een moskee of woning invoeren**: woningen staan niet in de zoekresultaten, dus vul in plaats daarvan hun MAWAQIT-ID in. Log in op [mawaqit.net](https://mawaqit.net): de ID staat naast elk van je moskeeën en woningen. Laat de ID leeg om terug te gaan naar de zoekmethoden.
+4. Kies je moskee, tenzij je haar ID hebt ingevuld.
 
 Je MAWAQIT-wachtwoord wordt niet opgeslagen: Home Assistant bewaart in plaats daarvan een token van MAWAQIT.
 
@@ -322,6 +323,10 @@ Gebruik het e-mailadres en wachtwoord die je op [mawaqit.net](https://mawaqit.ne
 ### Geen moskee gevonden in de buurt van mijn locatie
 
 Controleer de locatie van je huis in **Instellingen** > **Systeem** > **Algemeen**, of zoek je moskee op trefwoord. Alleen moskeeën die op MAWAQIT staan kunnen worden gevonden.
+
+### Mijn woning wordt niet gevonden
+
+Woningen die op MAWAQIT staan, verschijnen niet in de zoekresultaten: kies **ID van een moskee of woning invoeren** en vul de ID in die op [mawaqit.net](https://mawaqit.net) naast je woning staat. Als de tijden van een woning geen Jumu'a-gebed of Eid-gebed hebben, zijn die sensoren onbekend.
 
 ### Kan geen verbinding maken met de server
 
