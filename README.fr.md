@@ -67,7 +67,8 @@ Ne téléchargez pas le dépôt lui-même : la branche `main` contient des chang
 3. Choisissez comment trouver votre mosquée :
    - **Mosquées autour de ma position** : les mosquées autour de l'emplacement de votre domicile dans Home Assistant. S'il n'y en a aucune, un mot-clé vous est demandé à la place.
    - **Rechercher par mot-clé** : le nom de la mosquée ou de sa ville. Les résultats s'affichent 5 par 5 : choisissez **Page suivante** ou **Page précédente** pour les parcourir, ou **Nouvelle recherche** pour changer de mot-clé. Laissez le mot-clé vide pour revenir au choix de la recherche.
-4. Choisissez votre mosquée.
+   - **Saisir l'ID d'une mosquée ou d'une maison** : les maisons ne sont pas dans la recherche, saisissez donc leur ID MAWAQIT à la place. Connectez-vous sur [mawaqit.net](https://mawaqit.net) : l'ID est affiché à côté de chacune de vos mosquées et maisons. Laissez l'ID vide pour revenir au choix de la recherche.
+4. Choisissez votre mosquée, sauf si vous avez saisi son ID.
 
 Votre mot de passe MAWAQIT n'est pas enregistré : Home Assistant garde à la place un jeton fourni par MAWAQIT.
 
@@ -322,6 +323,10 @@ Utilisez l'adresse e-mail et le mot de passe que vous utilisez sur [mawaqit.net]
 ### Aucune mosquée trouvée autour de ma position
 
 Vérifiez l'emplacement de votre domicile dans **Paramètres** > **Système** > **Général**, ou cherchez votre mosquée par mot-clé. Seules les mosquées inscrites sur MAWAQIT peuvent être trouvées.
+
+### Ma maison est introuvable
+
+Les maisons inscrites sur MAWAQIT ne sont pas dans la recherche : choisissez **Saisir l'ID d'une mosquée ou d'une maison** et entrez l'ID affiché à côté de votre maison sur [mawaqit.net](https://mawaqit.net). Si les horaires d'une maison n'ont ni Jumu'a ni prière de l'Aïd, ces sensors sont inconnus.
 
 ### Impossible de se connecter au serveur
 

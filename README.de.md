@@ -67,7 +67,8 @@ Lade nicht das Repository selbst herunter: Der Branch `main` enthält unveröffe
 3. Wähle, wie du deine Moschee finden möchtest:
    - **Moscheen in meiner Nähe**: die Moscheen rund um den Standort deines Zuhauses in Home Assistant. Gibt es keine, wirst du stattdessen nach einem Stichwort gefragt.
    - **Per Stichwort suchen**: der Name der Moschee oder ihrer Stadt. Die Ergebnisse kommen zu je 5: Wähle **Nächste Seite** oder **Vorherige Seite**, um sie durchzublättern, oder **Neue Suche**, um das Stichwort zu ändern. Lass das Stichwort leer, um zu den Suchmethoden zurückzukehren.
-4. Wähle deine Moschee.
+   - **ID einer Moschee oder eines Zuhauses eingeben**: Ein Zuhause erscheint nicht in der Suche, gib stattdessen seine MAWAQIT-ID ein. Melde dich auf [mawaqit.net](https://mawaqit.net) an: Die ID steht neben jeder deiner Moscheen und jedem deiner Zuhause. Lass die ID leer, um zu den Suchmethoden zurückzukehren.
+4. Wähle deine Moschee, außer du hast ihre ID eingegeben.
 
 Dein MAWAQIT-Passwort wird nicht gespeichert: Home Assistant speichert stattdessen ein Token von MAWAQIT.
 
@@ -322,6 +323,10 @@ Verwende die E-Mail-Adresse und das Passwort, die du auf [mawaqit.net](https://m
 ### Keine Moschee in meiner Nähe gefunden
 
 Prüfe den Standort deines Zuhauses unter **Einstellungen** > **System** > **Allgemein**, oder suche deine Moschee per Stichwort. Nur auf MAWAQIT registrierte Moscheen können gefunden werden.
+
+### Mein Zuhause wird nicht gefunden
+
+Auf MAWAQIT registrierte Zuhause erscheinen nicht in der Suche: Wähle **ID einer Moschee oder eines Zuhauses eingeben** und gib die ID ein, die auf [mawaqit.net](https://mawaqit.net) neben deinem Zuhause steht. Haben die Zeiten eines Zuhauses kein Jumu'a-Gebet oder Eid-Gebet, sind diese Sensoren unbekannt.
 
 ### Keine Verbindung zum Server
 
