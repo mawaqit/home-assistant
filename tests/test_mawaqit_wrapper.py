@@ -1,6 +1,8 @@
 """Tests for the Mawaqit API wrapper."""
 
 from collections.abc import Awaitable, Callable
+import json
+from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
 
 from mawaqit import AsyncMawaqitClient
@@ -103,3 +105,18 @@ async def test_search_sends_the_api_token(
 
     assert await search(client) == []
     assert route.calls.last.request.headers["Api-Access-Token"] == "api-token"
+
+
+@respx.mock
+async def test_config_without_background_url(hass: HomeAssistant) -> None:
+    """Test a mosque whose screens have a background color, without backgroundUrl."""
+    uuid = "05b4d393-fb76-4d9b-b2a4-f98ab4c4b64f"
+    config = json.loads(
+        (
+            Path(__file__).parent / "fixtures/mosque_config_color_background.json"
+        ).read_text()
+    )
+    respx.get(f"https://mawaqit.net/api/3.0/mosque/{uuid}/config").respond(json=config)
+    client = AsyncMawaqitClient(token="api-token", http_client=get_async_client(hass))
+
+    assert (await client.mosques.config(uuid)).background_url is None
