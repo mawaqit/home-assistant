@@ -157,7 +157,7 @@ Ready-to-paste dashboards are in [Dashboards for MAWAQIT](docs/dashboards.md): a
 
 ## Adhans
 
-The adhans of the MAWAQIT mosque screens are available in the media browser. Listen to them in **Media** > **MAWAQIT**, with **This browser** as the player, and play them on a speaker with the **Play media** action. They are streamed from the MAWAQIT servers, so your speaker needs internet access.
+The adhans of the MAWAQIT mosque screens are available in the media browser. Listen to them in **Media** > **MAWAQIT**, with **Web browser** as the player, and play them on a speaker with the **Play media** action. They are streamed from the MAWAQIT servers, so your speaker needs internet access.
 
 | Adhan                  | Media ID                                      | Fajr version                                       |
 | ---------------------- | --------------------------------------------- | -------------------------------------------------- |

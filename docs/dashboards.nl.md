@@ -8,6 +8,8 @@ Drie voorbeelden om in je dashboards te plakken:
 - [Volgend gebed](#volgend-gebed): een kleine kaart met het volgende gebed en de resterende tijd. Alleen ingebouwde kaarten.
 - [Moskeescherm](#moskeescherm): een schermvullende weergave zoals de schermen van je moskee, voor een tablet aan de muur. Hiervoor is [button-card](https://github.com/custom-cards/button-card) nodig, geïnstalleerd met HACS.
 
+In recente versies van Home Assistant kun je geen kaarten toevoegen aan de pagina **Thuis**, dus de kaarten komen op een eigen dashboard. Zo maak je er een: open **Instellingen** > **Dashboards**, kies **Dashboard toevoegen** en daarna **Leeg nieuw dashboard**. Vul een **Titel** in, bijvoorbeeld `Moskee`, en kies **Maak aan**. Het dashboard verschijnt in de zijbalk.
+
 Een kaart toevoegen: open je dashboard, kies ✏️ **Dashboard bewerken** en daarna **Kaart toevoegen**. Zoek naar **Handmatig**, plak de YAML en kies **Opslaan**.
 
 ## Gebedstijdenkaart
@@ -95,8 +97,8 @@ De klok, de datum van vandaag en de Hijri-datum, en de zes tijden van de dag met
 Er zijn geen entiteit-ID's te vervangen: de kaart vindt de entiteiten van je moskee zelf. Volg je meerdere moskeeën, zet `mosque` dan op de naam van het apparaat van de moskee die je wilt tonen.
 
 1. Installeer **button-card** met HACS: open **HACS**, zoek naar **button-card**, kies **Downloaden** en herlaad daarna de pagina in je browser. Versie 7 vereist Home Assistant 2025.10 of nieuwer; de kaart is getest met versie 7.0.1.
-2. Open je dashboard, kies ✏️ **Dashboard bewerken** en daarna ➕ om een weergave toe te voegen. Kies bij **Indeling** **Paneel (één kaart)** en kies **Opslaan**.
-3. Voeg in de nieuwe weergave een kaart **Handmatig** toe, plak de YAML hieronder en kies **Opslaan**.
+2. Maak een dashboard voor het scherm, zoals bovenaan deze pagina uitgelegd, en open het. Kies ✏️ **Dashboard bewerken** en daarna het potlood naast **Naamloze weergave**. Kies bij **Indeling** **Paneel (één kaart)** en kies **Opslaan**.
+3. Kies **Kaart toevoegen**, zoek naar **Handmatig**, plak de YAML hieronder en kies **Opslaan**.
 
 ```yaml
 type: custom:button-card

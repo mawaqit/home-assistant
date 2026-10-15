@@ -157,7 +157,7 @@ Dashboards om te plakken staan in [Dashboards voor MAWAQIT](docs/dashboards.nl.m
 
 ## Adhans
 
-De adhans van de MAWAQIT-moskeeschermen zijn beschikbaar in de mediabrowser. Beluister ze in **Media** > **MAWAQIT** met **Deze browser** als speler, en speel ze af op een speaker met de actie **Media afspelen**. Ze worden gestreamd vanaf de MAWAQIT-servers, dus je speaker heeft internettoegang nodig.
+De adhans van de MAWAQIT-moskeeschermen zijn beschikbaar in de mediabrowser. Beluister ze in **Media** > **MAWAQIT** met **Webbrowser** als speler, en speel ze af op een speaker met de actie **Media afspelen**. Ze worden gestreamd vanaf de MAWAQIT-servers, dus je speaker heeft internettoegang nodig.
 
 | Adhan     | Media-ID                               | Fajr-versie                                 |
 | --------- | -------------------------------------- | ------------------------------------------- |

@@ -157,7 +157,7 @@ Des tableaux de bord prêts à coller sont dans [Tableaux de bord pour MAWAQIT](
 
 ## Adhans
 
-Les adhans des écrans MAWAQIT des mosquées sont disponibles dans le navigateur de médias. Écoutez-les dans **Médias** > **MAWAQIT**, avec **Ce navigateur** comme lecteur, et jouez-les sur une enceinte avec l'action **Lire un média**. Ils sont lus depuis les serveurs MAWAQIT : votre enceinte doit avoir accès à internet.
+Les adhans des écrans MAWAQIT des mosquées sont disponibles dans le navigateur de médias. Écoutez-les dans **Médias** > **MAWAQIT**, avec **Navigateur web** comme lecteur, et jouez-les sur une enceinte avec l'action **Lire un média**. Ils sont lus depuis les serveurs MAWAQIT : votre enceinte doit avoir accès à internet.
 
 | Adhan      | Identifiant du média                   | Version Fajr                                |
 | ---------- | -------------------------------------- | ------------------------------------------- |

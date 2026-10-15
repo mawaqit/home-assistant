@@ -8,6 +8,8 @@ Drei Beispiele zum Einfügen in deine Dashboards:
 - [Nächstes Gebet](#nächstes-gebet): eine kleine Karte mit dem nächsten Gebet und der verbleibenden Zeit. Nur integrierte Karten.
 - [Moschee-Anzeige](#moschee-anzeige): eine Vollbildansicht wie die Bildschirme deiner Moschee, für ein Tablet an der Wand. Sie benötigt [button-card](https://github.com/custom-cards/button-card), installiert mit HACS.
 
+In neueren Versionen von Home Assistant kannst du der Seite **Übersicht** keine Karten hinzufügen, die Karten kommen also in ein eigenes Dashboard. So erstellst du eines: Öffne **Einstellungen** > **Dashboards**, wähle **Dashboard hinzufügen** und dann **Neues Dashboard von Grund auf**. Gib einen **Titel** ein, zum Beispiel `Moschee`, und wähle **Erstellen**. Das Dashboard erscheint in der Seitenleiste.
+
 So fügst du eine Karte hinzu: Öffne dein Dashboard, wähle ✏️ **Dashboard bearbeiten** und dann **Karte hinzufügen**. Suche nach **Manuell**, füge das YAML ein und wähle **Speichern**.
 
 ## Gebetszeiten-Karte
@@ -95,8 +97,8 @@ Die Uhr, das heutige Datum und das Hidschri-Datum sowie die sechs Zeiten des Tag
 Es gibt keine Entitäts-ID zu ersetzen: Die Karte findet die Entitäten deiner Moschee selbst. Wenn du mehreren Moscheen folgst, setze `mosque` auf den Namen des Geräts der anzuzeigenden Moschee.
 
 1. Installiere **button-card** mit HACS: Öffne **HACS**, suche nach **button-card**, wähle **Herunterladen** und lade dann die Seite in deinem Browser neu. Version 7 benötigt Home Assistant 2025.10 oder neuer; die Karte wurde mit Version 7.0.1 getestet.
-2. Öffne dein Dashboard, wähle ✏️ **Dashboard bearbeiten** und dann ➕, um eine Ansicht hinzuzufügen. Wähle unter **Layout** **Panel (einzelne Karte)** und wähle **Speichern**.
-3. Füge in der neuen Ansicht eine Karte **Manuell** hinzu, füge das YAML unten ein und wähle **Speichern**.
+2. Erstelle ein Dashboard für die Anzeige, wie oben auf dieser Seite beschrieben, und öffne es. Wähle ✏️ **Dashboard bearbeiten** und dann den Stift neben **Unbenannte Ansicht**. Wähle unter **Layout** **Panel (einzelne Karte)** und wähle **Speichern**.
+3. Wähle **Karte hinzufügen**, suche nach **Manuell**, füge das YAML unten ein und wähle **Speichern**.
 
 ```yaml
 type: custom:button-card
