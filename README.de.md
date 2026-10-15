@@ -157,7 +157,7 @@ Dashboards zum Einfügen findest du unter [Dashboards für MAWAQIT](docs/dashboa
 
 ## Adhans
 
-Die Adhans der MAWAQIT-Moscheebildschirme sind im Medienbrowser verfügbar. Höre sie unter **Medien** > **MAWAQIT** mit **Dieser Browser** als Player an und spiele sie mit der Aktion **Medien abspielen** auf einem Lautsprecher ab. Sie werden von den MAWAQIT-Servern gestreamt, dein Lautsprecher braucht also Internetzugang.
+Die Adhans der MAWAQIT-Moscheebildschirme sind im Medienbrowser verfügbar. Höre sie unter **Medien** > **MAWAQIT** mit **Webbrowser** als Player an und spiele sie mit der Aktion **Medien abspielen** auf einem Lautsprecher ab. Sie werden von den MAWAQIT-Servern gestreamt, dein Lautsprecher braucht also Internetzugang.
 
 | Adhan     | Medien-ID                              | Fajr-Version                                |
 | --------- | -------------------------------------- | ------------------------------------------- |

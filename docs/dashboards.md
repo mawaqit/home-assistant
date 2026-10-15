@@ -8,6 +8,8 @@ Three examples to paste into your dashboards:
 - [Next prayer](#next-prayer): a small card with the next prayer and the time left. Built-in cards only.
 - [Mosque display](#mosque-display): a full-screen view like the screens of your mosque, for a tablet on the wall. It needs [button-card](https://github.com/custom-cards/button-card), installed with HACS.
 
+Recent versions of Home Assistant do not let you add cards to the **Overview** page, so the cards go on a dashboard of your own. To create one: open **Settings** > **Dashboards**, select **Add dashboard**, then **New dashboard from scratch**. Enter a **Title**, such as `Mosque`, and select **Create**. The dashboard shows in the sidebar.
+
 To add a card: open your dashboard, select ✏️ **Edit dashboard**, then **Add card**. Search for **Manual**, paste the YAML and select **Save**.
 
 ## Prayer times card
@@ -95,8 +97,8 @@ The clock, today's date and Hijri date, and the six times of the day with their 
 There is no entity ID to replace: the card finds the entities of your mosque by itself. If you follow several mosques, set `mosque` to the name of the device of the one to show.
 
 1. Install **button-card** with HACS: open **HACS**, search for **button-card**, select **Download**, then reload the page of your browser. Version 7 needs Home Assistant 2025.10 or newer; the card was tested with version 7.0.1.
-2. Open your dashboard, select ✏️ **Edit dashboard**, then ➕ to add a view. In **Layout**, select **Panel (single card)** and select **Save**.
-3. In the new view, add a **Manual** card, paste the YAML below and select **Save**.
+2. Create a dashboard for the display, as explained at the top of this page, and open it. Select ✏️ **Edit dashboard**, then the pencil next to **Unnamed view**. In **Layout**, select **Panel (single card)** and select **Save**.
+3. Select **Add card**, search for **Manual**, paste the YAML below and select **Save**.
 
 ```yaml
 type: custom:button-card

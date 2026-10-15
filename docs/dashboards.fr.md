@@ -8,6 +8,8 @@ Trois exemples à coller dans vos tableaux de bord :
 - [Prochaine prière](#prochaine-prière) : une petite carte avec la prochaine prière et le temps restant. Uniquement des cartes intégrées.
 - [Écran de mosquée](#écran-de-mosquée) : une vue plein écran comme les écrans de votre mosquée, pour une tablette au mur. Elle nécessite [button-card](https://github.com/custom-cards/button-card), installée avec HACS.
 
+Les versions récentes de Home Assistant ne permettent pas d'ajouter des cartes à la page **Aperçu** : les cartes vont donc dans votre propre tableau de bord. Pour en créer un : ouvrez **Paramètres** > **Tableaux de bord**, choisissez **Ajouter un tableau de bord**, puis **Nouveau tableau de bord vide**. Saisissez un **Titre**, par exemple `Mosquée`, et choisissez **Créer**. Le tableau de bord apparaît dans la barre latérale.
+
 Pour ajouter une carte : ouvrez votre tableau de bord, choisissez ✏️ **Modifier le tableau de bord**, puis **Ajouter une carte**. Cherchez **Manuel**, collez le YAML et choisissez **Enregistrer**.
 
 ## Carte des horaires
@@ -95,8 +97,8 @@ L'horloge, la date du jour et la date hégirienne, et les six horaires de la jou
 Il n'y a aucun identifiant d'entité à remplacer : la carte trouve elle-même les entités de votre mosquée. Si vous suivez plusieurs mosquées, mettez dans `mosque` le nom de l'appareil de celle à afficher.
 
 1. Installez **button-card** avec HACS : ouvrez **HACS**, cherchez **button-card**, choisissez **Télécharger**, puis rechargez la page de votre navigateur. La version 7 nécessite Home Assistant 2025.10 ou plus récent ; la carte a été testée avec la version 7.0.1.
-2. Ouvrez votre tableau de bord, choisissez ✏️ **Modifier le tableau de bord**, puis ➕ pour ajouter une vue. Dans **Mise en page**, choisissez **Panneau (carte unique)** et choisissez **Enregistrer**.
-3. Dans la nouvelle vue, ajoutez une carte **Manuel**, collez le YAML ci-dessous et choisissez **Enregistrer**.
+2. Créez un tableau de bord pour l'écran, comme expliqué en haut de cette page, et ouvrez-le. Choisissez ✏️ **Modifier le tableau de bord**, puis le crayon à côté de **Vue sans nom**. Dans **Mise en page**, choisissez **Panneau (carte unique)** et choisissez **Enregistrer**.
+3. Choisissez **Ajouter une carte**, cherchez **Manuel**, collez le YAML ci-dessous et choisissez **Enregistrer**.
 
 ```yaml
 type: custom:button-card
