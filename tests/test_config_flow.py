@@ -1256,7 +1256,11 @@ async def test_reconfigure_to_mosque_of_other_entry_aborts(
         current_device = dev_reg.async_get(mosque_device.id)
         assert current_device is not None
         assert current_device.identifiers == {(DOMAIN, mosque_uuid)}
-        assert current_device.config_entries == {mosque_entry.entry_id}
+        # DeviceEntry.config_entries is deprecated since Home Assistant 2026.10.
+        assert [
+            d.id
+            for d in dr.async_entries_for_config_entry(dev_reg, mosque_entry.entry_id)
+        ] == [mosque_device.id]
         current_fajr = ent_reg.async_get(mosque_fajr.entity_id)
         assert current_fajr is not None
         assert current_fajr.unique_id == f"{mosque_uuid}_prayer_fajr"

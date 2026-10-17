@@ -2,10 +2,15 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from mawaqit import AsyncMawaqitClient, AuthenticationError, MawaqitError, NotFoundError
-import voluptuous as vol
+
+if TYPE_CHECKING:
+    # Home Assistant 2026.10 types schemas as probatio and serves it as voluptuous at runtime.
+    import probatio as vol
+else:
+    import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME, CONF_UUID
