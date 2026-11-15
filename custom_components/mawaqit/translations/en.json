@@ -11,12 +11,14 @@
   },
   "config": {
     "abort": {
+      "account_disabled": "Your MAWAQIT account is disabled. If you just created it, confirm your email address with the link MAWAQIT sent you, then retry.",
       "already_configured": "This mosque is already set up.",
       "cannot_connect": "Failed to connect to the MAWAQIT server. Please check your internet connection and try again.",
       "reauth_successful": "Re-authentication was successful.",
       "reconfigure_successful": "The mosque was changed successfully."
     },
     "error": {
+      "account_disabled": "Your MAWAQIT account is disabled. If you just created it, confirm your email address with the link MAWAQIT sent you, then retry.",
       "cannot_connect_to_server": "Cannot connect to the server, please retry later.",
       "mosque_id_not_found": "No mosque or home has this ID.",
       "no_mosque_around": "No MAWAQIT mosques were found near your Home Assistant location. Search for your mosque by keyword instead.",
@@ -229,6 +231,9 @@
     }
   },
   "exceptions": {
+    "account_disabled": {
+      "message": "Your MAWAQIT account is disabled. If you just created it, confirm your email address with the link MAWAQIT sent you, then re-authenticate your account."
+    },
     "auth_failed": {
       "message": "Authentication with MAWAQIT failed. Please re-authenticate your account."
     },

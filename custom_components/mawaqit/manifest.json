@@ -7,6 +7,6 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/mawaqit/home-assistant/issues",
-  "requirements": ["mawaqit==2.3.2"],
+  "requirements": ["mawaqit==2.7.0"],
   "version": "4.0.3"
 }

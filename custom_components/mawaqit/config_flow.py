@@ -4,7 +4,13 @@ from collections.abc import Mapping
 import logging
 from typing import TYPE_CHECKING, Any, override
 
-from mawaqit import AsyncMawaqitClient, AuthenticationError, MawaqitError, NotFoundError
+from mawaqit import (
+    AccountDisabledError,
+    AsyncMawaqitClient,
+    AuthenticationError,
+    MawaqitError,
+    NotFoundError,
+)
 
 if TYPE_CHECKING:
     # Home Assistant 2026.10 types schemas as probatio and serves it as voluptuous at runtime.
@@ -20,6 +26,7 @@ from homeassistant.helpers.httpx_client import get_async_client
 
 from . import mawaqit_wrapper, utils
 from .const import (
+    ACCOUNT_DISABLED,
     CANNOT_CONNECT_TO_SERVER,
     CONF_KEYWORD,
     CONF_MOSQUE_ID,
@@ -148,8 +155,10 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            entry = self._get_reauth_entry()
             if not (errors := await self._async_login(user_input)):
-                entry = self._get_reauth_entry()
+                errors = await self._async_check_account(entry.data[CONF_UUID])
+            if not errors:
                 # The other mosques logged in with the rejected token too. Since
                 # Home Assistant 2025.5, their reload aborts their reauth flows.
                 for other in self._async_current_entries(include_ignore=False):
@@ -211,6 +220,17 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.client = client.with_options(token=account.api_access_token)
         return {}
 
+    async def _async_check_account(self, mosque_uuid: str) -> dict[str, str]:
+        """Return the form errors of an account disabled despite its login."""
+        try:
+            await self.client.mosques.hijri_settings(mosque_uuid)
+        except AccountDisabledError:
+            return {"base": ACCOUNT_DISABLED}
+        except MawaqitError as err:
+            # The reload of the mosque reports the other errors.
+            _LOGGER.debug("Cannot check the MAWAQIT account: %s", err)
+        return {}
+
     async def async_step_search_method(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
@@ -235,6 +255,9 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             neighborhood_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
                 self.client, self.hass.config.latitude, self.hass.config.longitude
             )
+        # Logging in accepts an account whose email is not confirmed yet.
+        except AccountDisabledError:
+            return self.async_abort(reason=ACCOUNT_DISABLED)
         except MawaqitError:
             return self.async_abort(reason="cannot_connect")
 
@@ -350,6 +373,8 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             except NotFoundError:
                 errors["base"] = MOSQUE_ID_NOT_FOUND
+            except AccountDisabledError:
+                errors["base"] = ACCOUNT_DISABLED
             except MawaqitError:
                 errors["base"] = CANNOT_CONNECT_TO_SERVER
             else:
@@ -373,6 +398,8 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             mosques = await mawaqit_wrapper.fetch_mosques_by_keyword(
                 self.client, self.keyword, page
             )
+        except AccountDisabledError:
+            return {"base": ACCOUNT_DISABLED}
         except MawaqitError:
             return {"base": CANNOT_CONNECT_TO_SERVER}
         self.pages[page] = mosques

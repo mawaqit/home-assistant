@@ -11,12 +11,14 @@
   },
   "config": {
     "abort": {
+      "account_disabled": "Je MAWAQIT-account is uitgeschakeld. Als je het net hebt aangemaakt, bevestig dan je e-mailadres via de link die MAWAQIT je heeft gestuurd en probeer het opnieuw.",
       "already_configured": "Deze moskee is al ingesteld.",
       "cannot_connect": "Kan geen verbinding maken met de MAWAQIT-server. Controleer je internetverbinding en probeer het opnieuw.",
       "reauth_successful": "Opnieuw authenticeren is gelukt.",
       "reconfigure_successful": "De moskee is gewijzigd."
     },
     "error": {
+      "account_disabled": "Je MAWAQIT-account is uitgeschakeld. Als je het net hebt aangemaakt, bevestig dan je e-mailadres via de link die MAWAQIT je heeft gestuurd en probeer het opnieuw.",
       "cannot_connect_to_server": "Kan geen verbinding maken met de server, probeer het later opnieuw.",
       "mosque_id_not_found": "Geen moskee of woning heeft deze ID.",
       "no_mosque_around": "Er zijn geen MAWAQIT-moskeeën gevonden in de buurt van je Home Assistant-locatie. Zoek je moskee in plaats daarvan op trefwoord.",
@@ -229,6 +231,9 @@
     }
   },
   "exceptions": {
+    "account_disabled": {
+      "message": "Je MAWAQIT-account is uitgeschakeld. Als je het net hebt aangemaakt, bevestig dan je e-mailadres via de link die MAWAQIT je heeft gestuurd en authenticeer je account daarna opnieuw."
+    },
     "auth_failed": {
       "message": "Authenticatie bij MAWAQIT is mislukt. Authenticeer je account opnieuw."
     },
