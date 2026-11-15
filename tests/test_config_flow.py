@@ -105,6 +105,7 @@ def mock_client() -> MagicMock:
 
     client.mosques.search = AsyncMock(side_effect=search)
     client.mosques.get = AsyncMock(return_value=HOME)
+    client.mosques.hijri_settings = AsyncMock()
     return client
 
 
@@ -756,6 +757,7 @@ async def test_reauth_flow(
     assert result.get("type") == data_entry_flow.FlowResultType.ABORT
     assert result.get("reason") == "reauth_successful"
     mock_client.auth.login.assert_awaited_once_with(email="user", password="pass")
+    mock_client.mosques.hijri_settings.assert_awaited_once_with(MOCK_UUID)
     assert mock_config_entry.data[CONF_API_KEY] == NEW_TOKEN
     assert mock_config_entry.data[CONF_UUID] == MOCK_UUID
 
@@ -801,6 +803,65 @@ async def test_reauth_flow_errors_then_recovers(
         await hass.async_block_till_done()
 
     assert result.get("type") == data_entry_flow.FlowResultType.ABORT
+    assert result.get("reason") == "reauth_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == NEW_TOKEN
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow_account_disabled_then_confirmed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test the reauth form says the account is disabled until it is enabled."""
+    mock_config_entry.add_to_hass(hass)
+    mock_client.mosques.hijri_settings.side_effect = ACCOUNT_DISABLED_ERROR
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    with patch(
+        "custom_components.mawaqit.config_flow.AsyncMawaqitClient",
+        return_value=mock_client,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+        assert result.get("type") == data_entry_flow.FlowResultType.FORM
+        assert result.get("step_id") == "reauth_confirm"
+        assert result.get("errors") == {"base": ACCOUNT_DISABLED}
+        assert mock_config_entry.data[CONF_API_KEY] == MOCK_TOKEN
+
+        mock_client.mosques.hijri_settings.side_effect = None
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+        await hass.async_block_till_done()
+
+    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
+    assert result.get("reason") == "reauth_successful"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow_leaves_other_errors_to_the_reload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test a failed account check other than a disabled account ends the reauth."""
+    mock_config_entry.add_to_hass(hass)
+    mock_client.auth.login.return_value = _account(NEW_TOKEN)
+    mock_client.mosques.hijri_settings.side_effect = SERVER_ERROR
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    with patch(
+        "custom_components.mawaqit.config_flow.AsyncMawaqitClient",
+        return_value=mock_client,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+        await hass.async_block_till_done()
+
     assert result.get("reason") == "reauth_successful"
     assert mock_config_entry.data[CONF_API_KEY] == NEW_TOKEN
 
