@@ -11,12 +11,14 @@
   },
   "config": {
     "abort": {
+      "account_disabled": "MAWAQIT hesabınız devre dışı. Hesabı yeni oluşturduysanız, MAWAQIT'in gönderdiği bağlantıyla e-posta adresinizi doğrulayın ve tekrar deneyin.",
       "already_configured": "Bu cami zaten yapılandırılmış.",
       "cannot_connect": "MAWAQIT sunucusuna bağlanılamadı. Lütfen internet bağlantınızı kontrol edip tekrar deneyin.",
       "reauth_successful": "Yeniden kimlik doğrulama başarılı oldu.",
       "reconfigure_successful": "Cami başarıyla değiştirildi."
     },
     "error": {
+      "account_disabled": "MAWAQIT hesabınız devre dışı. Hesabı yeni oluşturduysanız, MAWAQIT'in gönderdiği bağlantıyla e-posta adresinizi doğrulayın ve tekrar deneyin.",
       "cannot_connect_to_server": "Sunucuya bağlanılamıyor, lütfen daha sonra tekrar deneyin.",
       "mosque_id_not_found": "Bu ID'ye sahip cami veya ev yok.",
       "no_mosque_around": "Home Assistant konumunuzun yakınında MAWAQIT camisi bulunamadı. Bunun yerine caminizi anahtar kelimeyle arayın.",
@@ -229,6 +231,9 @@
     }
   },
   "exceptions": {
+    "account_disabled": {
+      "message": "MAWAQIT hesabınız devre dışı. Hesabı yeni oluşturduysanız, MAWAQIT'in gönderdiği bağlantıyla e-posta adresinizi doğrulayın ve ardından hesabınızı yeniden doğrulayın."
+    },
     "auth_failed": {
       "message": "MAWAQIT ile kimlik doğrulama başarısız oldu. Lütfen hesabınızı yeniden doğrulayın."
     },

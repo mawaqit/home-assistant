@@ -6,6 +6,7 @@ import logging
 from typing import override
 
 from mawaqit import (
+    AccountDisabledError,
     APIConnectionError,
     AsyncMawaqitClient,
     AuthenticationError,
@@ -111,6 +112,11 @@ class MawaqitCoordinator[_DataT](TimestampDataUpdateCoordinator[_DataT]):
         """Fetch the data, and retry sooner after a failure."""
         try:
             data = await self._async_fetch()
+        except AccountDisabledError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="account_disabled",
+            ) from err
         except AuthenticationError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,

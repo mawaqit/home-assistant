@@ -4,7 +4,12 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from mawaqit import AuthenticationError, InternalServerError, PermissionDeniedError
+from mawaqit import (
+    AccountDisabledError,
+    AuthenticationError,
+    InternalServerError,
+    PermissionDeniedError,
+)
 import pytest
 from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
@@ -110,16 +115,25 @@ async def test_prayer_time_coordinator_errors_cause_setup_retry(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.parametrize(
+    ("error", "reason"),
+    [
+        (AuthenticationError, "auth_failed"),
+        (AccountDisabledError, "account_disabled"),
+    ],
+    ids=["rejected_token", "account_disabled"],
+)
 async def test_prayer_time_coordinator_auth_error_starts_reauth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     setup_mawaqit_integration,
+    error: type[AuthenticationError],
+    reason: str,
 ) -> None:
     """Test a rejected token fails the setup and starts a reauth flow."""
-    await setup_mawaqit_integration(
-        prayer_side_effect=status_error(AuthenticationError, 401)
-    )
+    await setup_mawaqit_integration(prayer_side_effect=status_error(error, 401))
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == reason
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1

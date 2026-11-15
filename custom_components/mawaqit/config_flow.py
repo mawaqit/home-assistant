@@ -4,7 +4,13 @@ from collections.abc import Mapping
 import logging
 from typing import TYPE_CHECKING, Any, override
 
-from mawaqit import AsyncMawaqitClient, AuthenticationError, MawaqitError, NotFoundError
+from mawaqit import (
+    AccountDisabledError,
+    AsyncMawaqitClient,
+    AuthenticationError,
+    MawaqitError,
+    NotFoundError,
+)
 
 if TYPE_CHECKING:
     # Home Assistant 2026.10 types schemas as probatio and serves it as voluptuous at runtime.
@@ -20,6 +26,7 @@ from homeassistant.helpers.httpx_client import get_async_client
 
 from . import mawaqit_wrapper, utils
 from .const import (
+    ACCOUNT_DISABLED,
     CANNOT_CONNECT_TO_SERVER,
     CONF_KEYWORD,
     CONF_MOSQUE_ID,
@@ -235,6 +242,9 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             neighborhood_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
                 self.client, self.hass.config.latitude, self.hass.config.longitude
             )
+        # Logging in accepts an account whose email is not confirmed yet.
+        except AccountDisabledError:
+            return self.async_abort(reason=ACCOUNT_DISABLED)
         except MawaqitError:
             return self.async_abort(reason="cannot_connect")
 
@@ -350,6 +360,8 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             except NotFoundError:
                 errors["base"] = MOSQUE_ID_NOT_FOUND
+            except AccountDisabledError:
+                errors["base"] = ACCOUNT_DISABLED
             except MawaqitError:
                 errors["base"] = CANNOT_CONNECT_TO_SERVER
             else:
@@ -373,6 +385,8 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             mosques = await mawaqit_wrapper.fetch_mosques_by_keyword(
                 self.client, self.keyword, page
             )
+        except AccountDisabledError:
+            return {"base": ACCOUNT_DISABLED}
         except MawaqitError:
             return {"base": CANNOT_CONNECT_TO_SERVER}
         self.pages[page] = mosques

@@ -17,6 +17,7 @@ PREVIOUS_PAGE = "previous_page"
 
 # Error messages
 
+ACCOUNT_DISABLED = "account_disabled"
 CANNOT_CONNECT_TO_SERVER = "cannot_connect_to_server"
 MOSQUE_ID_NOT_FOUND = "mosque_id_not_found"
 NO_MOSQUE_AROUND = "no_mosque_around"
